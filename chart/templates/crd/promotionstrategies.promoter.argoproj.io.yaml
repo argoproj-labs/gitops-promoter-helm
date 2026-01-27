@@ -100,7 +100,6 @@ spec:
                                             type: boolean
                                         branch:
                                             description: Branch is the name of the active branch for the environment.
-                                            minLength: 1
                                             type: string
                                         proposedCommitStatuses:
                                             description: |-
@@ -138,9 +137,6 @@ spec:
                                 properties:
                                     name:
                                         description: Name is the name of the object to refer to.
-                                        maxLength: 253
-                                        minLength: 1
-                                        pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                                         type: string
                                 required:
                                     - name
@@ -316,11 +312,7 @@ spec:
                                                                                     - message: must be a valid URL
                                                                                       rule: self == '' || isURL(self)
                                                                             sha:
-                                                                                description: |-
-                                                                                    Sha is the commit hash.
-                                                                                    Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                maxLength: 64
-                                                                                pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                description: Sha is the commit hash.
                                                                                 type: string
                                                                             subject:
                                                                                 description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
@@ -336,11 +328,7 @@ spec:
                                                                 - message: must be a valid URL
                                                                   rule: self == '' || isURL(self)
                                                         sha:
-                                                            description: |-
-                                                                Sha is the SHA of the commit in the branch
-                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                            maxLength: 64
-                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                            description: Sha is the SHA of the commit in the branch
                                                             type: string
                                                         subject:
                                                             description: Subject is the subject line of the commit message
@@ -387,11 +375,7 @@ spec:
                                                                                     - message: must be a valid URL
                                                                                       rule: self == '' || isURL(self)
                                                                             sha:
-                                                                                description: |-
-                                                                                    Sha is the commit hash.
-                                                                                    Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                maxLength: 64
-                                                                                pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                description: Sha is the commit hash.
                                                                                 type: string
                                                                             subject:
                                                                                 description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
@@ -407,11 +391,7 @@ spec:
                                                                 - message: must be a valid URL
                                                                   rule: self == '' || isURL(self)
                                                         sha:
-                                                            description: |-
-                                                                Sha is the SHA of the commit in the branch
-                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                            maxLength: 64
-                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                            description: Sha is the SHA of the commit in the branch
                                                             type: string
                                                         subject:
                                                             description: Subject is the subject line of the commit message
@@ -431,11 +411,7 @@ spec:
                                                             format: date-time
                                                             type: string
                                                         drySha:
-                                                            description: |-
-                                                                DrySha is the SHA of the commit that was used as the dry source for hydration.
-                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                            maxLength: 64
-                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                            description: DrySha is the SHA of the commit that was used as the dry source for hydration.
                                                             type: string
                                                         references:
                                                             description: References are the references to other commits, that went into the hydration of the branch.
@@ -465,11 +441,7 @@ spec:
                                                                                     - message: must be a valid URL
                                                                                       rule: self == '' || isURL(self)
                                                                             sha:
-                                                                                description: |-
-                                                                                    Sha is the commit hash.
-                                                                                    Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                maxLength: 64
-                                                                                pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                description: Sha is the commit hash.
                                                                                 type: string
                                                                             subject:
                                                                                 description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
@@ -487,7 +459,6 @@ spec:
                                             type: object
                                         branch:
                                             description: Branch is the name of the active branch for the environment.
-                                            minLength: 1
                                             type: string
                                         history:
                                             description: |-
@@ -576,11 +547,7 @@ spec:
                                                                                                 - message: must be a valid URL
                                                                                                   rule: self == '' || isURL(self)
                                                                                         sha:
-                                                                                            description: |-
-                                                                                                Sha is the commit hash.
-                                                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                            maxLength: 64
-                                                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                            description: Sha is the commit hash.
                                                                                             type: string
                                                                                         subject:
                                                                                             description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
@@ -596,11 +563,7 @@ spec:
                                                                             - message: must be a valid URL
                                                                               rule: self == '' || isURL(self)
                                                                     sha:
-                                                                        description: |-
-                                                                            Sha is the SHA of the commit in the branch
-                                                                            Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                        maxLength: 64
-                                                                        pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                        description: Sha is the SHA of the commit in the branch
                                                                         type: string
                                                                     subject:
                                                                         description: Subject is the subject line of the commit message
@@ -647,11 +610,7 @@ spec:
                                                                                                 - message: must be a valid URL
                                                                                                   rule: self == '' || isURL(self)
                                                                                         sha:
-                                                                                            description: |-
-                                                                                                Sha is the commit hash.
-                                                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                            maxLength: 64
-                                                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                            description: Sha is the commit hash.
                                                                                             type: string
                                                                                         subject:
                                                                                             description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
@@ -667,11 +626,7 @@ spec:
                                                                             - message: must be a valid URL
                                                                               rule: self == '' || isURL(self)
                                                                     sha:
-                                                                        description: |-
-                                                                            Sha is the SHA of the commit in the branch
-                                                                            Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                        maxLength: 64
-                                                                        pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                        description: Sha is the SHA of the commit in the branch
                                                                         type: string
                                                                     subject:
                                                                         description: Subject is the subject line of the commit message
@@ -691,11 +646,7 @@ spec:
                                                                         format: date-time
                                                                         type: string
                                                                     drySha:
-                                                                        description: |-
-                                                                            DrySha is the SHA of the commit that was used as the dry source for hydration.
-                                                                            Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                        maxLength: 64
-                                                                        pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                        description: DrySha is the SHA of the commit that was used as the dry source for hydration.
                                                                         type: string
                                                                     references:
                                                                         description: References are the references to other commits, that went into the hydration of the branch.
@@ -725,11 +676,7 @@ spec:
                                                                                                 - message: must be a valid URL
                                                                                                   rule: self == '' || isURL(self)
                                                                                         sha:
-                                                                                            description: |-
-                                                                                                Sha is the commit hash.
-                                                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                            maxLength: 64
-                                                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                            description: Sha is the commit hash.
                                                                                             type: string
                                                                                         subject:
                                                                                             description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
@@ -821,11 +768,7 @@ spec:
                                                                                                 - message: must be a valid URL
                                                                                                   rule: self == '' || isURL(self)
                                                                                         sha:
-                                                                                            description: |-
-                                                                                                Sha is the commit hash.
-                                                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                            maxLength: 64
-                                                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                            description: Sha is the commit hash.
                                                                                             type: string
                                                                                         subject:
                                                                                             description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
@@ -841,11 +784,7 @@ spec:
                                                                             - message: must be a valid URL
                                                                               rule: self == '' || isURL(self)
                                                                     sha:
-                                                                        description: |-
-                                                                            Sha is the SHA of the commit in the branch
-                                                                            Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                        maxLength: 64
-                                                                        pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                        description: Sha is the SHA of the commit in the branch
                                                                         type: string
                                                                     subject:
                                                                         description: Subject is the subject line of the commit message
@@ -901,11 +840,7 @@ spec:
                                                 description: HealthyDryShas is a list of dry commits that were observed to be healthy in the environment.
                                                 properties:
                                                     sha:
-                                                        description: |-
-                                                            Sha is the commit SHA of the dry commit that was observed to be healthy.
-                                                            Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                        maxLength: 64
-                                                        pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                        description: Sha is the commit SHA of the dry commit that was observed to be healthy.
                                                         type: string
                                                     time:
                                                         description: Time is the time when the proposed commit for the given dry SHA was merged into the active branch.
@@ -993,11 +928,7 @@ spec:
                                                                                     - message: must be a valid URL
                                                                                       rule: self == '' || isURL(self)
                                                                             sha:
-                                                                                description: |-
-                                                                                    Sha is the commit hash.
-                                                                                    Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                maxLength: 64
-                                                                                pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                description: Sha is the commit hash.
                                                                                 type: string
                                                                             subject:
                                                                                 description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
@@ -1013,11 +944,7 @@ spec:
                                                                 - message: must be a valid URL
                                                                   rule: self == '' || isURL(self)
                                                         sha:
-                                                            description: |-
-                                                                Sha is the SHA of the commit in the branch
-                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                            maxLength: 64
-                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                            description: Sha is the SHA of the commit in the branch
                                                             type: string
                                                         subject:
                                                             description: Subject is the subject line of the commit message
@@ -1064,11 +991,7 @@ spec:
                                                                                     - message: must be a valid URL
                                                                                       rule: self == '' || isURL(self)
                                                                             sha:
-                                                                                description: |-
-                                                                                    Sha is the commit hash.
-                                                                                    Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                maxLength: 64
-                                                                                pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                description: Sha is the commit hash.
                                                                                 type: string
                                                                             subject:
                                                                                 description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
@@ -1084,11 +1007,7 @@ spec:
                                                                 - message: must be a valid URL
                                                                   rule: self == '' || isURL(self)
                                                         sha:
-                                                            description: |-
-                                                                Sha is the SHA of the commit in the branch
-                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                            maxLength: 64
-                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                            description: Sha is the SHA of the commit in the branch
                                                             type: string
                                                         subject:
                                                             description: Subject is the subject line of the commit message
@@ -1108,11 +1027,7 @@ spec:
                                                             format: date-time
                                                             type: string
                                                         drySha:
-                                                            description: |-
-                                                                DrySha is the SHA of the commit that was used as the dry source for hydration.
-                                                                Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                            maxLength: 64
-                                                            pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                            description: DrySha is the SHA of the commit that was used as the dry source for hydration.
                                                             type: string
                                                         references:
                                                             description: References are the references to other commits, that went into the hydration of the branch.
@@ -1142,11 +1057,7 @@ spec:
                                                                                     - message: must be a valid URL
                                                                                       rule: self == '' || isURL(self)
                                                                             sha:
-                                                                                description: |-
-                                                                                    Sha is the commit hash.
-                                                                                    Supports both SHA-1 (40 chars) and SHA-256 (64 chars) Git hash formats.
-                                                                                maxLength: 64
-                                                                                pattern: ^([a-f0-9]{40}|[a-f0-9]{64})$
+                                                                                description: Sha is the commit hash.
                                                                                 type: string
                                                                             subject:
                                                                                 description: Subject is the subject line of the commit message, i.e. `git show --format=%s`.
