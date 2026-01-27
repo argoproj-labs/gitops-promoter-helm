@@ -34,15 +34,14 @@ jobs:
 
       - name: Install Helm chart
         run: |
-          kubectl apply -f chart/templates/crd -n promoter-system
-          helm install promoter ./chart --namespace promoter-system --create-namespace --timeout 1m
+          kubectl create ns promoter-system
+          helm template promoter chart/  --create-namespace  --namespace promoter-system | kubectl apply -f -
 
       - name: Verify installation
         run: |
-          kubectl get pods -n promoter-system
-          sleep 30
-          kubectl get pods -n promoter-system
           helm list -n promoter-system
+          kubectl get pods -n promoter-system
+          kubectl wait --for=condition=Ready pods --all -n promoter-system --timeout=120s
           kubectl get all -n promoter-system
           echo "=== All pod logs ==="
           for pod in $(kubectl get pods -n promoter-system -o jsonpath='{.items[*].metadata.name}'); do
