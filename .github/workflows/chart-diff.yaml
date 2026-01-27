@@ -12,7 +12,7 @@ permissions:
 
 env:
   KUBEBUILDER_VERSION: v4.11.1
-  GITOPS_PROMOTER_VERSION: v0.20.3
+  GITOPS_PROMOTER_VERSION: e783f3e7c7bebf393659d5cd7b5f568d96d32efc # latest will be pinned to next release
 
 jobs:
   chart-diff:
