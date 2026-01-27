@@ -8,9 +8,9 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   name: promoter-controller-configuration
   annotations:
-    # This annotation defines the resource as a post-install hook
-    "helm.sh/hook": "post-install"
-    "helm.sh/hook-weight": "1"
+    "helm.sh/hook": "post-install,post-upgrade"
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
 spec:
   promotionStrategy:
     workQueue:
