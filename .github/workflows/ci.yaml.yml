@@ -33,7 +33,9 @@ jobs:
           helm install argocd argo/argo-cd --namespace argocd --create-namespace --wait --timeout 5m
 
       - name: Install Helm chart
-        run:  helm install promoter ./chart --namespace promoter-system --create-namespace  --set crds.enabled=true
+        run: |
+          kubectl apply -f ./chart/crds/
+          helm install promoter ./chart --namespace promoter-system --create-namespace --timeout 1m
 
 
       - name: Verify installation

@@ -7,10 +7,6 @@ metadata:
     app.kubernetes.io/part-of: promoter
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   name: promoter-controller-configuration
-  annotations:
-    "helm.sh/hook": "post-install,post-upgrade"
-    "helm.sh/hook-weight": "10"
-    "helm.sh/hook-delete-policy": "before-hook-creation"
 spec:
   promotionStrategy:
     workQueue:
