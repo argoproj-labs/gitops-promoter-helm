@@ -58,6 +58,7 @@ jobs:
         working-directory: gitops-promoter
         run: |
           kubebuilder edit --plugins=helm/v2-alpha --output-dir=new_charts
+          ls -la new_charts/*
 
       - name: Diff charts
         run: |
