@@ -39,6 +39,6 @@ jobs:
       - name: Verify installation
         run: |
           kubectl get pods -n promoter-system
-          kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=promoter -n promoter-system --timeout=120s
+          kubectl wait --for=condition=ready pod -l control-plane=controller-manager -n promoter-system --timeout=120s
           helm list -n promoter-system
           kubectl get all -n promoter-system
