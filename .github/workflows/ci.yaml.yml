@@ -41,6 +41,5 @@ jobs:
           kubectl get pods -n promoter-system
           sleep 30
           kubectl get pods -n promoter-system
-#          kubectl wait --for=condition=ready pod -l control-plane=controller-manager -n promoter-system --timeout=120s
           helm list -n promoter-system
           kubectl get all -n promoter-system
