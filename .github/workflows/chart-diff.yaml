@@ -45,9 +45,8 @@ jobs:
 
       - name: Install kubebuilder
         run: |
-          curl -L -o kubebuilder-tools.tar.gz "https://github.com/kubernetes-sigs/kubebuilder/releases/download/${{ env.KUBEBUILDER_VERSION }}/kubebuilder_$(go env GOOS)_$(go env GOARCH).tar.gz"
-          chmod +x kubebuilder
-          sudo mv kubebuilder /usr/local/bin/
+          curl -L -o kubebuilder "https://github.com/kubernetes-sigs/kubebuilder/releases/download/${{ env.KUBEBUILDER_VERSION }}/kubebuilder_$(go env GOOS)_$(go env GOARCH)"
+          chmod +x kubebuilder && sudo mv kubebuilder /usr/local/bin/
           kubebuilder version
 
       - name: Run KubeBuilder
