@@ -30,6 +30,10 @@ jobs:
 #          LATEST_TAG=$(curl -s https://api.github.com/repos/argoproj-labs/gitops-promoter/releases/latest | jq -r '.tag_name')
 #          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 #          echo "Latest release: $LATEST_TAG"
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          path: current-repo
 
       - name: Checkout gitops-promoter at latest release
         uses: actions/checkout@v4
@@ -57,7 +61,7 @@ jobs:
       - name: Diff charts
         run: |
           echo "=== Diff between generated manifests and current Helm chart ==="
-          diff -ru --exclude='.git' --exclude='*.orig' gitops-promoter/new_charts ./chart > /tmp/chart-diff.txt || true
+          diff -ru --exclude='.git' --exclude='*.orig' gitops-promoter/new_charts current-repo/chart > /tmp/chart-diff.diff || true
 
       - name: Upload diff artifact
         if: always()
