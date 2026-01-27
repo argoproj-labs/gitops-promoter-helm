@@ -27,6 +27,6 @@ jobs:
         uses: helm/kind-action@v1
 
       - name: Install Helm chart
-        run:  helm install promoter ./charts/chart --namespace promoter-system --create-namespace  --set crds.enabled=true
+        run:  helm install promoter ./chart --namespace promoter-system --create-namespace  --set crds.enabled=true
 
 
