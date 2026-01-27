@@ -68,5 +68,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: chart-diff
-          path: /tmp/chart-diff.txt
+          path: /tmp/chart-diff.diff
           if-no-files-found: ignore
