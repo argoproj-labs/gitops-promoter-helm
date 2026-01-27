@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Helm chart
         run: |
-          kubectl apply -f ./chart/crds/
+          kubectl apply -f ./chart/templates/crd
           helm install promoter ./chart --namespace promoter-system --create-namespace --timeout 1m
 
 
