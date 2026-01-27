@@ -43,3 +43,8 @@ jobs:
           kubectl get pods -n promoter-system
           helm list -n promoter-system
           kubectl get all -n promoter-system
+          echo "=== All pod logs ==="
+          for pod in $(kubectl get pods -n promoter-system -o jsonpath='{.items[*].metadata.name}'); do
+            echo "--- Logs for $pod ---"
+            kubectl logs "$pod" -n promoter-system --all-containers=true || true
+          done
