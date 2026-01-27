@@ -57,7 +57,7 @@ jobs:
       - name: Diff charts
         run: |
           echo "=== Diff between generated manifests and current Helm chart ==="
-          diff -ru --exclude='.git' --exclude='*.orig' gitops-promoter/new_charts ./helm-chart/chart > /tmp/chart-diff.txt || true
+          diff -ru --exclude='.git' --exclude='*.orig' gitops-promoter/new_charts ./chart > /tmp/chart-diff.txt || true
 
       - name: Upload diff artifact
         if: always()
