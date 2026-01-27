@@ -1,0 +1,66 @@
+name: chart-diff
+on:
+  push:
+    branches:
+     - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  KUBEBUILDER_VERSION: v4.11.1
+
+jobs:
+  chart-diff:
+    name: Chart Diff
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Get latest gitops-promoter release tag
+        id: get-release
+        run: |
+          LATEST_TAG=$(curl -s https://api.github.com/repos/argoproj-labs/gitops-promoter/releases/latest | jq -r '.tag_name')
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest release: $LATEST_TAG"
+
+      - name: Checkout gitops-promoter at latest release
+        uses: actions/checkout@v4
+        with:
+          repository: argoproj-labs/gitops-promoter
+          ref: ${{ steps.get-release.outputs.tag }}
+          path: gitops-promoter
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Install kubebuilder
+        run: |
+          curl -L -o kubebuilder https://go.kubebuilder.io/dl/${{ env.KUBEBUILDER_VERSION }}/$(go env GOOS)/$(go env GOARCH)
+          chmod +x kubebuilder
+          sudo mv kubebuilder /usr/local/bin/
+
+      - name: Run KubeBuilder
+        run: |
+          kubebuilder edit --plugins=helm/v2-alpha --output-dir=new_charts
+
+      - name: Diff charts
+        run: |
+          echo "=== Diff between generated manifests and current Helm chart ==="
+          diff -ru --exclude='.git' --exclude='*.orig' gitops-promoter/new_charts ./helm-chart/chart > /tmp/chart-diff.txt || true
+
+      - name: Upload diff artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chart-diff
+          path: /tmp/chart-diff.txt
+          if-no-files-found: ignore
