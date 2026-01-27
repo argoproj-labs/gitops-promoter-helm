@@ -49,6 +49,7 @@ jobs:
           sudo mv kubebuilder /usr/local/bin/
 
       - name: Run KubeBuilder
+        working-directory: gitops-promoter
         run: |
           kubebuilder edit --plugins=helm/v2-alpha --output-dir=new_charts
 
