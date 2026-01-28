@@ -60,6 +60,12 @@ jobs:
           kubebuilder edit --plugins=helm/v2-alpha --output-dir=new_charts
           ls -la new_charts/*
 
+      - name: Remove example blocks from generated CRDs
+        run: |
+          find gitops-promoter/new_charts -name "*.yaml" -type f | while read file; do
+            perl -i -0777 -pe 's/\s*Example:\s*\n\s*\{\{ "\{\{- \$baseURL.*?urlQueryEscape \$labels\)\}" \}\}//gs' "$file"
+          done
+
       - name: Diff charts
         run: |
           echo "=== Diff between generated manifests and current Helm chart ==="
