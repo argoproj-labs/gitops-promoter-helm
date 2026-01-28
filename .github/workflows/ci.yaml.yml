@@ -34,8 +34,9 @@ jobs:
       - name: Install Helm chart
         run: |
           # Initial apply to install CRDs. It's expected to fail, since we install the ControllerConfiguration CRD and a ControllerConfiguration CR in the same apply.
-          helm template promoter chart/  --create-namespace  --namespace promoter-system | kubectl apply -f - || true
-          helm template promoter chart/  --create-namespace  --namespace promoter-system | kubectl apply -f -
+          kubectl create namespace promoter-system
+          helm template promoter chart/    --namespace promoter-system | kubectl apply -f - || true
+          helm template promoter chart/    --namespace promoter-system | kubectl apply -f -
 
       - name: Verify installation
         run: |
