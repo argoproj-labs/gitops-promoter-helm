@@ -49,7 +49,7 @@ jobs:
 
       - name: Remove example blocks from generated CRDs
         run: |
-          sed -i '/Example:/,/urlQueryEscape/d' gitops-promoter/new_charts/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
+          sed -i '/Example:/,/urlQueryEscape/d' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
 
       - name: Diff charts
         run: |
