@@ -60,11 +60,11 @@ jobs:
           kubebuilder edit --plugins=helm/v2-alpha --output-dir=new_charts
           ls -la new_charts/*
 
-      - name: Remove example blocks from generated CRDs
-        run: |
-          find gitops-promoter/new_charts -name "*.yaml" -type f | while read file; do
-            perl -i -0777 -pe 's/\s*Example:\s*\n\s*\{\{ "\{\{- \$baseURL.*?urlQueryEscape \$labels\)\}" \}\}//gs' "$file"
-          done
+#      - name: Remove example blocks from generated CRDs
+#        run: |
+#          find gitops-promoter/new_charts -name "*.yaml" -type f | while read file; do
+#            perl -i -0777 -pe 's/\s*Example:\s*\n\s*\{\{ "\{\{- \$baseURL.*?urlQueryEscape \$labels\)\}" \}\}//gs' "$file"
+#          done
 
       - name: Diff charts
         run: |
@@ -74,6 +74,7 @@ jobs:
           if [ -s /tmp/chart-diff.diff ]; then
             echo "Differences found:"
             cat -n /tmp/chart-diff.diff
+            exit 1
           else
             echo "No differences found"
           fi
