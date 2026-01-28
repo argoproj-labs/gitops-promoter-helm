@@ -50,9 +50,12 @@ spec:
               slowDelay: "5m"
               maxFastAttempts: 3
     template:
-      title: 'Promote {{ `{{ trunc 5 .ChangeTransferPolicy.Status.Proposed.Dry.Sha }}` }} to `{{ `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}` }}`'
-      description: 'This PR is promoting the environment branch `{{ `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}` }}` which is currently on dry sha {{ `{{ .ChangeTransferPolicy.Status.Active.Dry.Sha }}` }} to dry sha {{ `{{ .ChangeTransferPolicy.Status.Proposed.Dry.Sha }}` }}.'
+      title: "Promote {{ "{{" }} trunc 5 .ChangeTransferPolicy.Status.Proposed.Dry.Sha {{ "}}" }} to `{{ "{{" }} .ChangeTransferPolicy.Spec.ActiveBranch {{ "}}" }}`"
+      description: "This PR is promoting the environment branch `{{ "{{" }} .ChangeTransferPolicy.Spec.ActiveBranch {{ "}}" }}` which is currently on dry sha {{ "{{" }} .ChangeTransferPolicy.Status.Active.Dry.Sha {{ "}}" }} to dry sha {{ "{{" }} .ChangeTransferPolicy.Status.Proposed.Dry.Sha {{ "}}" }}."
   commitStatus:
+    watchLocalApplications: true
+    workQueue:
+      maxConcurrentReconciles: 10
       requeueDuration: "5m"
       rateLimiter:
         maxOf:
