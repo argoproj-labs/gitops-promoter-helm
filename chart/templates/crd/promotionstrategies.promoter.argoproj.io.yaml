@@ -247,6 +247,9 @@ spec:
                                                     items:
                                                         description: ChangeRequestPolicyCommitStatusPhase defines the phase of a commit status in a ChangeTransferPolicy.
                                                         properties:
+                                                            description:
+                                                                description: Description is the description of the commit status
+                                                                type: string
                                                             key:
                                                                 description: Key staging hydrated branch
                                                                 maxLength: 63
@@ -507,6 +510,9 @@ spec:
                                                                 items:
                                                                     description: ChangeRequestPolicyCommitStatusPhase defines the phase of a commit status in a ChangeTransferPolicy.
                                                                     properties:
+                                                                        description:
+                                                                            description: Description is the description of the commit status
+                                                                            type: string
                                                                         key:
                                                                             description: Key staging hydrated branch
                                                                             maxLength: 63
@@ -755,6 +761,9 @@ spec:
                                                                 items:
                                                                     description: ChangeRequestPolicyCommitStatusPhase defines the phase of a commit status in a ChangeTransferPolicy.
                                                                     properties:
+                                                                        description:
+                                                                            description: Description is the description of the commit status
+                                                                            type: string
                                                                         key:
                                                                             description: Key staging hydrated branch
                                                                             maxLength: 63
@@ -924,6 +933,9 @@ spec:
                                                     items:
                                                         description: ChangeRequestPolicyCommitStatusPhase defines the phase of a commit status in a ChangeTransferPolicy.
                                                         properties:
+                                                            description:
+                                                                description: Description is the description of the commit status
+                                                                type: string
                                                             key:
                                                                 description: Key staging hydrated branch
                                                                 maxLength: 63
