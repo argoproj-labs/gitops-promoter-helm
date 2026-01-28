@@ -44,7 +44,7 @@ jobs:
       - name: Save current Chart
         run: |
           mkdir -p /tmp/current-chart
-          cp -r current-repo/chart/* /tmp/current-chart/
+          cp -r current-repo/chart/ /tmp/current-chart/
 
       - name: Run KubeBuilder
         working-directory: gitops-promoter
