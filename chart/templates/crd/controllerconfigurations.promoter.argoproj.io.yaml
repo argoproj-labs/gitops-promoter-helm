@@ -67,7 +67,8 @@ spec:
                                                 description: |-
                                                     MaxConcurrentReconciles defines the maximum number of concurrent reconcile operations
                                                     that can run for this controller. Higher values increase throughput but consume more
-                                                    resources. Must be at least 1.
+                                                    resources.
+                                                minimum: 1
                                                 type: integer
                                             rateLimiter:
                                                 description: |-
@@ -85,11 +86,13 @@ spec:
                                                                     Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                     This defines the maximum burst size - how many operations can occur in rapid
                                                                     succession before rate limiting takes effect. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                             qps:
                                                                 description: |-
                                                                     Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                     This defines the sustained rate limit for operations. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                         required:
                                                             - bucket
@@ -130,6 +133,7 @@ spec:
                                                                 description: |-
                                                                     MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                     Must be at least 1.
+                                                                minimum: 1
                                                                 type: integer
                                                             slowDelay:
                                                                 description: |-
@@ -167,11 +171,13 @@ spec:
                                                                                 Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                                 This defines the maximum burst size - how many operations can occur in rapid
                                                                                 succession before rate limiting takes effect. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                         qps:
                                                                             description: |-
                                                                                 Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                                 This defines the sustained rate limit for operations. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                     required:
                                                                         - bucket
@@ -212,6 +218,7 @@ spec:
                                                                             description: |-
                                                                                 MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                                 Must be at least 1.
+                                                                            minimum: 1
                                                                             type: integer
                                                                         slowDelay:
                                                                             description: |-
@@ -264,7 +271,8 @@ spec:
                                                 description: |-
                                                     MaxConcurrentReconciles defines the maximum number of concurrent reconcile operations
                                                     that can run for this controller. Higher values increase throughput but consume more
-                                                    resources. Must be at least 1.
+                                                    resources.
+                                                minimum: 1
                                                 type: integer
                                             rateLimiter:
                                                 description: |-
@@ -282,11 +290,13 @@ spec:
                                                                     Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                     This defines the maximum burst size - how many operations can occur in rapid
                                                                     succession before rate limiting takes effect. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                             qps:
                                                                 description: |-
                                                                     Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                     This defines the sustained rate limit for operations. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                         required:
                                                             - bucket
@@ -327,6 +337,7 @@ spec:
                                                                 description: |-
                                                                     MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                     Must be at least 1.
+                                                                minimum: 1
                                                                 type: integer
                                                             slowDelay:
                                                                 description: |-
@@ -364,11 +375,13 @@ spec:
                                                                                 Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                                 This defines the maximum burst size - how many operations can occur in rapid
                                                                                 succession before rate limiting takes effect. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                         qps:
                                                                             description: |-
                                                                                 Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                                 This defines the sustained rate limit for operations. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                     required:
                                                                         - bucket
@@ -409,6 +422,7 @@ spec:
                                                                             description: |-
                                                                                 MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                                 Must be at least 1.
+                                                                            minimum: 1
                                                                             type: integer
                                                                         slowDelay:
                                                                             description: |-
@@ -460,7 +474,8 @@ spec:
                                                 description: |-
                                                     MaxConcurrentReconciles defines the maximum number of concurrent reconcile operations
                                                     that can run for this controller. Higher values increase throughput but consume more
-                                                    resources. Must be at least 1.
+                                                    resources.
+                                                minimum: 1
                                                 type: integer
                                             rateLimiter:
                                                 description: |-
@@ -478,11 +493,13 @@ spec:
                                                                     Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                     This defines the maximum burst size - how many operations can occur in rapid
                                                                     succession before rate limiting takes effect. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                             qps:
                                                                 description: |-
                                                                     Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                     This defines the sustained rate limit for operations. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                         required:
                                                             - bucket
@@ -523,6 +540,7 @@ spec:
                                                                 description: |-
                                                                     MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                     Must be at least 1.
+                                                                minimum: 1
                                                                 type: integer
                                                             slowDelay:
                                                                 description: |-
@@ -560,11 +578,13 @@ spec:
                                                                                 Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                                 This defines the maximum burst size - how many operations can occur in rapid
                                                                                 succession before rate limiting takes effect. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                         qps:
                                                                             description: |-
                                                                                 Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                                 This defines the sustained rate limit for operations. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                     required:
                                                                         - bucket
@@ -605,6 +625,7 @@ spec:
                                                                             description: |-
                                                                                 MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                                 Must be at least 1.
+                                                                            minimum: 1
                                                                             type: integer
                                                                         slowDelay:
                                                                             description: |-
@@ -656,7 +677,8 @@ spec:
                                                 description: |-
                                                     MaxConcurrentReconciles defines the maximum number of concurrent reconcile operations
                                                     that can run for this controller. Higher values increase throughput but consume more
-                                                    resources. Must be at least 1.
+                                                    resources.
+                                                minimum: 1
                                                 type: integer
                                             rateLimiter:
                                                 description: |-
@@ -674,11 +696,13 @@ spec:
                                                                     Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                     This defines the maximum burst size - how many operations can occur in rapid
                                                                     succession before rate limiting takes effect. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                             qps:
                                                                 description: |-
                                                                     Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                     This defines the sustained rate limit for operations. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                         required:
                                                             - bucket
@@ -719,6 +743,7 @@ spec:
                                                                 description: |-
                                                                     MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                     Must be at least 1.
+                                                                minimum: 1
                                                                 type: integer
                                                             slowDelay:
                                                                 description: |-
@@ -756,11 +781,13 @@ spec:
                                                                                 Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                                 This defines the maximum burst size - how many operations can occur in rapid
                                                                                 succession before rate limiting takes effect. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                         qps:
                                                                             description: |-
                                                                                 Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                                 This defines the sustained rate limit for operations. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                     required:
                                                                         - bucket
@@ -801,6 +828,7 @@ spec:
                                                                             description: |-
                                                                                 MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                                 Must be at least 1.
+                                                                            minimum: 1
                                                                             type: integer
                                                                         slowDelay:
                                                                             description: |-
@@ -852,7 +880,8 @@ spec:
                                                 description: |-
                                                     MaxConcurrentReconciles defines the maximum number of concurrent reconcile operations
                                                     that can run for this controller. Higher values increase throughput but consume more
-                                                    resources. Must be at least 1.
+                                                    resources.
+                                                minimum: 1
                                                 type: integer
                                             rateLimiter:
                                                 description: |-
@@ -870,11 +899,13 @@ spec:
                                                                     Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                     This defines the maximum burst size - how many operations can occur in rapid
                                                                     succession before rate limiting takes effect. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                             qps:
                                                                 description: |-
                                                                     Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                     This defines the sustained rate limit for operations. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                         required:
                                                             - bucket
@@ -915,6 +946,7 @@ spec:
                                                                 description: |-
                                                                     MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                     Must be at least 1.
+                                                                minimum: 1
                                                                 type: integer
                                                             slowDelay:
                                                                 description: |-
@@ -952,11 +984,13 @@ spec:
                                                                                 Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                                 This defines the maximum burst size - how many operations can occur in rapid
                                                                                 succession before rate limiting takes effect. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                         qps:
                                                                             description: |-
                                                                                 Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                                 This defines the sustained rate limit for operations. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                     required:
                                                                         - bucket
@@ -997,6 +1031,7 @@ spec:
                                                                             description: |-
                                                                                 MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                                 Must be at least 1.
+                                                                            minimum: 1
                                                                             type: integer
                                                                         slowDelay:
                                                                             description: |-
@@ -1067,7 +1102,8 @@ spec:
                                                 description: |-
                                                     MaxConcurrentReconciles defines the maximum number of concurrent reconcile operations
                                                     that can run for this controller. Higher values increase throughput but consume more
-                                                    resources. Must be at least 1.
+                                                    resources.
+                                                minimum: 1
                                                 type: integer
                                             rateLimiter:
                                                 description: |-
@@ -1085,11 +1121,13 @@ spec:
                                                                     Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                     This defines the maximum burst size - how many operations can occur in rapid
                                                                     succession before rate limiting takes effect. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                             qps:
                                                                 description: |-
                                                                     Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                     This defines the sustained rate limit for operations. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                         required:
                                                             - bucket
@@ -1130,6 +1168,7 @@ spec:
                                                                 description: |-
                                                                     MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                     Must be at least 1.
+                                                                minimum: 1
                                                                 type: integer
                                                             slowDelay:
                                                                 description: |-
@@ -1167,11 +1206,13 @@ spec:
                                                                                 Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                                 This defines the maximum burst size - how many operations can occur in rapid
                                                                                 succession before rate limiting takes effect. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                         qps:
                                                                             description: |-
                                                                                 Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                                 This defines the sustained rate limit for operations. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                     required:
                                                                         - bucket
@@ -1212,6 +1253,7 @@ spec:
                                                                             description: |-
                                                                                 MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                                 Must be at least 1.
+                                                                            minimum: 1
                                                                             type: integer
                                                                         slowDelay:
                                                                             description: |-
@@ -1264,7 +1306,8 @@ spec:
                                                 description: |-
                                                     MaxConcurrentReconciles defines the maximum number of concurrent reconcile operations
                                                     that can run for this controller. Higher values increase throughput but consume more
-                                                    resources. Must be at least 1.
+                                                    resources.
+                                                minimum: 1
                                                 type: integer
                                             rateLimiter:
                                                 description: |-
@@ -1282,11 +1325,13 @@ spec:
                                                                     Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                     This defines the maximum burst size - how many operations can occur in rapid
                                                                     succession before rate limiting takes effect. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                             qps:
                                                                 description: |-
                                                                     Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                     This defines the sustained rate limit for operations. Must be non-negative.
+                                                                minimum: 0
                                                                 type: integer
                                                         required:
                                                             - bucket
@@ -1327,6 +1372,7 @@ spec:
                                                                 description: |-
                                                                     MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                     Must be at least 1.
+                                                                minimum: 1
                                                                 type: integer
                                                             slowDelay:
                                                                 description: |-
@@ -1364,11 +1410,13 @@ spec:
                                                                                 Bucket is the maximum number of tokens that can be accumulated in the bucket.
                                                                                 This defines the maximum burst size - how many operations can occur in rapid
                                                                                 succession before rate limiting takes effect. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                         qps:
                                                                             description: |-
                                                                                 Qps (queries per second) is the rate at which tokens are added to the bucket.
                                                                                 This defines the sustained rate limit for operations. Must be non-negative.
+                                                                            minimum: 0
                                                                             type: integer
                                                                     required:
                                                                         - bucket
@@ -1409,6 +1457,7 @@ spec:
                                                                             description: |-
                                                                                 MaxFastAttempts is the number of retry attempts that use FastDelay before switching to SlowDelay.
                                                                                 Must be at least 1.
+                                                                            minimum: 1
                                                                             type: integer
                                                                         slowDelay:
                                                                             description: |-

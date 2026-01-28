@@ -13,7 +13,7 @@ manager:
   
   image:
     repository: quay.io/brancz/kube-rbac-proxy
-    tag: v0.17.0
+    tag: v0.20.2
     pullPolicy: IfNotPresent
 
   ## Arguments
