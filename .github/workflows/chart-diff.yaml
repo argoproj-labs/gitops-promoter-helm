@@ -45,7 +45,7 @@ jobs:
         working-directory: gitops-promoter
         run: |
           kubebuilder edit --plugins=helm/v2-alpha --output-dir=../current-repo --manifests=./dist/install.yaml
-          ls -lah current-repo/*
+          ls -lah ../current-repo/*
 
       - name: Remove example blocks from generated CRDs
         run: |
