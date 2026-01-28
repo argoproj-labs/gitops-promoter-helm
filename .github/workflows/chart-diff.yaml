@@ -53,6 +53,9 @@ jobs:
           ls -lah ../current-repo/*
           ls -lah /tmp/current-chart/*
 
+      - name: Remove example blocks from generated CRDs
+        run: |
+          sed -i '/Example:/,/urlQueryEscape/d' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
 
 
       - name: Diff charts
