@@ -34,7 +34,7 @@ jobs:
       - name: Install Helm chart
         run: |
           kubectl create ns promoter-system
-          helm template promoter chart/  --create-namespace  --namespace promoter-system | kubectl apply -f - || true
+          helm template promoter chart/  --create-namespace  --namespace promoter-system | kubectl apply --server-side -f -
           helm template promoter chart/  --create-namespace  --namespace promoter-system | kubectl apply -f -
 
       - name: Verify installation
