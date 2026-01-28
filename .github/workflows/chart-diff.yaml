@@ -62,9 +62,7 @@ jobs:
 
       - name: Remove example blocks from generated CRDs
         run: |
-          find gitops-promoter/new_charts -name "*.yaml" -type f | while read file; do
-            perl -i -0777 -pe 's/\s*Example:\s*\n\s*\{\{ "\{\{- \$baseURL.*?urlQueryEscape \$labels\)\}" \}\}//gs' "$file"
-          done
+          sed -i '/Example:/,/urlQueryEscape/d' gitops-promoter/new_charts/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
 
       - name: Diff charts
         run: |
