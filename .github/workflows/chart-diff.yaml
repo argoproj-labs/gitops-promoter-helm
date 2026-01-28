@@ -42,10 +42,9 @@ jobs:
           kubebuilder version
 
       - name: Run KubeBuilder
-        working-directory: gitops-promoter
         run: |
-          kubebuilder edit --plugins=helm/v2-alpha --output-dir=new_charts
-          ls -la new_charts/*
+          kubebuilder edit --plugins=helm/v2-alpha --output-dir=current-repo --manifests=gitops-promoter/dist/install.yaml
+          ls -lah current-repo/*
 
       - name: Remove example blocks from generated CRDs
         run: |
