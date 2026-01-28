@@ -13,6 +13,7 @@ permissions:
 env:
   KUBEBUILDER_VERSION: v4.11.1
   GITOPS_PROMOTER_VERSION: v0.21.0
+  GOVERSION: 1.25
 
 jobs:
   chart-diff:
@@ -24,12 +25,6 @@ jobs:
         run: |
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-#      - name: Get latest gitops-promoter release tag
-#        id: get-release
-#        run: |
-#          LATEST_TAG=$(curl -s https://api.github.com/repos/argoproj-labs/gitops-promoter/releases/latest | jq -r '.tag_name')
-#          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-#          echo "Latest release: $LATEST_TAG"
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -44,9 +39,9 @@ jobs:
           path: gitops-promoter
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: "1.23"
+          go-version: ${{ env.GOVERSION }}
 
       - name: Install kubebuilder
         run: |
