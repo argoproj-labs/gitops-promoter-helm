@@ -35,7 +35,7 @@ jobs:
       - name: Install Helm chart
         run: |
           kubectl create ns promoter-system
-          helm template promoter chart/  --create-namespace  --namespace promoter-system | kubectl apply -f - || true # So the CRDs are created
+          helm template promoter ./chart --set crd.enable=true | kubectl apply -f - --selector="apiextensions.k8s.io/v1"
           helm template promoter chart/  --create-namespace  --namespace promoter-system | kubectl apply -f -
 
       - name: Verify installation
