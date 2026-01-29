@@ -18,18 +18,25 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
+        with:
+          path: current-repo
 
       - name: Get latest GitOps Promoter release
         id: get-latest-release
         run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/argoproj-labs/gitops-promoter/releases/latest | jq -r .tag_name)
+          LATEST_VERSION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/argoproj-labs/gitops-promoter/releases/latest | jq -r .tag_name)
+          if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" = "null" ]; then
+            echo "Failed to fetch latest release"
+            exit 1
+          fi
           echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
           echo "Latest GitOps Promoter version: $LATEST_VERSION"
 
       - name: Get current GitOps Promoter version
         id: get-current-version
         run: |
-          CURRENT_VERSION=$(grep 'GITOPS_PROMOTER_VERSION:' .github/workflows/chart-diff.yaml | awk '{print $2}')
+          CURRENT_VERSION=$(grep 'GITOPS_PROMOTER_VERSION:' current-repo/.github/workflows/chart-diff.yaml | awk '{print $2}')
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "Current GitOps Promoter version: $CURRENT_VERSION"
 
@@ -63,12 +70,12 @@ jobs:
         if: steps.check-update.outputs.update_needed == 'true'
         working-directory: gitops-promoter
         run: |
-          kubebuilder edit --plugins=helm/v2-alpha --output-dir=.. --manifests=./dist/install.yaml
+          kubebuilder edit --plugins=helm/v2-alpha --output-dir=../current-repo --manifests=./dist/install.yaml
 
       - name: Remove example blocks from generated CRDs
         if: steps.check-update.outputs.update_needed == 'true'
         run: |
-          sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
+          sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
 
       - name: Update appVersion in Chart.yaml
         if: steps.check-update.outputs.update_needed == 'true'
@@ -76,17 +83,18 @@ jobs:
           # Remove the 'v' prefix from version for appVersion
           VERSION_WITHOUT_V="${{ steps.get-latest-release.outputs.latest_version }}"
           VERSION_WITHOUT_V="${VERSION_WITHOUT_V#v}"
-          sed -i "s/^appVersion: .*/appVersion: \"$VERSION_WITHOUT_V\"/" chart/Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"$VERSION_WITHOUT_V\"/" current-repo/chart/Chart.yaml
 
       - name: Update GITOPS_PROMOTER_VERSION in chart-diff.yaml
         if: steps.check-update.outputs.update_needed == 'true'
         run: |
-          sed -i "s/GITOPS_PROMOTER_VERSION: .*/GITOPS_PROMOTER_VERSION: ${{ steps.get-latest-release.outputs.latest_version }}/" .github/workflows/chart-diff.yaml
+          sed -i "s/GITOPS_PROMOTER_VERSION: .*/GITOPS_PROMOTER_VERSION: ${{ steps.get-latest-release.outputs.latest_version }}/" current-repo/.github/workflows/chart-diff.yaml
 
       - name: Create Pull Request
         if: steps.check-update.outputs.update_needed == 'true'
         uses: peter-evans/create-pull-request@c7fcb2c1d4c851a1d8d82dd61df0e0f8ef373e6f # v7.0.6
         with:
+          path: current-repo
           commit-message: "chore: update GitOps Promoter to ${{ steps.get-latest-release.outputs.latest_version }}"
           title: "chore: update GitOps Promoter to ${{ steps.get-latest-release.outputs.latest_version }}"
           body: |
