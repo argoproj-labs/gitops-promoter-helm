@@ -6,6 +6,11 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   KUBEBUILDER_VERSION: v4.11.1
@@ -74,7 +79,7 @@ jobs:
 
       - name: Upload diff artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: chart-diff
           path: /tmp/chart-diff.diff
