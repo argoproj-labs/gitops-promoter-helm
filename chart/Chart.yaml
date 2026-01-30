@@ -18,7 +18,6 @@ sources:
   - https://github.com/argoproj-labs/gitops-promoter
   - https://github.com/argoproj-labs/gitops-promoter-helm
 annotations:
-  artifacthub.io/alternativeName: gitops-promoter
   artifacthub.io/category: integration-delivery
   artifacthub.io/screenshots: |
     - title: GitOps Promoter UI
