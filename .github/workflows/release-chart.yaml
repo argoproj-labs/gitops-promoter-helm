@@ -1,0 +1,77 @@
+name: Release new Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-version:
+    name: Update GitOps Promoter to Latest Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
+        with:
+          path: current-repo
+
+      - name: Checkout Repository Docs Branch
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
+        with:
+          path: current-repo-doc
+          ref: gh_pages
+
+      - name: Get latest published chart
+        id: get-current-chart-version
+        path: current-repo-doc
+        run: |
+          CHART_VERSION=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
+          echo "Current chart appVersion: $CHART_VERSION"
+          echo "latest_version=v$CHART_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get latest chart version from main
+        id: get-current-version
+        path: current-repo
+        run: |
+          CHART_VERSION=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
+          echo "Current chart appVersion: $CHART_VERSION"
+          echo "current_version=v$CHART_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if update is needed
+        id: check-update
+        run: |
+          if [ "${{ steps.get-current-chart-version.outputs.latest_version }}" = "${{ steps.get-current-version.outputs.current_version }}" ]; then
+            echo "No update needed. Latest chart already published."
+            echo "update_needed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Update needed: ${{ steps.get-current-version.outputs.current_version }} -> ${{ steps.get-current-chart-version.outputs.latest_version }}"
+            echo "update_needed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push updated chart to gh_pages
+        if: steps.check-update.outputs.update_needed == 'true'
+        path: current-repo
+        run: |
+          git checkout gh_pages
+          git reset --hard origin/main
+          mkdir -p docs
+          
+          helm package chart 
+          helm repo index . --url https://argoproj-labs.github.io/gitops-promoter/
+          echo "Packaged new chart and updated index.yaml" 
+          ls
+          mv gitops-promoter-*.tgz docs/
+          mv index.yaml docs/
+          git add docs/
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "ci: update gh_pages with latest chart" docs/
+          
+          git push origin gh_pages --force
+          
