@@ -129,6 +129,7 @@ jobs:
           path: current-repo
           commit-message: "chore: update GitOps Promoter to ${{ steps.get-latest-release.outputs.latest_version }}"
           title: "chore: update GitOps Promoter to ${{ steps.get-latest-release.outputs.latest_version }}"
+          signoff: true
           body: |
             This PR updates GitOps Promoter from ${{ steps.get-current-version.outputs.current_version }} to ${{ steps.get-latest-release.outputs.latest_version }}.
 
