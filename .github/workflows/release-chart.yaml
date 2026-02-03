@@ -28,7 +28,7 @@ jobs:
 
       - name: Get latest published chart
         id: get-current-chart-version
-        path: current-repo-doc
+        working-directory: current-repo-doc
         run: |
           CHART_VERSION=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
           echo "Current chart appVersion: $CHART_VERSION"
@@ -36,7 +36,7 @@ jobs:
 
       - name: Get latest chart version from main
         id: get-current-version
-        path: current-repo
+        working-directory: current-repo
         run: |
           CHART_VERSION=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
           echo "Current chart appVersion: $CHART_VERSION"
@@ -55,9 +55,11 @@ jobs:
 
       - name: Push updated chart to gh_pages
         if: steps.check-update.outputs.update_needed == 'true'
-        path: current-repo
+        working-directory: current-repo
         run: |
-          git checkout gh_pages
+          set -ex
+          git fetch origin gh_pages
+          git switch gh_pages
           git reset --hard origin/main
           mkdir -p docs
           
@@ -67,6 +69,7 @@ jobs:
           ls
           mv gitops-promoter-*.tgz docs/
           mv index.yaml docs/
+          ls docs/
           git add docs/
           
           git config user.name "github-actions[bot]"
@@ -74,4 +77,3 @@ jobs:
           git commit -m "ci: update gh_pages with latest chart" docs/
           
           git push origin gh_pages --force
-          
