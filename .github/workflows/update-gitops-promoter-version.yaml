@@ -1,0 +1,142 @@
+name: Update GitOps Promoter Version
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  KUBEBUILDER_VERSION: v4.11.1
+
+jobs:
+  update-version:
+    name: Update GitOps Promoter to Latest Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
+        with:
+          path: current-repo
+      - name: Set up Go
+        uses: actions/setup-go@4aaadf42668403795cdfdb15b1c4250e9fed12b9 # pin@v5
+        with:
+          go-version: "1.25"
+
+      - name: Get latest GitOps Promoter release
+        id: get-latest-release
+        run: |
+          LATEST_VERSION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/argoproj-labs/gitops-promoter/releases/latest | jq -r .tag_name)
+          if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" = "null" ]; then
+            echo "Failed to fetch latest release"
+            exit 1
+          fi
+          echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest GitOps Promoter version: $LATEST_VERSION"
+
+      - name: Get current GitOps Promoter version
+        id: get-current-version
+        run: |
+          CURRENT_VERSION=$(grep 'GITOPS_PROMOTER_VERSION:' current-repo/.github/workflows/chart-diff.yaml | awk '{print $2}')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current GitOps Promoter version: $CURRENT_VERSION"
+
+      - name: Check if update is needed
+        id: check-update
+        run: |
+          if [ "${{ steps.get-latest-release.outputs.latest_version }}" = "${{ steps.get-current-version.outputs.current_version }}" ]; then
+            echo "No update needed. Current version is already the latest."
+            echo "update_needed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Update needed: ${{ steps.get-current-version.outputs.current_version }} -> ${{ steps.get-latest-release.outputs.latest_version }}"
+            echo "update_needed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout gitops-promoter at latest release
+        if: steps.check-update.outputs.update_needed == 'true'
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        with:
+          repository: argoproj-labs/gitops-promoter
+          ref: ${{ steps.get-latest-release.outputs.latest_version }}
+          path: gitops-promoter
+
+      - name: Install kubebuilder
+        if: steps.check-update.outputs.update_needed == 'true'
+        run: |
+          go env GOOS
+          curl -L -o kubebuilder "https://github.com/kubernetes-sigs/kubebuilder/releases/download/${{ env.KUBEBUILDER_VERSION }}/kubebuilder_$(go env GOOS)_$(go env GOARCH)"
+          chmod +x kubebuilder && sudo mv kubebuilder /usr/local/bin/
+          kubebuilder version
+
+      - name: Run KubeBuilder to generate manifests
+        if: steps.check-update.outputs.update_needed == 'true'
+        working-directory: gitops-promoter
+        run: |
+          kubebuilder edit --plugins=helm/v2-alpha --output-dir=../current-repo --manifests=./dist/install.yaml
+
+      - name: Remove example blocks from generated CRDs
+        if: steps.check-update.outputs.update_needed == 'true'
+        run: |
+          sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
+
+      - name: Update appVersion in gitops_promoter_version
+        if: steps.check-update.outputs.update_needed == 'true'
+        run: |
+          # Remove the 'v' prefix from version for appVersion
+          VERSION_WITHOUT_V="${{ steps.get-latest-release.outputs.latest_version }}"
+          VERSION_WITHOUT_V="${VERSION_WITHOUT_V#v}"
+          echo "$VERSION_WITHOUT_V" > current-repo/gitops_promoter_version
+
+      - name: Update Chart.yaml version
+        if: steps.check-update.outputs.update_needed == 'true'
+        working-directory: current-repo
+        run: |
+          OLD_APP=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
+          echo "Old app version: $OLD_APP"
+          NEW_APP="${{ steps.get-latest-release.outputs.latest_version }}"
+          echo "New app version: $NEW_APP"
+          NEW_APP="${NEW_APP#v}"
+          echo "New app version number: $NEW_APP"
+          
+          OLD_MAJOR=$(echo "$OLD_APP" | cut -d. -f1)
+          OLD_MINOR=$(echo "$OLD_APP" | cut -d. -f2)
+          NEW_MAJOR=$(echo "$NEW_APP" | cut -d. -f1)
+          NEW_MINOR=$(echo "$NEW_APP" | cut -d. -f2)
+          
+          CURRENT_CHART_VERSION=$(grep '^version:' chart/Chart.yaml | awk '{print $2}')
+          CHART_MAJOR=$(echo "$CURRENT_CHART_VERSION" | cut -d. -f1)
+          CHART_MINOR=$(echo "$CURRENT_CHART_VERSION" | cut -d. -f2)
+          CHART_PATCH=$(echo "$CURRENT_CHART_VERSION" | cut -d. -f3)
+          
+          if [ "$NEW_MAJOR" -gt "$OLD_MAJOR" ]; then
+            NEW_CHART_VERSION="$((CHART_MAJOR + 1)).0.0"
+          elif [ "$NEW_MINOR" -gt "$OLD_MINOR" ]; then
+            NEW_CHART_VERSION="$CHART_MAJOR.$((CHART_MINOR + 1)).0"
+          else
+            NEW_CHART_VERSION="$CHART_MAJOR.$CHART_MINOR.$((CHART_PATCH + 1))"
+          fi
+
+          sed -i "s/^version: .*/version: $NEW_CHART_VERSION/" chart/Chart.yaml
+          echo "Chart version bumped to $NEW_CHART_VERSION"
+
+      - name: Create Pull Request
+        if: steps.check-update.outputs.update_needed == 'true'
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
+        with:
+          path: current-repo
+          commit-message: "chore: update GitOps Promoter to ${{ steps.get-latest-release.outputs.latest_version }}"
+          title: "chore: update GitOps Promoter to ${{ steps.get-latest-release.outputs.latest_version }}"
+          body: |
+            This PR updates GitOps Promoter from ${{ steps.get-current-version.outputs.current_version }} to ${{ steps.get-latest-release.outputs.latest_version }}.
+
+            **Changes:**
+            - Updated manifests using kubebuilder
+            - Updated appVersion in Chart.yaml
+            - Updated GITOPS_PROMOTER_VERSION in chart-diff.yaml
+
+            **Release Notes:** https://github.com/argoproj-labs/gitops-promoter/releases/tag/${{ steps.get-latest-release.outputs.latest_version }}
+          branch: update-gitops-promoter-${{ steps.get-latest-release.outputs.latest_version }}
+          delete-branch: true
