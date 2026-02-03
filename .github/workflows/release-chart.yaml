@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
         with:
           path: current-repo-doc
-          ref: gh_pages
+          ref: gh-pages
 
       - name: Get latest published chart
         id: get-current-chart-version
@@ -53,13 +53,13 @@ jobs:
             echo "update_needed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Push updated chart to gh_pages
+      - name: Push updated chart to gh-pages
         if: steps.check-update.outputs.update_needed == 'true'
         working-directory: current-repo
         run: |
           set -ex
-          git fetch origin gh_pages
-          git switch gh_pages
+          git fetch origin gh-pages
+          git switch gh-pages
           git reset --hard origin/main
           mkdir -p docs
           
@@ -74,6 +74,6 @@ jobs:
           
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "ci: update gh_pages with latest chart" docs/
+          git commit -m "ci: update gh-pages with latest chart" docs/
           
-          git push origin gh_pages --force
+          git push origin gh-pages --force
