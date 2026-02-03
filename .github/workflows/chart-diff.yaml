@@ -14,7 +14,6 @@ concurrency:
 
 env:
   KUBEBUILDER_VERSION: v4.11.1
-  GITOPS_PROMOTER_VERSION: v0.21.0
 
 jobs:
   chart-diff:
@@ -33,11 +32,17 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           path: current-repo
 
+      - name: Read GitOps Promoter Version
+        working-directory: current-repo
+        id: get-promoter-version
+        run: |
+          echo "version=$(cat gitops_promoter_version)" >> $GITHUB_OUTPUT
+
       - name: Checkout gitops-promoter at latest release
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
         with:
           repository: argoproj-labs/gitops-promoter
-          ref: ${{ env.GITOPS_PROMOTER_VERSION }}
+          ref: ${{ steps.get-promoter-version.outputs.version }}
           path: gitops-promoter
 
       - name: Install kubebuilder
@@ -62,7 +67,6 @@ jobs:
         run: |
           cat current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
           sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
-
 
       - name: Diff charts
         run: |
