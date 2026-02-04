@@ -82,13 +82,14 @@ jobs:
         run: |
           sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
 
-      - name: Update appVersion in gitops_promoter_version
+      - name: Update appVersion in gitops_promoter_version and Chart.yaml
         if: steps.check-update.outputs.update_needed == 'true'
         run: |
           # Remove the 'v' prefix from version for appVersion
           VERSION_WITHOUT_V="${{ steps.get-latest-release.outputs.latest_version }}"
           VERSION_WITHOUT_V="${VERSION_WITHOUT_V#v}"
           echo "$VERSION_WITHOUT_V" > current-repo/gitops_promoter_version
+          sed -i "s/^appVersion: .*/appVersion: $VERSION_WITHOUT_V/" chart/Chart.yaml
 
       - name: Update Chart.yaml version
         if: steps.check-update.outputs.update_needed == 'true'
