@@ -64,7 +64,7 @@ jobs:
           mkdir -p docs
           
           helm package chart 
-          helm repo index . --url https://argoproj-labs.github.io/gitops-promoter/ --merge docs/index.yaml
+          helm repo index . --url https://argoproj-labs.github.io/gitops-promoter-helm/ --merge docs/index.yaml
           echo "Packaged new chart and updated index.yaml" 
           ls
           mv gitops-promoter-*.tgz docs/
