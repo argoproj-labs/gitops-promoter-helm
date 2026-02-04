@@ -19,14 +19,29 @@ We recommend to install the chart using Argo CD:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-    name: promoter
-    namespace: argocd
+  name: my-helm-app
+  namespace: argocd
 spec:
-
+  project: default
+  source:
+    repoURL: https://github.com/argoproj-labs/gitops-promoter-helm
+    targetRevision: HEAD # Or a specific version/branch/tag
+    path: chart # The path within the Git repo to the chart
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: promoter-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
 ```
 
 Or you can install the chart using `kubectl`:
 ```
+helm repo add gitops-promoter-helm https://argoproj-labs.github.io/gitops-promoter-helm/
+helm repo update
 # Initial apply to install CRDs. It's expected to fail, since we install the ControllerConfiguration CRD and a ControllerConfiguration CR in the same apply.
 kubectl create namespace promoter-system
 helm template  gitops-promoter-helm/gitops-promoter --namespace promoter-system | kubectl apply -f - || true 
