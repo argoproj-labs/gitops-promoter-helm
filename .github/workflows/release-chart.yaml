@@ -30,9 +30,14 @@ jobs:
         id: get-current-chart-version
         working-directory: current-repo-doc
         run: |
-          CHART_VERSION=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
-          echo "Current chart appVersion: $CHART_VERSION"
-          echo "latest_version=v$CHART_VERSION" >> $GITHUB_OUTPUT
+          if [ -f docs/index.yaml ]; then
+            CHART_VERSION=$(grep 'appVersion:' docs/index.yaml | head -1 | tr -d '"' | awk '{print $2}')
+            echo "Current published appVersion: $CHART_VERSION"
+            echo "latest_version=v$CHART_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "No index.yaml found, assuming first release"
+            echo "latest_version=v0.0.0" >> $GITHUB_OUTPUT
+          fi
 
       - name: Get latest chart version from main
         id: get-current-version
