@@ -6,13 +6,6 @@ rules:
     - apiGroups:
         - ""
       resources:
-        - events
-      verbs:
-        - create
-        - patch
-    - apiGroups:
-        - ""
-      resources:
         - secrets
       verbs:
         - get
@@ -20,6 +13,14 @@ rules:
         - patch
         - update
         - watch
+    - apiGroups:
+        - ""
+        - events.k8s.io
+      resources:
+        - events
+      verbs:
+        - create
+        - patch
     - apiGroups:
         - argoproj.io
       resources:
