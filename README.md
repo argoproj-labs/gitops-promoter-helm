@@ -29,8 +29,8 @@ Or you can install the chart using `kubectl`:
 ```
 # Initial apply to install CRDs. It's expected to fail, since we install the ControllerConfiguration CRD and a ControllerConfiguration CR in the same apply.
 kubectl create namespace promoter-system
-helm template  gitops-promoter-helm/gitops-promoter    --namespace promoter-system | kubectl apply -f - || true 
-helm template  gitops-promoter-helm/gitops-promoter    --namespace promoter-system | kubectl apply -f -
+helm template  gitops-promoter-helm/gitops-promoter --namespace promoter-system | kubectl apply -f - || true 
+helm template  gitops-promoter-helm/gitops-promoter --namespace promoter-system | kubectl apply -f -
 ```
 
 
