@@ -89,7 +89,7 @@ jobs:
           VERSION_WITHOUT_V="${{ steps.get-latest-release.outputs.latest_version }}"
           VERSION_WITHOUT_V="${VERSION_WITHOUT_V#v}"
           echo "$VERSION_WITHOUT_V" > current-repo/gitops_promoter_version
-          sed -i "s/^appVersion: .*/appVersion: $VERSION_WITHOUT_V/" chart/Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: $VERSION_WITHOUT_V/" current-repo/chart/Chart.yaml
 
       - name: Update Chart.yaml version
         if: steps.check-update.outputs.update_needed == 'true'
