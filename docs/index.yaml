@@ -7,11 +7,11 @@ entries:
         - title: GitOps Promoter UI
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
-    appVersion: 0.22.0
-    created: "2026-02-04T17:04:54.838890435Z"
+    appVersion: 0.22.1
+    created: "2026-02-04T23:11:55.290557391Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
-    digest: 3c1d0966ce4b42786a0cd9a31080c801d2f7268fe2c5260974cfb0df42b64724
+    digest: 07131834751b0fe6a2d74bff87f3c223fa43275dadee8cff2bd5e4c8949b1f8f
     home: https://github.com/argoproj-labs/gitops-promoter-helm
     keywords:
     - kubernetes
@@ -28,6 +28,35 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.0.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.1.tgz
+    version: 0.2.1
+  - annotations:
+      artifacthub.io/category: integration-delivery
+      artifacthub.io/screenshots: |-
+        - title: GitOps Promoter UI
+          url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
+    apiVersion: v2
+    appVersion: 0.22.0
+    created: "2026-02-04T23:11:55.292587575Z"
+    description: A Helm chart to install GitOps Promoter, a GitOps-native environment
+      promotion tool.
+    digest: 0a9686fcc4ba7efa95a777dfc30674c81a54544cd121ea1308df218750095f52
+    home: https://github.com/argoproj-labs/gitops-promoter-helm
+    keywords:
+    - kubernetes
+    - environment
+    - deployment
+    - continuous-delivery
+    - cd
+    - promotions
+    - gitops
+    - progressive-delivery
+    name: gitops-promoter
+    sources:
+    - https://github.com/argoproj-labs/gitops-promoter
+    - https://github.com/argoproj-labs/gitops-promoter-helm
+    type: application
+    urls:
+    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.0.tgz
     version: 0.2.0
-generated: "2026-02-04T17:04:54.836637062Z"
+generated: "2026-02-04T23:11:55.289063153Z"
