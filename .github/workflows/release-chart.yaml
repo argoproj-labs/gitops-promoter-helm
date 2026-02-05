@@ -30,9 +30,14 @@ jobs:
         id: get-current-chart-version
         working-directory: current-repo-doc
         run: |
-          CHART_VERSION=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
-          echo "Current chart appVersion: $CHART_VERSION"
-          echo "latest_version=v$CHART_VERSION" >> $GITHUB_OUTPUT
+          if [ -f docs/index.yaml ]; then
+            CHART_VERSION=$(grep 'appVersion:' docs/index.yaml | head -1 | tr -d '"' | awk '{print $2}')
+            echo "Current published appVersion: $CHART_VERSION"
+            echo "latest_version=v$CHART_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "No index.yaml found, assuming first release"
+            echo "latest_version=v0.0.0" >> $GITHUB_OUTPUT
+          fi
 
       - name: Get latest chart version from main
         id: get-current-version
@@ -60,17 +65,17 @@ jobs:
           set -ex
           git fetch origin gh-pages
           git switch gh-pages
-          git reset --hard origin/main
+
           mkdir -p docs
-          
-          helm package chart 
+          git checkout origin/main -- chart/
+          helm package chart
           helm repo index . --url https://argoproj-labs.github.io/gitops-promoter-helm/ --merge docs/index.yaml
           echo "Packaged new chart and updated index.yaml" 
           ls
           mv gitops-promoter-*.tgz docs/
           mv index.yaml docs/
           ls docs/
-          git add docs/
+          git add -A docs/
           
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
