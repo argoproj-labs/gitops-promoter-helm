@@ -41,6 +41,10 @@ jobs:
           CHART_VERSION=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
           echo "Current chart appVersion: $CHART_VERSION"
           echo "current_version=v$CHART_VERSION" >> $GITHUB_OUTPUT
+          
+          HELM_CHART_VERSION=$(grep '^version:' chart/Chart.yaml | awk '{print $2}')
+          echo "Chart version: $HELM_CHART_VERSION"
+          echo "chart_version=$HELM_CHART_VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if update is needed
         id: check-update
@@ -77,3 +81,17 @@ jobs:
           git commit -m "ci: update gh-pages with latest chart" docs/
           
           git push origin gh-pages --force
+
+      - name: Create and push tag
+        if: steps.check-update.outputs.update_needed == 'true'
+        working-directory: current-repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          TAG_NAME="${{ steps.get-current-version.outputs.chart_version }}"
+          echo "Creating tag: $TAG_NAME"
+          
+          git fetch origin main
+          git tag -a "$TAG_NAME" origin/main -m "Release $TAG_NAME"
+          git push origin "$TAG_NAME"
