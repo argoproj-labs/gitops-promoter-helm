@@ -57,6 +57,6 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.0.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.0.tgz
     version: 0.2.0
 generated: "2026-02-04T23:11:55.289063153Z"
