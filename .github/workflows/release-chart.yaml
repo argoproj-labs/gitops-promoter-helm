@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   update-version:
-    name: Update GitOps Promoter to Latest Version
+    name: Update Helm Chart
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -26,35 +26,35 @@ jobs:
           path: current-repo-doc
           ref: gh-pages
 
-      - name: Get latest published chart
-        id: get-current-chart-version
+      - name: Get latest published chart version
+        id: get-published-version
         working-directory: current-repo-doc
         run: |
           if [ -f docs/index.yaml ]; then
-            CHART_VERSION=$(grep 'appVersion:' docs/index.yaml | head -1 | tr -d '"' | awk '{print $2}')
-            echo "Current published appVersion: $CHART_VERSION"
-            echo "latest_version=v$CHART_VERSION" >> $GITHUB_OUTPUT
+            CHART_VERSION=$(grep 'version:' docs/index.yaml | grep -v apiVersion | head -1 | awk '{print $2}' | tr -d '"')
+            echo "Published chart version: $CHART_VERSION"
+            echo "latest_version=$CHART_VERSION" >> $GITHUB_OUTPUT
           else
             echo "No index.yaml found, assuming first release"
-            echo "latest_version=v0.0.0" >> $GITHUB_OUTPUT
+            echo "latest_version=0.0.0" >> $GITHUB_OUTPUT
           fi
 
-      - name: Get latest chart version from main
+      - name: Get chart version from main
         id: get-current-version
         working-directory: current-repo
         run: |
-          CHART_VERSION=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
-          echo "Current chart appVersion: $CHART_VERSION"
-          echo "current_version=v$CHART_VERSION" >> $GITHUB_OUTPUT
+          CHART_VERSION=$(grep '^version:' chart/Chart.yaml | awk '{print $2}' | tr -d '"')
+          echo "Chart version on main: $CHART_VERSION"
+          echo "current_version=$CHART_VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if update is needed
         id: check-update
         run: |
-          if [ "${{ steps.get-current-chart-version.outputs.latest_version }}" = "${{ steps.get-current-version.outputs.current_version }}" ]; then
-            echo "No update needed. Latest chart already published."
+          if [ "${{ steps.get-published-version.outputs.latest_version }}" = "${{ steps.get-current-version.outputs.current_version }}" ]; then
+            echo "No update needed. Chart ${{ steps.get-current-version.outputs.current_version }} already published."
             echo "update_needed=false" >> $GITHUB_OUTPUT
           else
-            echo "Update needed: ${{ steps.get-current-version.outputs.current_version }} -> ${{ steps.get-current-chart-version.outputs.latest_version }}"
+            echo "Update needed: ${{ steps.get-published-version.outputs.latest_version }} -> ${{ steps.get-current-version.outputs.current_version }}"
             echo "update_needed=true" >> $GITHUB_OUTPUT
           fi
 
@@ -91,7 +91,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          TAG_NAME="${{ steps.get-current-version.outputs.chart_version }}"
+          TAG_NAME="v${{ steps.get-current-version.outputs.current_version }}"
           echo "Creating tag: $TAG_NAME"
           
           git fetch origin main
