@@ -31,7 +31,7 @@ jobs:
         working-directory: current-repo-doc
         run: |
           if [ -f docs/index.yaml ]; then
-            CHART_VERSION=$(grep 'version:' docs/index.yaml | grep -v apiVersion | head -1 | awk '{print $2}' | tr -d '"')
+            CHART_VERSION=$(grep 'version:' docs/index.yaml | head -1 | awk '{print $2}' | tr -d '"')
             echo "Published chart version: $CHART_VERSION"
             echo "latest_version=$CHART_VERSION" >> $GITHUB_OUTPUT
           else
