@@ -67,7 +67,8 @@ jobs:
           git switch gh-pages
 
           mkdir -p docs
-          git checkout origin/main -- chart/
+          git checkout origin/main -- chart/ README.md
+          cp README.md chart/
           helm package chart
           helm repo index . --url https://argoproj-labs.github.io/gitops-promoter-helm/ --merge docs/index.yaml
           echo "Packaged new chart and updated index.yaml" 
