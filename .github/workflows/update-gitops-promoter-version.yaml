@@ -123,6 +123,13 @@ jobs:
           sed -i "s/^version: .*/version: $NEW_CHART_VERSION/" chart/Chart.yaml
           echo "Chart version bumped to $NEW_CHART_VERSION"
 
+      - name: Set Artifact Hub CRD annotations from gitops-promoter testdata
+        if: steps.check-update.outputs.update_needed == 'true'
+        working-directory: current-repo
+        run: |
+          bash hack/update-artifacthub-crd-annotations.sh \
+            --gitops-promoter-repo "$GITHUB_WORKSPACE/gitops-promoter"
+
       - name: Create Pull Request
         if: steps.check-update.outputs.update_needed == 'true'
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
