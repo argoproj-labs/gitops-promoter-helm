@@ -61,6 +61,10 @@ jobs:
       - name: Push updated chart to gh-pages
         if: steps.check-update.outputs.update_needed == 'true'
         working-directory: current-repo
+        env:
+          HELM_SIGNING_PRIVATE_KEY: ${{ secrets.HELM_SIGNING_PRIVATE_KEY }}
+          HELM_SIGNING_KEY_NAME: ${{ secrets.HELM_SIGNING_KEY_NAME }}
+          HELM_SIGNING_PASSPHRASE: ${{ secrets.HELM_SIGNING_PASSPHRASE }}
         run: |
           set -ex
           git fetch origin gh-pages
@@ -69,11 +73,30 @@ jobs:
           mkdir -p docs
           git checkout origin/main -- chart/ README.md
           cp README.md chart/
-          helm package chart
+          if [ -n "$HELM_SIGNING_KEY_NAME" ] && [ -n "$HELM_SIGNING_PRIVATE_KEY" ]; then
+            mkdir -p ~/.gnupg
+            chmod 700 ~/.gnupg
+            printf '%s' "$HELM_SIGNING_PRIVATE_KEY" | gpg --batch --import
+            # Passphrase file for gpg/helm (avoids gpg-agent TTY in CI)
+            printf '%s' "$HELM_SIGNING_PASSPHRASE" > /tmp/helm-passphrase
+            # Helm expects legacy keyring format (secring.gpg); GnuPG v2 uses keybox by default
+            gpg --export > ~/.gnupg/pubring.gpg
+            gpg --batch --pinentry-mode loopback --passphrase-file /tmp/helm-passphrase --export-secret-keys > ~/.gnupg/secring.gpg
+            chmod 600 ~/.gnupg/secring.gpg
+            gpg --export --armor "$HELM_SIGNING_KEY_NAME" > docs/pgp_keys.asc
+            if [ -n "$HELM_SIGNING_PASSPHRASE" ]; then
+              helm package --sign --key "$HELM_SIGNING_KEY_NAME" --keyring ~/.gnupg/secring.gpg --passphrase-file /tmp/helm-passphrase chart
+            else
+              helm package --sign --key "$HELM_SIGNING_KEY_NAME" --keyring ~/.gnupg/secring.gpg chart
+            fi
+          else
+            helm package chart
+          fi
           helm repo index . --url https://argoproj-labs.github.io/gitops-promoter-helm/ --merge docs/index.yaml
-          echo "Packaged new chart and updated index.yaml" 
+          echo "Packaged new chart and updated index.yaml"
           ls
           mv gitops-promoter-*.tgz docs/
+          for f in gitops-promoter-*.tgz.prov; do [ -f "$f" ] && mv "$f" docs/ && break; done
           mv index.yaml docs/
           ls docs/
           git add -A docs/

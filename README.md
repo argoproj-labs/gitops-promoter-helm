@@ -55,3 +55,12 @@ This project uses [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder) 
 The helm chart will be automatically updated when new GitOps Promoter versions are released.
 
 Please see:[kubebuilder helm plugin documentation](https://book.kubebuilder.io/plugins/available/helm-v2-alpha) for more information on how to update the chart.
+
+## Verifying the chart signature
+
+```bash
+# Public key is at https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
+helm repo add gitops-promoter https://argoproj-labs.github.io/gitops-promoter-helm/
+helm repo update
+helm verify gitops-promoter/gitops-promoter  # verify before install
+```
