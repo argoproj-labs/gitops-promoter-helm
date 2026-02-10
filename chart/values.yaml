@@ -12,17 +12,14 @@ manager:
   replicas: 1
   
   image:
-    repository: quay.io/brancz/kube-rbac-proxy
-    tag: v0.20.2
+    repository: quay.io/argoprojlabs/gitops-promoter
+    tag: latest
     pullPolicy: IfNotPresent
 
   ## Arguments
   ##
   args:
-    - --secure-listen-address=0.0.0.0:8443
-    - --upstream=http://127.0.0.1:8080/
-    - --logtostderr=true
-    - --v=0
+    - --leader-elect
 
   ## Environment variables
   ##
@@ -37,43 +34,43 @@ manager:
   podSecurityContext:
     runAsNonRoot: true
     seccompProfile:
-        type: RuntimeDefault
+      type: RuntimeDefault
 
   ## Container-level security settings
   ##
   securityContext:
     allowPrivilegeEscalation: false
     capabilities:
-        drop:
-            - ALL
+      drop:
+        - ALL
 
   ## Resource limits and requests
   ##
   resources:
     limits:
-        cpu: 500m
-        memory: 128Mi
+      cpu: 500m
+      memory: 128Mi
     requests:
-        cpu: 5m
-        memory: 64Mi
+      cpu: 10m
+      memory: 64Mi
 
   ## Manager pod's affinity
   ##
   affinity:
     podAntiAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                    matchLabels:
-                        app.kubernetes.io/component: manager
-                topologyKey: kubernetes.io/hostname
-              weight: 100
-            - podAffinityTerm:
-                labelSelector:
-                    matchLabels:
-                        app.kubernetes.io/name: deployment
-                topologyKey: kubernetes.io/hostname
-              weight: 5
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: manager
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: deployment
+            topologyKey: kubernetes.io/hostname
+          weight: 5
 
   ## Manager pod's node selector
   ##
@@ -103,7 +100,7 @@ crd:
 metrics:
   enable: true
   # Metrics server port
-  port: 8443
+  port: 8080
 
 ## Cert-manager integration for TLS certificates.
 ## Required for webhook certificates and metrics endpoint certificates.
@@ -116,4 +113,3 @@ certManager:
 ##
 prometheus:
   enable: false
-
