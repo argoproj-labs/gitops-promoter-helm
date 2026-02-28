@@ -71,7 +71,7 @@ jobs:
           git switch gh-pages
 
           mkdir -p docs
-          git checkout origin/main -- chart/ README.md
+          git checkout origin/main -- chart/ README.md docs/index.html
           cp README.md chart/
           if [ -n "$HELM_SIGNING_KEY_NAME" ] && [ -n "$HELM_SIGNING_PRIVATE_KEY" ]; then
             mkdir -p ~/.gnupg
