@@ -1,6 +1,6 @@
 # GitOps Promoter Helm Chart
 
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/gitops-promoter-helm)](https://artifacthub.io/packages/helm/gitops-promoter-helm/gitops-promoter)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/gitops-promoter-helm)](https://artifacthub.io/packages/helm/gitops-promoter/gitops-promoter)
 
 GitOps Promoter is a Kubernetes controller for automating GitOps-based application promotion across environments.
 
