@@ -1,5 +1,7 @@
 # GitOps Promoter Helm Chart
 
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/gitops-promoter-helm)](https://artifacthub.io/packages/helm/gitops-promoter/gitops-promoter)
+
 GitOps Promoter is a Kubernetes controller for automating GitOps-based application promotion across environments.
 
 Source code can be found here:
@@ -19,14 +21,14 @@ We recommend to install the chart using Argo CD:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: my-helm-app
+  name: gitops-promoter
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: https://github.com/argoproj-labs/gitops-promoter-helm
-    targetRevision: HEAD # Or a specific version/branch/tag
-    path: chart # The path within the Git repo to the chart
+    repoURL: https://argoproj-labs.github.io/gitops-promoter-helm/
+    chart: gitops-promoter
+    targetRevision: "*" # Or a specific version
   destination:
     server: "https://kubernetes.default.svc"
     namespace: promoter-system
@@ -48,6 +50,15 @@ helm template  gitops-promoter-helm/gitops-promoter --namespace promoter-system 
 helm template  gitops-promoter-helm/gitops-promoter --namespace promoter-system | kubectl apply -f -
 ```
 
+
+## Known Limitations
+
+### kube-rbac-proxy image and resources are not configurable
+
+The chart currently deploys a `kube-rbac-proxy` sidecar container whose image and resource requests/limits cannot be overridden via `values.yaml`.
+This is a limitation inherited from how [kubebuilder](https://book.kubebuilder.io/plugins/available/helm-v2-alpha) generates the Helm chart.
+
+Tracking issue for removing `kube-rbac-proxy` from the upstream project: https://github.com/argoproj-labs/gitops-promoter/issues/1085
 
 ## Updates
 
