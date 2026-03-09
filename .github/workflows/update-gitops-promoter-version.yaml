@@ -82,6 +82,11 @@ jobs:
         run: |
           sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
 
+      - name: Set image tag to match new appVersion
+        if: steps.check-update.outputs.update_needed == 'true'
+        run: |
+          sed -i "s/^[[:space:]]*tag: .*/    tag: ${{ steps.get-latest-release.outputs.latest_version }}/" current-repo/chart/values.yaml
+
       - name: Update appVersion in gitops_promoter_version and Chart.yaml
         if: steps.check-update.outputs.update_needed == 'true'
         run: |
