@@ -40,6 +40,12 @@ jobs:
 
       - name: Verify installation
         run: |
+          sleep 5  # Give time for container to crash
+          kubectl get pods -n promoter-system
+          echo "=== Current logs ==="
+          kubectl logs -n promoter-system -l app.kubernetes.io/name=gitops-promoter -c manager --tail=100 || true
+          echo "=== Previous logs (crashed container) ==="
+          kubectl logs -n promoter-system -l app.kubernetes.io/name=gitops-promoter -c manager --previous --tail=100 || true
           kubectl get pods -n promoter-system
           kubectl wait --for=condition=Ready pods --all -n promoter-system --timeout=120s || \
           (kubectl describe pod -n promoter-system -l app.kubernetes.io/name=gitops-promoter && \
