@@ -13,8 +13,7 @@ manager:
   
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
-    # tag defaults to "v{appVersion}" from Chart.yaml when left empty
-    tag: ""
+    tag: v0.22.7
     pullPolicy: IfNotPresent
 
   ## Arguments

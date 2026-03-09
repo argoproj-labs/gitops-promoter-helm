@@ -50,7 +50,7 @@ spec:
                     - --
                     - /gitops-promoter
                     - controller
-                  image: "{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag | default (printf "v%s" .Chart.AppVersion) }}"
+                  image: "{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag }}"
                   imagePullPolicy: {{ .Values.manager.image.pullPolicy }}
                   livenessProbe:
                     httpGet:
