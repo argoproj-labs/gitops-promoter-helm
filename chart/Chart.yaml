@@ -2,7 +2,7 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.2.9
+version: 0.2.10
 appVersion: 0.22.7
 keywords:
   - kubernetes
