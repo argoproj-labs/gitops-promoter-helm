@@ -92,12 +92,10 @@ jobs:
           else
             helm package chart
           fi
-          helm repo index . --url https://argoproj-labs.github.io/gitops-promoter-helm/ --merge docs/index.yaml
-          echo "Packaged new chart and updated index.yaml"
-          ls
           mv gitops-promoter-*.tgz docs/
           for f in gitops-promoter-*.tgz.prov; do [ -f "$f" ] && mv "$f" docs/ && break; done
-          mv index.yaml docs/
+          helm repo index docs/ --url https://argoproj-labs.github.io/gitops-promoter-helm/
+          echo "Packaged new chart and updated index.yaml"
           ls docs/
           git add -A docs/
           
