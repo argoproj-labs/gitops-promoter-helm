@@ -1592,7 +1592,7 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.8.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.8.tgz
     version: 0.2.8
   - annotations:
       artifacthub.io/category: integration-delivery
@@ -2123,7 +2123,7 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.7.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.7.tgz
     version: 0.2.7
   - annotations:
       artifacthub.io/category: integration-delivery
@@ -2654,7 +2654,7 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.6.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.6.tgz
     version: 0.2.6
   - annotations:
       artifacthub.io/category: integration-delivery
@@ -3185,7 +3185,7 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.5.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.5.tgz
     version: 0.2.5
   - annotations:
       artifacthub.io/category: integration-delivery
@@ -3716,7 +3716,7 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.4.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.4.tgz
     version: 0.2.4
   - annotations:
       artifacthub.io/category: integration-delivery
@@ -4224,7 +4224,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-03-02T20:59:47.351214539Z"
+    created: "2026-03-09T09:39:46.47685-07:00"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: f9f0ce488a82308c0d7253859b999003607dec8fa9174b8d07dd3712dd018c04
@@ -4244,7 +4244,7 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.3.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.3.tgz
     version: 0.2.3
   - annotations:
       artifacthub.io/category: integration-delivery
@@ -4253,7 +4253,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-03-02T20:59:47.34864126Z"
+    created: "2026-03-09T09:39:46.475759-07:00"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 1eba471548462f9ea8017439e120971ae6ad1d26c22640aa9cdd557e0682bfc0
@@ -4273,7 +4273,7 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.2.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.2.tgz
     version: 0.2.2
   - annotations:
       artifacthub.io/category: integration-delivery
@@ -4302,7 +4302,7 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.1.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.1.tgz
     version: 0.2.1
   - annotations:
       artifacthub.io/category: integration-delivery
@@ -4331,6 +4331,6 @@ entries:
     - https://github.com/argoproj-labs/gitops-promoter-helm
     type: application
     urls:
-    - https://argoproj-labs.github.io/gitops-promoter-helm/docs/gitops-promoter-0.2.0.tgz
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.0.tgz
     version: 0.2.0
 generated: "2026-03-02T20:59:47.341042738Z"
