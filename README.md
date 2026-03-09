@@ -1,4 +1,4 @@
-# GitOps Promoter Helm Chart
+# GitOps Promoter Helm Chart TEST CI
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/gitops-promoter-helm)](https://artifacthub.io/packages/helm/gitops-promoter/gitops-promoter)
 
