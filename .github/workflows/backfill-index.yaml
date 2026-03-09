@@ -1,0 +1,34 @@
+name: Backfill Helm Repo Index
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backfill-index:
+    name: Regenerate index.yaml from docs/
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
+        with:
+          ref: gh-pages
+
+      - name: Regenerate index.yaml with correct URLs
+        run: |
+          set -ex
+          helm repo index docs/ --url https://argoproj-labs.github.io/gitops-promoter-helm/
+          echo "Regenerated index.yaml:"
+          grep -A1 "^\s*urls:" docs/index.yaml
+
+      - name: Commit and push fixed index.yaml
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.yaml
+          git diff --cached --quiet && echo "No changes needed" && exit 0
+          git commit -m "fix: regenerate index.yaml with correct chart URLs"
+          git push origin gh-pages
