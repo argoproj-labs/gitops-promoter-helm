@@ -48,3 +48,19 @@ jobs:
             echo "--- Logs for $pod ---"
             kubectl logs "$pod" -n promoter-system --all-containers=true || true
           done
+
+      - name: Diagnose failed pods
+        if: failure()
+        run: |
+          echo "=== Pods ==="
+          kubectl get pods -n promoter-system -o wide || true
+          echo "=== Namespace events ==="
+          kubectl get events -n promoter-system --sort-by='.lastTimestamp' || true
+          echo "=== Pod descriptions ==="
+          for pod in $(kubectl get pods -n promoter-system -o jsonpath='{.items[*].metadata.name}'); do
+            echo "--- Describe $pod ---"
+            kubectl describe pod "$pod" -n promoter-system || true
+            echo "--- Logs for $pod ---"
+            kubectl logs "$pod" -n promoter-system --all-containers=true --previous=true 2>/dev/null || true
+            kubectl logs "$pod" -n promoter-system --all-containers=true || true
+          done
