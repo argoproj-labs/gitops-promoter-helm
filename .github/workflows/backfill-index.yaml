@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   backfill-index:
@@ -32,3 +33,18 @@ jobs:
           git diff --cached --quiet && echo "No changes needed" && exit 0
           git commit -m "fix: regenerate index.yaml with correct chart URLs"
           git push origin gh-pages
+
+      - name: Open cleanup issue
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'chore: remove one-time backfill-index workflow',
+              body: [
+                'The `backfill-index.yaml` workflow was a one-time cleanup to fix broken `docs/`-prefixed URLs in `index.yaml`.',
+                'It has been run successfully. The file `.github/workflows/backfill-index.yaml` should now be deleted.',
+              ].join('\n\n'),
+              labels: ['chore'],
+            });
