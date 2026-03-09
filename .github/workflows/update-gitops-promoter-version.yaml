@@ -135,6 +135,14 @@ jobs:
           bash hack/update-artifacthub-crd-annotations.sh \
             --gitops-promoter-repo "$GITHUB_WORKSPACE/gitops-promoter"
 
+      - name: Set Artifact Hub changes annotation from gitops-promoter release notes
+        if: steps.check-update.outputs.update_needed == 'true'
+        working-directory: current-repo
+        run: |
+          bash hack/update-artifacthub-changes.sh \
+            --version "${{ steps.get-latest-release.outputs.latest_version }}" \
+            --github-token "${{ secrets.GITHUB_TOKEN }}"
+
       - name: Create Pull Request
         if: steps.check-update.outputs.update_needed == 'true'
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
