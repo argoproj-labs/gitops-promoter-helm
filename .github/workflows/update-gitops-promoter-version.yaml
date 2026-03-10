@@ -90,6 +90,10 @@ jobs:
       - name: Update appVersion in gitops_promoter_version and Chart.yaml
         if: steps.check-update.outputs.update_needed == 'true'
         run: |
+          # Save old appVersion BEFORE updating
+          OLD_APP=$(grep '^appVersion:' current-repo/chart/Chart.yaml | tr -d '"' | awk '{print $2}')
+          echo "OLD_APP=$OLD_APP" >> $GITHUB_ENV
+          
           # Remove the 'v' prefix from version for appVersion
           VERSION_WITHOUT_V="${{ steps.get-latest-release.outputs.latest_version }}"
           VERSION_WITHOUT_V="${VERSION_WITHOUT_V#v}"
@@ -100,7 +104,7 @@ jobs:
         if: steps.check-update.outputs.update_needed == 'true'
         working-directory: current-repo
         run: |
-          OLD_APP=$(grep '^appVersion:' chart/Chart.yaml | tr -d '"' | awk '{print $2}')
+          OLD_APP="${{ env.OLD_APP }}"  # Use the saved value
           echo "Old app version: $OLD_APP"
           NEW_APP="${{ steps.get-latest-release.outputs.latest_version }}"
           echo "New app version: $NEW_APP"
