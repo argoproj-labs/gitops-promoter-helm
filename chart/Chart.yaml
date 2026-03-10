@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.2.10
-appVersion: 0.22.7
+version: 0.3.0
+appVersion: 0.23.0
 keywords:
   - kubernetes
   - environment
@@ -26,88 +26,7 @@ annotations:
     - title: GitOps Promoter UI
       url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
   artifacthub.io/crds: |-
-    - kind: ArgoCDCommitStatus
-      version: v1alpha1
-      name: argocdcommitstatuses
-      displayName: ArgoCDCommitStatus
-      description: ArgoCDCommitStatus is the Schema for the argocdcommitstatuses API.
-    - kind: ChangeTransferPolicy
-      version: v1alpha1
-      name: changetransferpolicies
-      displayName: ChangeTransferPolicy
-      description: ChangeTransferPolicy is the Schema for the changetransferpolicies API
-    - kind: ClusterScmProvider
-      version: v1alpha1
-      name: clusterscmproviders
-      displayName: ClusterScmProvider
-      description: ClusterScmProvider is the Schema for the clusterscmproviders API.
-    - kind: CommitStatus
-      version: v1alpha1
-      name: commitstatuses
-      displayName: CommitStatus
-      description: CommitStatus is the Schema for the commitstatuses API
-    - kind: ControllerConfiguration
-      version: v1alpha1
-      name: controllerconfigurations
-      displayName: ControllerConfiguration
-      description: ControllerConfiguration is the Schema for the controllerconfigurations API.
-    - kind: GitCommitStatus
-      version: v1alpha1
-      name: gitcommitstatuses
-      displayName: GitCommitStatus
-      description: |-
-        GitCommitStatus is the Schema for the gitcommitstatuses API.
-
-        It validates commits from PromotionStrategy environments using configurable expressions
-        and creates CommitStatus resources with the validation results.
-
-        Use the Target field to control which commit is validated:
-        - "active" (default): Validates the currently deployed commit
-        - "proposed": Validates the incoming commit
-
-        The validation result is always reported on the PROPOSED commit to enable promotion gating,
-        regardless of which commit was validated.
-
-        Workflow:
-         1. Controller reads PromotionStrategy to get ProposedHydratedSha and ActiveHydratedSha
-         2. Controller selects SHA to validate based on Target field
-         3. Controller fetches commit data (subject, body, author, trailers) for selected SHA
-         4. Controller evaluates expression against selected commit data
-         5. Controller creates/updates CommitStatus with result attached to PROPOSED SHA
-         6. PromotionStrategy checks CommitStatus on PROPOSED SHA before allowing promotion
-
-        Common use cases:
-          - "Ensure active commit is not a revert before promoting"
-    - kind: GitRepository
-      version: v1alpha1
-      name: gitrepositories
-      displayName: GitRepository
-      description: GitRepository is the Schema for the gitrepositories API
-    - kind: PromotionStrategy
-      version: v1alpha1
-      name: promotionstrategies
-      displayName: PromotionStrategy
-      description: PromotionStrategy is the Schema for the promotionstrategies API
-    - kind: PullRequest
-      version: v1alpha1
-      name: pullrequests
-      displayName: PullRequest
-      description: PullRequest is the Schema for the pullrequests API
-    - kind: RevertCommit
-      version: v1alpha1
-      name: revertcommits
-      displayName: RevertCommit
-      description: RevertCommit is the Schema for the revertcommits API
-    - kind: ScmProvider
-      version: v1alpha1
-      name: scmproviders
-      displayName: ScmProvider
-      description: ScmProvider is the Schema for the scmproviders API
-    - kind: TimedCommitStatus
-      version: v1alpha1
-      name: timedcommitstatuses
-      displayName: TimedCommitStatus
-      description: TimedCommitStatus is the Schema for the timedcommitstatuses API
+    []
   artifacthub.io/crdsExamples: |-
     - apiVersion: promoter.argoproj.io/v1alpha1
       kind: ArgoCDCommitStatus
@@ -313,6 +232,15 @@ annotations:
               bucket:
                 qps: 20
                 bucket: 50
+        # WebRequestCommitStatus controller runs HTTP requests and reports commit status from response
+        webRequestCommitStatus:
+          workQueue:
+            requeueDuration: "2m"
+            maxConcurrentReconciles: 5
+            rateLimiter:
+              exponentialFailure:
+                baseDelay: "500ms"
+                maxDelay: "1m"
     - apiVersion: promoter.argoproj.io/v1alpha1
       kind: GitRepository
       metadata:
@@ -524,3 +452,68 @@ annotations:
             requiredDuration: 4h
             timeElapsed: 5h15m20s
             phase: success
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: WebRequestCommitStatus
+      metadata:
+        name: external-approval
+        namespace: default
+      spec:
+        # Reference to the PromotionStrategy this WebRequestCommitStatus applies to
+        promotionStrategyRef:
+          name: my-app
+        # Unique key for this validation; matched against proposedCommitStatuses or activeCommitStatuses
+        key: external-approval
+        # Human-readable description shown in the SCM (Go templates supported). Optional.
+        descriptionTemplate: "Waiting for external approval"
+        # URL for the commit status target link in the SCM (Go templates supported). Optional.
+        urlTemplate: ""
+        # Which SHA to report on: "proposed" (default) or "active". Optional.
+        reportOn: proposed
+        # HTTP request configuration; URL, headers, and body support Go templates
+        httpRequest:
+          urlTemplate: "https://approvals.example.com/api/check/{{ .ReportedSha }}"
+          method: GET
+          # Optional: header name -> template value
+          headerTemplates: {}
+          # Optional: request body template
+          bodyTemplate: ""
+          timeout: 30s
+          # Optional: authentication (basic, bearer, oauth2, or tls with secretRef); omit if none
+        # When the HTTP response is considered successful (phase success)
+        success:
+          when:
+            expression: "Response.StatusCode == 200 && Response.Body.approved == true"
+        # Exactly one of polling or trigger must be set.
+        mode:
+          # Polling: single optional field. Interval (default 1m) controls how often the HTTP request runs.
+          polling:
+            interval: 2m
+            # Trigger: use this instead of polling for expression-based triggering.
+            # trigger:
+            #   requeueDuration: 1m     # optional, default 1m
+            #   when:
+            #     expression: ""        # required; boolean expr deciding whether to fire the request
+            #     output:
+            #       expression: ""      # optional; expr returning map, stored in status.triggerOutput
+            #   response:               # optional
+            #     output:
+            #       expression: ""      # expr returning map, stored in status.responseOutput
+      status:
+        conditions:
+          # The Ready condition indicates that the resource has been successfully reconciled.
+          - type: Ready
+            lastTransitionTime: 2023-10-01T00:00:00Z
+            message: Reconciliation succeeded
+            reason: ReconciliationSuccess
+            status: "True"
+            observedGeneration: 1
+        # Status per environment; populated by the controller
+        environments:
+          - branch: environment/development
+            reportedSha: abc123def456789012345678901234567890abcd
+            lastSuccessfulSha: abc123def456789012345678901234567890abcd
+            phase: success
+            lastRequestTime: "2024-01-15T10:30:00Z"
+            lastResponseStatusCode: 200
+            # triggerOutput (trigger mode): output from trigger.when.output.expression (available as TriggerOutput in expressions/templates)
+            # responseOutput (trigger + response.output): output from response.output.expression (available as ResponseOutput in expressions/templates)
