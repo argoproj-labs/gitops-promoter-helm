@@ -13,7 +13,7 @@ manager:
   
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
-    tag: v0.22.7
+    tag: v0.23.1
     pullPolicy: IfNotPresent
 
   ## Arguments
