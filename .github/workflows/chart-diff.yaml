@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  KUBEBUILDER_VERSION: v4.11.1
+  KUBEBUILDER_VERSION: v4.12.0
 
 jobs:
   chart-diff:
