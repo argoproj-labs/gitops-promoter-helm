@@ -2,7 +2,7 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.4.0
+version: 0.4.1
 appVersion: 0.24.0
 keywords:
   - kubernetes
@@ -17,6 +17,7 @@ home: https://github.com/argoproj-labs/gitops-promoter-helm
 sources:
   - https://github.com/argoproj-labs/gitops-promoter
   - https://github.com/argoproj-labs/gitops-promoter-helm
+icon: https://raw.githubusercontent.com/argoproj-labs/gitops-promoter/main/docs/assets/logo/favicon-large.png
 annotations:
   artifacthub.io/category: integration-delivery
   artifacthub.io/signKey: |
