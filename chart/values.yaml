@@ -159,6 +159,9 @@ controllerConfiguration:
               fastDelay: "1s"
               slowDelay: "5m"
               maxFastAttempts: 3
+    template:
+      title: "Promote me"
+      description: "This Pr is dope"
     # Due to rendering limitations of Helm
     # the pull request template is defined in the controller configuration manifest directly.
     # This section is still required to set the work queue

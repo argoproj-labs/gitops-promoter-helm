@@ -12,7 +12,7 @@ metadata:
 spec:
 {{- omit .Values.controllerConfiguration "pullRequest" | toYaml | nindent 2 }}
   pullRequest:
-{{- .Values.controllerConfiguration.pullRequest | toYaml | nindent 4 }}
+{{- omit .Values.controllerConfiguration.pullRequest "template" | toYaml | nindent 4 }}
     template:
       title: "Promote {{ "{{" }} trunc 5 .ChangeTransferPolicy.Status.Proposed.Dry.Sha {{ "}}" }} to `{{ "{{" }} .ChangeTransferPolicy.Spec.ActiveBranch {{ "}}" }}`"
       description: "This PR is promoting the environment branch `{{ "{{" }} .ChangeTransferPolicy.Spec.ActiveBranch {{ "}}" }}` which is currently on dry sha {{ "{{" }} .ChangeTransferPolicy.Status.Active.Dry.Sha {{ "}}" }} to dry sha {{ "{{" }} .ChangeTransferPolicy.Status.Proposed.Dry.Sha {{ "}}" }}."
