@@ -82,7 +82,7 @@ jobs:
         run: |
           sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
 
-      - name: Update extra/controllerconfiguration from upstream
+      - name: Update controllerConfiguration in values.yaml from upstream
         if: steps.check-update.outputs.update_needed == 'true'
         working-directory: current-repo
         run: |
@@ -159,7 +159,7 @@ jobs:
 
             **Changes:**
             - Updated manifests using kubebuilder
-            - Updated extra/controllerconfiguration from upstream
+            - Updated controllerConfiguration in chart/values.yaml from upstream (hack/update-controllerconfiguration.sh)
             - Updated appVersion in Chart.yaml
             - Updated GITOPS_PROMOTER_VERSION in chart-diff.yaml
 

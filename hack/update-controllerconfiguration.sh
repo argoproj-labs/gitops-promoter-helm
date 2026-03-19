@@ -1,16 +1,24 @@
 #!/usr/bin/env bash
 #
-# Update chart/templates/extra/controllerconfiguration.yaml from the GitOps
-# Promoter upstream config. The kubebuilder helm plugin does not emit this
-# resource, so we copy it from upstream and apply Helm metadata/templating.
+# Update chart/values.yaml controllerConfiguration from the GitOps Promoter
+# upstream config (config/config/controllerconfiguration.yaml). The kubebuilder
+# helm plugin does not emit this resource; we copy the spec into values.yaml
+# under controllerConfiguration and render it via templates/extra/controllerconfiguration.yaml.
 #
 # Usage:
 #   ./hack/update-controllerconfiguration.sh --gitops-promoter-repo /path/to/gitops-promoter
 #
 # Run from the repo root (or from current-repo in CI). The chart is expected at chart/.
 # Requires: yq (https://github.com/mikefarah/yq)
+#
+# The controllerConfiguration subtree is built with yq (load + assignment). The splice
+# between # BEGIN / # END markers still uses awk so we do not run yq -i on all of
+# values.yaml, which would reformat the entire file.
 
 set -euo pipefail
+
+BEGIN_MARKER="# BEGIN controllerConfiguration"
+END_MARKER="# END controllerConfiguration"
 
 GITOPS_PROMOTER_REPO=""
 
@@ -33,50 +41,72 @@ if [[ -z "$GITOPS_PROMOTER_REPO" ]]; then
 fi
 
 REPO_ROOT="$(pwd)"
-CHART_DIR_ABS="$REPO_ROOT/chart"
-EXTRA_DIR="$CHART_DIR_ABS/templates/extra"
-OUTPUT_FILE="$EXTRA_DIR/controllerconfiguration.yaml"
+CHART_DIR="$REPO_ROOT/chart"
+VALUES_PATH="$CHART_DIR/values.yaml"
 UPSTREAM_SOURCE="$GITOPS_PROMOTER_REPO/config/config/controllerconfiguration.yaml"
 
-if [[ ! -d "$CHART_DIR_ABS" ]]; then
-  echo "Error: chart dir not found: $CHART_DIR_ABS" >&2
+if [[ ! -d "$CHART_DIR" ]]; then
+  echo "Error: chart dir not found: $CHART_DIR" >&2
   exit 1
 fi
 if [[ ! -f "$UPSTREAM_SOURCE" ]]; then
   echo "Error: upstream controllerconfiguration not found: $UPSTREAM_SOURCE" >&2
   exit 1
 fi
+if [[ ! -f "$VALUES_PATH" ]]; then
+  echo "Error: values.yaml not found: $VALUES_PATH" >&2
+  exit 1
+fi
 
-mkdir -p "$EXTRA_DIR"
+begin_n="$(tr -d '\r' <"$VALUES_PATH" | grep -cFx "$BEGIN_MARKER" || echo 0)"
+end_n="$(tr -d '\r' <"$VALUES_PATH" | grep -cFx "$END_MARKER" || echo 0)"
+if [[ "$begin_n" != 1 || "$end_n" != 1 ]]; then
+  echo "Error: expected exactly one $BEGIN_MARKER and one $END_MARKER in $VALUES_PATH" >&2
+  exit 1
+fi
 
-# Helm metadata block (replaces upstream metadata)
-read -r -d '' HELM_HEADER <<'HEADER' || true
-apiVersion: promoter.argoproj.io/v1alpha1
-kind: ControllerConfiguration
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/name: {{ include "promoter.name" . }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    control-plane: controller-manager
-  name: promoter-controller-configuration
-  namespace: {{ .Release.Namespace }}
-HEADER
+SPEC_TMP="$(mktemp "${TMPDIR:-/tmp}/controllerconfiguration-spec.XXXXXX.yaml")"
+BLOCK_FILE="$(mktemp "${TMPDIR:-/tmp}/controllerconfiguration-block.XXXXXX")"
+OUT_FILE="$(mktemp "${TMPDIR:-/tmp}/values-updated.XXXXXX")"
+trap 'rm -f "$SPEC_TMP" "$BLOCK_FILE" "$OUT_FILE"' EXIT
 
-# Extract spec from upstream and escape Go template delimiters for Helm.
-# In pullRequest.template.title/description, {{ and }} must become {{ "{{" }} and {{ "}}" }}
-# so Helm doesn't interpret them (they are for the controller's Go templates).
-spec_content=$(yq '.spec' "$UPSTREAM_SOURCE" -o=yaml)
-# Escape: }} -> __HELM_RBRACE__, then {{ -> {{ "{{" }}, then __HELM_RBRACE__ -> {{ "}}" }}
-spec_escaped=$(echo "$spec_content" | sed 's/}}/__HELM_RBRACE__/g' | sed 's/{{/{{ "{{" }}/g' | sed 's/__HELM_RBRACE__/{{ "}}" }}/g')
-# Indent spec for top-level YAML (two spaces)
-spec_indented=$(echo "$spec_escaped" | sed 's/^/  /')
+yq '.spec' "$UPSTREAM_SOURCE" -o=yaml >"$SPEC_TMP"
+SPEC_ABS="$(cd "$(dirname "$SPEC_TMP")" && pwd)/$(basename "$SPEC_TMP")"
+export SPEC_ABS
 
 {
-  echo "$HELM_HEADER"
-  echo "spec:"
-  echo "$spec_indented"
-} > "$OUTPUT_FILE"
+  printf '%s\n' "$BEGIN_MARKER"
+  echo "# Synced from upstream gitops-promoter config/config/controllerconfiguration.yaml"
+  echo "# (do not edit manually; run hack/update-controllerconfiguration.sh)"
+  yq -n '.controllerConfiguration = load(env(SPEC_ABS))' -o=yaml
+  printf '%s\n' "$END_MARKER"
+} >"$BLOCK_FILE"
 
-echo "Updated $OUTPUT_FILE from $UPSTREAM_SOURCE"
+awk -v blockfile="$BLOCK_FILE" -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
+  {
+    raw = $0
+    sub(/\r$/, "", raw)
+  }
+  raw == begin {
+    while ((getline line < blockfile) > 0) {
+      print line
+    }
+    close(blockfile)
+    in_block = 1
+    next
+  }
+  in_block && raw == end {
+    in_block = 0
+    next
+  }
+  in_block {
+    next
+  }
+  { print }
+' "$VALUES_PATH" >"$OUT_FILE"
+
+mv "$OUT_FILE" "$VALUES_PATH"
+trap - EXIT
+rm -f "$SPEC_TMP" "$BLOCK_FILE"
+
+echo "Updated $VALUES_PATH from $UPSTREAM_SOURCE"
