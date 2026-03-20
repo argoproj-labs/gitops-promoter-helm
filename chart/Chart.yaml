@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.4.2
-appVersion: 0.24.0
+version: 0.5.0
+appVersion: 0.25.0
 keywords:
   - kubernetes
   - environment
@@ -280,7 +280,8 @@ annotations:
                     bucket: 20
         # PullRequest controller manages pull request lifecycle
         pullRequest:
-          # Template configuration for generating PR titles and descriptions
+          # Template configuration for generating PR titles and descriptions.
+          # Template data has access to: .ChangeTransferPolicy, .PromotionStrategy
           template:
             title: "Promote {{ trunc 7 .ChangeTransferPolicy.Status.Proposed.Dry.Sha }} to `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`"
             description: |
