@@ -71,7 +71,7 @@ jobs:
       - name: Diff charts
         run: |
           echo "=== Diff between generated manifests and current Helm chart ==="
-          diff -ruN --exclude='.git' --exclude='*.orig' --exclude='extra' /tmp/current-chart/chart current-repo/chart > /tmp/chart-diff.diff || true
+          diff -ruN --exclude='.git' --exclude='*.orig' --exclude='extra' --exclude='webhook' /tmp/current-chart/chart current-repo/chart > /tmp/chart-diff.diff || true
 
           if [ -s /tmp/chart-diff.diff ]; then
             echo "Differences found:"

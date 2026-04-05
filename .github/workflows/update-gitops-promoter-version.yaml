@@ -77,6 +77,15 @@ jobs:
         run: |
           kubebuilder edit --plugins=helm/v2-alpha --output-dir=../current-repo --manifests=./dist/install.yaml
 
+      - name: Restore webhook.enable guard in webhook-receiver Service
+        if: steps.check-update.outputs.update_needed == 'true'
+        run: |
+          WEBHOOK_FILE="current-repo/chart/templates/webhook/webhook-receiver.yaml"
+          if [ -f "$WEBHOOK_FILE" ] && ! grep -q 'webhook.enable' "$WEBHOOK_FILE"; then
+            sed -i '1s/^/{{- if .Values.webhook.enable }}\n/' "$WEBHOOK_FILE"
+            printf '{{- end }}\n' >> "$WEBHOOK_FILE"
+          fi
+
       - name: Remove example blocks from generated CRDs
         if: steps.check-update.outputs.update_needed == 'true'
         run: |
