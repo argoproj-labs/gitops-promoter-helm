@@ -2,6 +2,12 @@ name: Update GitOps Promoter Version
 
 on:
   workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force update even if version is the same'
+        required: false
+        default: 'false'
+        type: boolean
 
 permissions:
   contents: write
@@ -47,7 +53,10 @@ jobs:
       - name: Check if update is needed
         id: check-update
         run: |
-          if [ "${{ steps.get-latest-release.outputs.latest_version }}" = "${{ steps.get-current-version.outputs.current_version }}" ]; then
+          if [ "${{ inputs.force_update }}" = "true" ]; then
+            echo "Force update requested."
+            echo "update_needed=true" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.get-latest-release.outputs.latest_version }}" = "${{ steps.get-current-version.outputs.current_version }}" ]; then
             echo "No update needed. Current version is already the latest."
             echo "update_needed=false" >> $GITHUB_OUTPUT
           else
