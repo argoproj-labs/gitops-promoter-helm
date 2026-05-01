@@ -33,6 +33,9 @@ spec:
             {{- with .Values.manager.affinity }}
             affinity: {{ toYaml . | nindent 16 }}
             {{- end }}
+            {{- with .Values.manager.priorityClassName }}
+            priorityClassName: {{ . }}
+            {{- end }}
             containers:
                 - args:
                     {{- if .Values.metrics.enable }}

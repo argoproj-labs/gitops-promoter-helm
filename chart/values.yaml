@@ -80,6 +80,10 @@ manager:
   ##
   tolerations: []
 
+  ## Manager pod's priority class
+  ##
+  priorityClassName: ""
+
 ## Helper RBAC roles for managing custom resources
 ##
 rbacHelpers:
