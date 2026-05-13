@@ -14,24 +14,18 @@ metadata:
     app.kubernetes.io/name: {{ include "promoter.name" . }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-  name: {{ include "promoter.resourceName" (dict "suffix" "argocdcommitstatus-editor-role" "context" $) }}
+  name: {{ include "promoter.resourceName" (dict "suffix" "webrequestcommitstatus-admin-role" "context" $) }}
 rules:
 - apiGroups:
   - promoter.argoproj.io
   resources:
-  - argocdcommitstatuses
+  - webrequestcommitstatuses
   verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
+  - '*'
 - apiGroups:
   - promoter.argoproj.io
   resources:
-  - argocdcommitstatuses/status
+  - webrequestcommitstatuses/status
   verbs:
   - get
 {{- end }}

@@ -61,7 +61,14 @@ EXAMPLES_DOCS="$TMPDIR/examples_docs.yaml"
 EXAMPLES_ARRAY="$TMPDIR/examples_array.yaml"
 
 # 1) Render CRDs with helm template and build Artifact Hub crds list as a YAML array file
-helm template release "$CHART_DIR_ABS" --set crd.enable=true 2>/dev/null | yq eval-all '
+#    Fail loud if `helm template` errors; otherwise a silent failure would overwrite
+#    Chart.yaml with an empty `artifacthub.io/crds: []` and ship a destructive PR.
+RENDERED="$TMPDIR/rendered.yaml"
+if ! helm template release "$CHART_DIR_ABS" > "$RENDERED"; then
+  echo "Error: 'helm template' failed on $CHART_DIR_ABS; refusing to update annotations." >&2
+  exit 1
+fi
+yq eval-all '
   select(.kind == "CustomResourceDefinition") |
   {
     "kind": .spec.names.kind,
@@ -70,14 +77,13 @@ helm template release "$CHART_DIR_ABS" --set crd.enable=true 2>/dev/null | yq ev
     "displayName": .spec.names.kind,
     "description": (.spec.versions[0].schema.openAPIV3Schema.description // (.spec.names.kind + " CRD"))
   }
-' -o yaml > "$CRDS_DOCS" || true
+' -o yaml < "$RENDERED" > "$CRDS_DOCS"
 
 if [[ ! -s "$CRDS_DOCS" ]]; then
-  echo "Warning: no CRDs extracted from chart." >&2
-  echo "[]" > "$CRDS_ARRAY"
-else
-  yq eval-all '[.]' "$CRDS_DOCS" -o yaml > "$CRDS_ARRAY"
+  echo "Error: no CRDs extracted from rendered chart; refusing to write empty annotations." >&2
+  exit 1
 fi
+yq eval-all '[.]' "$CRDS_DOCS" -o yaml > "$CRDS_ARRAY"
 
 # 2) Build list of CRD kinds for filtering testdata
 yq '[.[].kind]' "$CRDS_ARRAY" -o yaml > "$KINDS_FILE"
