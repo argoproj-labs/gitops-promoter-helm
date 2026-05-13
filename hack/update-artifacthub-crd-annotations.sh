@@ -2,7 +2,7 @@
 #
 # Update Chart.yaml with Artifact Hub CRD and CRD example annotations.
 #
-# Reads CRD metadata directly from chart/templates/crd/*.yaml and example CRs from
+# Reads CRD metadata from the chart (via helm template) and example CRs from
 # the GitOps Promoter repo's internal/controller/testdata directory, then
 # sets artifacthub.io/crds and artifacthub.io/crdsExamples on chart/Chart.yaml.
 #
@@ -10,7 +10,7 @@
 #   ./hack/update-artifacthub-crd-annotations.sh --gitops-promoter-repo /path/to/gitops-promoter
 #
 # Run from the repo root (or from current-repo in CI). The chart is expected at chart/.
-# Requires: yq (https://github.com/mikefarah/yq)
+# Requires: helm, yq (https://github.com/mikefarah/yq)
 
 set -euo pipefail
 
@@ -60,46 +60,23 @@ KINDS_FILE="$TMPDIR/kinds.yaml"
 EXAMPLES_DOCS="$TMPDIR/examples_docs.yaml"
 EXAMPLES_ARRAY="$TMPDIR/examples_array.yaml"
 
-# 1) Parse CRD YAML files directly (not via helm template) and build Artifact Hub crds list.
-# Using helm template is unreliable: CRD descriptions may contain example Go template
-# expressions (e.g. {{ range ... }}) that cause helm template to fail, silently producing
-# an empty list. Instead, strip the few Helm-directive-only lines from each CRD file and
-# parse the remaining pure YAML with yq.
-#
-# Helm-only lines all use the whitespace-trimming {{- syntax (e.g. {{- if .Values.crd.enable }}).
-# Lines with embedded {{ "{{ ... }}" }} escape patterns have other YAML content before the
-# {{ and are therefore not matched by this pattern.
+# 1) Render CRDs with helm template and build Artifact Hub crds list as a YAML array file
+helm template release "$CHART_DIR_ABS" | yq eval-all '
+  select(.kind == "CustomResourceDefinition") |
+  {
+    "kind": .spec.names.kind,
+    "version": (.spec.versions[0].name // "v1alpha1"),
+    "name": .spec.names.plural,
+    "displayName": .spec.names.kind,
+    "description": (.spec.versions[0].schema.openAPIV3Schema.description // (.spec.names.kind + " CRD"))
+  }
+' -o yaml > "$CRDS_DOCS"
 
-# Check there are actually CRD files to process
-crd_file_count=$(find "$CHART_DIR_ABS/templates/crd" -type f \( -name '*.yaml' -o -name '*.yml' \) | wc -l)
-if [[ "$crd_file_count" -eq 0 ]]; then
-  echo "Warning: no CRD template files found in $CHART_DIR_ABS/templates/crd." >&2
+if [[ ! -s "$CRDS_DOCS" ]]; then
+  echo "Warning: no CRDs extracted from chart." >&2
   echo "[]" > "$CRDS_ARRAY"
 else
-  {
-    first=1
-    while IFS= read -r -d '' crd_file; do
-      [[ $first -ne 1 ]] && printf -- '\n---\n'
-      sed '/^[[:space:]]*{{-.*}}[[:space:]]*$/d' "$crd_file"
-      first=0
-    done < <(find "$CHART_DIR_ABS/templates/crd" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 | sort -z)
-  } | yq eval-all '
-    select(.kind == "CustomResourceDefinition") |
-    {
-      "kind": .spec.names.kind,
-      "version": (.spec.versions[0].name // "v1alpha1"),
-      "name": .spec.names.plural,
-      "displayName": .spec.names.kind,
-      "description": (.spec.versions[0].schema.openAPIV3Schema.description // (.spec.names.kind + " CRD"))
-    }
-  ' -o yaml > "$CRDS_DOCS"
-
-  if [[ ! -s "$CRDS_DOCS" ]]; then
-    echo "Warning: no CRDs extracted from chart." >&2
-    echo "[]" > "$CRDS_ARRAY"
-  else
-    yq eval-all '[.]' "$CRDS_DOCS" -o yaml > "$CRDS_ARRAY"
-  fi
+  yq eval-all '[.]' "$CRDS_DOCS" -o yaml > "$CRDS_ARRAY"
 fi
 
 # 2) Build list of CRD kinds for filtering testdata

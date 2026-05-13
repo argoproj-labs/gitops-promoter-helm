@@ -82,6 +82,51 @@ jobs:
         run: |
           sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
 
+          # Escape any remaining unescaped {{ range/if/else/end/with ... }} patterns across all
+          # generated CRD files. These appear as Go template examples embedded in CRD spec
+          # description fields, not as Helm directives. Without escaping them, helm template
+          # fails to render the chart, which would cause the CRD annotation update to fail.
+          # Helm directive lines use {{- (with a dash) and are left untouched.
+          python3 << 'PYEOF'
+import re, glob, sys
+
+def escape_helm_expressions(content):
+    lines = content.splitlines(True)
+    result = []
+    for line in lines:
+        # Leave Helm directive lines (starting with optional whitespace then {{-) unchanged.
+        if re.match(r'^\s*\{\{-', line):
+            result.append(line)
+            continue
+        # Step 1: Protect already-escaped {{ "..." }} and {{ `...` }} blocks so the
+        # substitution in step 2 does not re-escape their contents.
+        placeholders = []
+        def protect(m, _p=placeholders):
+            _p.append(m.group(0))
+            return f'\x00P{len(_p)-1}\x00'
+        protected = re.sub(r'\{\{\s*(?:"[^"]*"|`[^`]*`)\s*\}\}', protect, line)
+        # Step 2: Escape remaining unescaped {{ range/if/else/end/with ... }} patterns.
+        protected = re.sub(
+            r'\{\{(\s*(?:range|if|else|end|with)\b[^}]*)\}\}',
+            lambda m: '{{ `{{' + m.group(1) + '}}` }}',
+            protected,
+        )
+        # Step 3: Restore placeholders.
+        for idx, original in enumerate(placeholders):
+            protected = protected.replace(f'\x00P{idx}\x00', original)
+        result.append(protected)
+    return ''.join(result)
+
+for fname in sorted(glob.glob('current-repo/chart/templates/crd/*.yaml')):
+    with open(fname) as f:
+        original = f.read()
+    escaped = escape_helm_expressions(original)
+    if escaped != original:
+        with open(fname, 'w') as f:
+            f.write(escaped)
+        print(f'Escaped Go template expressions in {fname}', file=sys.stderr)
+PYEOF
+
       - name: Update controllerConfiguration in values.yaml from upstream
         if: steps.check-update.outputs.update_needed == 'true'
         working-directory: current-repo
