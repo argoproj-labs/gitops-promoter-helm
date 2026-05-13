@@ -80,11 +80,18 @@ manager:
   ##
   tolerations: []
 
-## Helper RBAC roles for managing custom resources
+## Service account for the controller manager
 ##
-rbacHelpers:
-  # Install convenience admin/editor/viewer roles for CRDs
-  enable: false
+serviceAccount:
+  enable: true
+
+## RBAC (Kubebuilder helm/v2-alpha layout; replaces legacy rbacHelpers)
+##
+rbac:
+  namespaced: false
+  helpers:
+    # Install convenience admin/editor/viewer roles for CRDs
+    enable: false
 
 ## Custom Resource Definitions
 ##
@@ -99,6 +106,8 @@ crd:
 ##
 metrics:
   enable: true
+  # When true, metrics are served via kube-rbac-proxy (HTTPS on the metrics Service).
+  secure: true
   # Metrics server port
   port: 8080
 

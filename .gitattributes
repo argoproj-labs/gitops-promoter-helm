@@ -1,0 +1,21 @@
+# Collapse kubebuilder helm/v2-alpha regen output in GitHub PRs when chart-diff
+# has already enforced a byte-for-byte match (diff after kubebuilder + CI seds).
+#
+# Kubebuilder helm plugin: which files are preserved vs generated
+#   https://book.kubebuilder.io/plugins/available/helm-v2-alpha
+#   (Never overwrites Chart.yaml; preserves values.yaml, NOTES.txt, _helpers.tpl,
+#   .helmignore, test-chart.yml unless --force. Chart structure lists crd/, rbac/,
+#   manager/, metrics/, etc. vs templates/extras/ for custom resources.)
+#
+# Excluded from chart-diff: templates/extra/ and templates/extras/ (chart-only;
+# kubebuilder may still write into extras/ during edit — diff ignores both).
+# Not listed: NOTES.txt, templates/extras/, templates/_helpers.tpl, Chart.yaml,
+# values.yaml (see preserved-files note in kubebuilder book link above).
+#
+# GitHub linguist-generated (PR diff collapse)
+#   https://github.com/github/linguist/blob/master/docs/overrides.md
+chart/templates/crd/** linguist-generated=true
+chart/templates/manager/** linguist-generated=true
+chart/templates/metrics/** linguist-generated=true
+chart/templates/prometheus/** linguist-generated=true
+chart/templates/rbac/** linguist-generated=true

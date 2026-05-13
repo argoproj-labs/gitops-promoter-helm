@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  KUBEBUILDER_VERSION: v4.12.0
+  KUBEBUILDER_VERSION: v4.14.0
 
 jobs:
   chart-diff:
@@ -45,41 +45,14 @@ jobs:
           ref: v${{ steps.get-promoter-version.outputs.version }}
           path: gitops-promoter
 
-      - name: Install kubebuilder
+      - name: Chart diff (hack)
+        env:
+          KUBEBUILDER_VERSION: ${{ env.KUBEBUILDER_VERSION }}
         run: |
-          curl -L -o kubebuilder "https://github.com/kubernetes-sigs/kubebuilder/releases/download/${{ env.KUBEBUILDER_VERSION }}/kubebuilder_$(go env GOOS)_$(go env GOARCH)"
-          chmod +x kubebuilder && sudo mv kubebuilder /usr/local/bin/
-          kubebuilder version
-
-      - name: Save current Chart
-        run: |
-          mkdir -p /tmp/current-chart
-          cp -r current-repo/chart/ /tmp/current-chart/
-
-      - name: Run KubeBuilder
-        working-directory: gitops-promoter
-        run: |
-          kubebuilder edit --plugins=helm/v2-alpha --output-dir=../current-repo --manifests=./dist/install.yaml
-          ls -lah ../current-repo/*
-          ls -lah /tmp/current-chart/*
-
-      - name: Remove example blocks from generated CRDs
-        run: |
-          cat current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
-          sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
-
-      - name: Diff charts
-        run: |
-          echo "=== Diff between generated manifests and current Helm chart ==="
-          diff -ruN --exclude='.git' --exclude='*.orig' --exclude='extra' /tmp/current-chart/chart current-repo/chart > /tmp/chart-diff.diff || true
-
-          if [ -s /tmp/chart-diff.diff ]; then
-            echo "Differences found:"
-            cat -n /tmp/chart-diff.diff
-            exit 1
-          else
-            echo "No differences found"
-          fi
+          bash "${GITHUB_WORKSPACE}/current-repo/hack/chart-diff.sh" \
+            --helm-repo "${GITHUB_WORKSPACE}/current-repo" \
+            --gitops-promoter-repo "${GITHUB_WORKSPACE}/gitops-promoter" \
+            --write-diff /tmp/chart-diff.diff
 
       - name: Upload diff artifact
         if: always()
