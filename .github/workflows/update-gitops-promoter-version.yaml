@@ -8,7 +8,7 @@ permissions:
   pull-requests: write
 
 env:
-  KUBEBUILDER_VERSION: v4.12.0
+  KUBEBUILDER_VERSION: v4.14.0
 
 jobs:
   update-version:
@@ -40,18 +40,21 @@ jobs:
       - name: Get current GitOps Promoter version
         id: get-current-version
         run: |
-          CURRENT_VERSION=$(grep 'GITOPS_PROMOTER_VERSION:' current-repo/.github/workflows/chart-diff.yaml | awk '{print $2}')
+          CURRENT_VERSION=$(tr -d '[:space:]' < current-repo/gitops_promoter_version)
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "Current GitOps Promoter version: $CURRENT_VERSION"
 
       - name: Check if update is needed
         id: check-update
         run: |
-          if [ "${{ steps.get-latest-release.outputs.latest_version }}" = "${{ steps.get-current-version.outputs.current_version }}" ]; then
+          LATEST="${{ steps.get-latest-release.outputs.latest_version }}"
+          CURRENT="${{ steps.get-current-version.outputs.current_version }}"
+          LATEST_NOPREFIX="${LATEST#v}"
+          if [ "$CURRENT" = "$LATEST_NOPREFIX" ]; then
             echo "No update needed. Current version is already the latest."
             echo "update_needed=false" >> $GITHUB_OUTPUT
           else
-            echo "Update needed: ${{ steps.get-current-version.outputs.current_version }} -> ${{ steps.get-latest-release.outputs.latest_version }}"
+            echo "Update needed: v$CURRENT -> $LATEST"
             echo "update_needed=true" >> $GITHUB_OUTPUT
           fi
 
@@ -63,24 +66,16 @@ jobs:
           ref: ${{ steps.get-latest-release.outputs.latest_version }}
           path: gitops-promoter
 
-      - name: Install kubebuilder
+      - name: Install kubebuilder and regenerate Helm chart
         if: steps.check-update.outputs.update_needed == 'true'
+        env:
+          KUBEBUILDER_VERSION: ${{ env.KUBEBUILDER_VERSION }}
         run: |
-          go env GOOS
-          curl -L -o kubebuilder "https://github.com/kubernetes-sigs/kubebuilder/releases/download/${{ env.KUBEBUILDER_VERSION }}/kubebuilder_$(go env GOOS)_$(go env GOARCH)"
-          chmod +x kubebuilder && sudo mv kubebuilder /usr/local/bin/
-          kubebuilder version
-
-      - name: Run KubeBuilder to generate manifests
-        if: steps.check-update.outputs.update_needed == 'true'
-        working-directory: gitops-promoter
-        run: |
-          kubebuilder edit --plugins=helm/v2-alpha --output-dir=../current-repo --manifests=./dist/install.yaml
-
-      - name: Remove example blocks from generated CRDs
-        if: steps.check-update.outputs.update_needed == 'true'
-        run: |
-          sed -i 's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' current-repo/chart/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml
+          bash "${GITHUB_WORKSPACE}/current-repo/hack/install-kubebuilder.sh"
+          export PATH="/usr/local/bin:$PATH"
+          bash "${GITHUB_WORKSPACE}/current-repo/hack/regenerate-helm-chart.sh" \
+            --helm-repo "${GITHUB_WORKSPACE}/current-repo" \
+            --gitops-promoter-repo "${GITHUB_WORKSPACE}/gitops-promoter"
 
       - name: Update controllerConfiguration in values.yaml from upstream
         if: steps.check-update.outputs.update_needed == 'true'
@@ -155,13 +150,13 @@ jobs:
           title: "chore: update GitOps Promoter to ${{ steps.get-latest-release.outputs.latest_version }}"
           signoff: true
           body: |
-            This PR updates GitOps Promoter from ${{ steps.get-current-version.outputs.current_version }} to ${{ steps.get-latest-release.outputs.latest_version }}.
+            This PR updates GitOps Promoter from v${{ steps.get-current-version.outputs.current_version }} to ${{ steps.get-latest-release.outputs.latest_version }}.
 
             **Changes:**
             - Updated manifests using kubebuilder
             - Updated controllerConfiguration in chart/values.yaml from upstream (hack/update-controllerconfiguration.sh)
             - Updated appVersion in Chart.yaml
-            - Updated GITOPS_PROMOTER_VERSION in chart-diff.yaml
+            - Updated gitops_promoter_version
 
             **Release Notes:** https://github.com/argoproj-labs/gitops-promoter/releases/tag/${{ steps.get-latest-release.outputs.latest_version }}
           branch: update-gitops-promoter-${{ steps.get-latest-release.outputs.latest_version }}

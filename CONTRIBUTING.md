@@ -9,6 +9,8 @@ Examples of changes that require a manual patch bump:
 - Edits to templates, `values.yaml`, RBAC, webhooks, or docs that ship with the chart
 - Bug fixes or behavior changes outside the version-update automation
 
+The chart uses Kubebuilder `helm/v2-alpha` values layout (`rbac.helpers`, `serviceAccount`, `metrics.secure`, etc.). Regenerating with `kubebuilder edit` may reshape templates; keep `hack/` post-steps and CI `sed` fixes in sync.
+
 The workflow that updates GitOps Promoter (see `.github/workflows/update-gitops-promoter-version.yaml`) already bumps `version` according to app semver; you do not need an extra bump **only** for files that PR updates via KubeBuilder and `hack/update-controllerconfiguration.sh`.
 
 ## Controller configuration defaults

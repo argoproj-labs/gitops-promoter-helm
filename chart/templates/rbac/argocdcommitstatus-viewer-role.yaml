@@ -1,26 +1,33 @@
-{{- if .Values.rbacHelpers.enable }}
+{{- if .Values.rbac.helpers.enable }}
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.namespaced }}
+kind: Role
+{{- else }}
 kind: ClusterRole
+{{- end }}
 metadata:
-    labels:
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/name: {{ include "promoter.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-    name: {{ include "promoter.resourceName" (dict "suffix" "argocdcommitstatus-viewer-role" "context" $) }}
+{{- if .Values.rbac.namespaced }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "promoter.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  name: {{ include "promoter.resourceName" (dict "suffix" "argocdcommitstatus-viewer-role" "context" $) }}
 rules:
-    - apiGroups:
-        - promoter.argoproj.io
-      resources:
-        - argocdcommitstatuses
-      verbs:
-        - get
-        - list
-        - watch
-    - apiGroups:
-        - promoter.argoproj.io
-      resources:
-        - argocdcommitstatuses/status
-      verbs:
-        - get
+- apiGroups:
+  - promoter.argoproj.io
+  resources:
+  - argocdcommitstatuses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - promoter.argoproj.io
+  resources:
+  - argocdcommitstatuses/status
+  verbs:
+  - get
 {{- end }}

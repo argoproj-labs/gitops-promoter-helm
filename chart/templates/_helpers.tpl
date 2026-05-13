@@ -48,3 +48,14 @@ Dynamically calculates safe truncation to ensure total name length <= 63 chars.
 {{- printf "%s-%s" $fullname $suffix | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
+
+{{/*
+Service account name for the controller manager (must match ServiceAccount metadata.name).
+*/}}
+{{- define "promoter.serviceAccountName" -}}
+{{- if .Values.serviceAccount.name }}
+{{- .Values.serviceAccount.name }}
+{{- else }}
+{{- include "promoter.resourceName" (dict "suffix" "controller-manager" "context" $) }}
+{{- end }}
+{{- end }}
