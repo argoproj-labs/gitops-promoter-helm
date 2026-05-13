@@ -17,6 +17,7 @@ fi
 
 CHART_DIR="$(cd "$1" && pwd)"
 CRD="${CHART_DIR}/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml"
+WRCS_CRD="${CHART_DIR}/templates/crd/webrequestcommitstatuses.promoter.argoproj.io.yaml"
 PROM="${CHART_DIR}/templates/prometheus/controller-manager-metrics-monitor.yaml"
 
 if [[ ! -d "$CHART_DIR/templates" ]]; then
@@ -36,6 +37,16 @@ if [[ -f "$CRD" ]]; then
   sed_i \
     's/{{- if eq \(.Environment\)/{{ `{{- if eq .Environment` }}/g; s/{{- else if eq \(.Environment\)/{{ `{{- else if eq .Environment` }}/g; s/{{- end -}}/{{ `{{- end -}}` }}/g; s/{{- range \$key, \$value := \.ArgoCDCommitStatus/{{ `{{- range $key, $value := .ArgoCDCommitStatus` }}/g' \
     "$CRD"
+fi
+
+if [[ -f "$WRCS_CRD" ]]; then
+  # v0.28.0 added a doc-string example with nested Go-template directives that
+  # kubebuilder leaves unescaped, breaking `helm template`. Wrap them in backtick
+  # strings so Helm renders them as literal text instead of evaluating them.
+  echo "Applying WebRequestCommitStatus CRD Helm escapes..."
+  sed_i \
+    's/{{ range \.PromotionStrategy\.Status\.Environments }}/{{ `{{ range .PromotionStrategy.Status.Environments }}` }}/g; s/{{ if eq \.Branch \$\.Branch }}/{{ `{{ if eq .Branch $.Branch }}` }}/g; s/{{ end }}{{ end }}/{{ `{{ end }}{{ end }}` }}/g' \
+    "$WRCS_CRD"
 fi
 
 if [[ -f "$PROM" ]]; then
