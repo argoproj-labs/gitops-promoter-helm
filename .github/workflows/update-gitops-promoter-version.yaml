@@ -20,43 +20,22 @@ jobs:
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
         with:
           path: current-repo
-      - name: Set up Go
-        uses: actions/setup-go@4aaadf42668403795cdfdb15b1c4250e9fed12b9 # pin@v5
-        with:
-          go-version: "1.25"
 
       - name: Get latest GitOps Promoter release
         id: get-latest-release
         run: |
-          LATEST_VERSION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/argoproj-labs/gitops-promoter/releases/latest | jq -r .tag_name)
-          if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" = "null" ]; then
-            echo "Failed to fetch latest release"
-            exit 1
-          fi
-          echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
-          echo "Latest GitOps Promoter version: $LATEST_VERSION"
-
-      - name: Get current GitOps Promoter version
-        id: get-current-version
-        run: |
-          CURRENT_VERSION=$(tr -d '[:space:]' < current-repo/gitops_promoter_version)
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "Current GitOps Promoter version: $CURRENT_VERSION"
+          v="$(bash "${GITHUB_WORKSPACE}/current-repo/hack/fetch-promoter-latest-release.sh")"
+          echo "latest_version=$v" >> "$GITHUB_OUTPUT"
+          echo "Latest GitOps Promoter version: $v"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if update is needed
         id: check-update
         run: |
-          LATEST="${{ steps.get-latest-release.outputs.latest_version }}"
-          CURRENT="${{ steps.get-current-version.outputs.current_version }}"
-          LATEST_NOPREFIX="${LATEST#v}"
-          if [ "$CURRENT" = "$LATEST_NOPREFIX" ]; then
-            echo "No update needed. Current version is already the latest."
-            echo "update_needed=false" >> $GITHUB_OUTPUT
-          else
-            echo "Update needed: v$CURRENT -> $LATEST"
-            echo "update_needed=true" >> $GITHUB_OUTPUT
-          fi
+          bash "${GITHUB_WORKSPACE}/current-repo/hack/check-promoter-version-update-needed.sh" \
+            --helm-repo "${GITHUB_WORKSPACE}/current-repo" \
+            --version "${{ steps.get-latest-release.outputs.latest_version }}"
 
       - name: Checkout gitops-promoter at latest release
         if: steps.check-update.outputs.update_needed == 'true'
@@ -66,80 +45,15 @@ jobs:
           ref: ${{ steps.get-latest-release.outputs.latest_version }}
           path: gitops-promoter
 
-      - name: Install kubebuilder and regenerate Helm chart
+      - name: Apply promoter version to chart (hack)
         if: steps.check-update.outputs.update_needed == 'true'
         env:
           KUBEBUILDER_VERSION: ${{ env.KUBEBUILDER_VERSION }}
         run: |
-          bash "${GITHUB_WORKSPACE}/current-repo/hack/install-kubebuilder.sh"
-          export PATH="/usr/local/bin:$PATH"
-          bash "${GITHUB_WORKSPACE}/current-repo/hack/regenerate-helm-chart.sh" \
+          bash "${GITHUB_WORKSPACE}/current-repo/hack/apply-promoter-version-to-chart.sh" \
             --helm-repo "${GITHUB_WORKSPACE}/current-repo" \
-            --gitops-promoter-repo "${GITHUB_WORKSPACE}/gitops-promoter"
-
-      - name: Update controllerConfiguration in values.yaml from upstream
-        if: steps.check-update.outputs.update_needed == 'true'
-        working-directory: current-repo
-        run: |
-          bash hack/update-controllerconfiguration.sh \
-            --gitops-promoter-repo "$GITHUB_WORKSPACE/gitops-promoter"
-
-      - name: Set image tag to match new appVersion
-        if: steps.check-update.outputs.update_needed == 'true'
-        run: |
-          sed -i "s/^[[:space:]]*tag: .*/    tag: ${{ steps.get-latest-release.outputs.latest_version }}/" current-repo/chart/values.yaml
-
-      - name: Update appVersion in gitops_promoter_version and Chart.yaml
-        if: steps.check-update.outputs.update_needed == 'true'
-        run: |
-          # Save old appVersion BEFORE updating
-          OLD_APP=$(grep '^appVersion:' current-repo/chart/Chart.yaml | tr -d '"' | awk '{print $2}')
-          echo "OLD_APP=$OLD_APP" >> $GITHUB_ENV
-          
-          # Remove the 'v' prefix from version for appVersion
-          VERSION_WITHOUT_V="${{ steps.get-latest-release.outputs.latest_version }}"
-          VERSION_WITHOUT_V="${VERSION_WITHOUT_V#v}"
-          echo "$VERSION_WITHOUT_V" > current-repo/gitops_promoter_version
-          sed -i "s/^appVersion: .*/appVersion: $VERSION_WITHOUT_V/" current-repo/chart/Chart.yaml
-
-      - name: Update Chart.yaml version
-        if: steps.check-update.outputs.update_needed == 'true'
-        working-directory: current-repo
-        run: |
-          OLD_APP="${{ env.OLD_APP }}"  # Use the saved value
-          echo "Old app version: $OLD_APP"
-          NEW_APP="${{ steps.get-latest-release.outputs.latest_version }}"
-          echo "New app version: $NEW_APP"
-          NEW_APP="${NEW_APP#v}"
-          echo "New app version number: $NEW_APP"
-          
-          OLD_MAJOR=$(echo "$OLD_APP" | cut -d. -f1)
-          OLD_MINOR=$(echo "$OLD_APP" | cut -d. -f2)
-          NEW_MAJOR=$(echo "$NEW_APP" | cut -d. -f1)
-          NEW_MINOR=$(echo "$NEW_APP" | cut -d. -f2)
-          
-          CURRENT_CHART_VERSION=$(grep '^version:' chart/Chart.yaml | awk '{print $2}')
-          CHART_MAJOR=$(echo "$CURRENT_CHART_VERSION" | cut -d. -f1)
-          CHART_MINOR=$(echo "$CURRENT_CHART_VERSION" | cut -d. -f2)
-          CHART_PATCH=$(echo "$CURRENT_CHART_VERSION" | cut -d. -f3)
-          
-          if [ "$NEW_MAJOR" -gt "$OLD_MAJOR" ]; then
-            NEW_CHART_VERSION="$((CHART_MAJOR + 1)).0.0"
-          elif [ "$NEW_MINOR" -gt "$OLD_MINOR" ]; then
-            NEW_CHART_VERSION="$CHART_MAJOR.$((CHART_MINOR + 1)).0"
-          else
-            NEW_CHART_VERSION="$CHART_MAJOR.$CHART_MINOR.$((CHART_PATCH + 1))"
-          fi
-
-          sed -i "s/^version: .*/version: $NEW_CHART_VERSION/" chart/Chart.yaml
-          echo "Chart version bumped to $NEW_CHART_VERSION"
-
-      - name: Set Artifact Hub CRD annotations from gitops-promoter testdata
-        if: steps.check-update.outputs.update_needed == 'true'
-        working-directory: current-repo
-        run: |
-          bash hack/update-artifacthub-crd-annotations.sh \
-            --gitops-promoter-repo "$GITHUB_WORKSPACE/gitops-promoter"
+            --gitops-promoter-repo "${GITHUB_WORKSPACE}/gitops-promoter" \
+            --version "${{ steps.get-latest-release.outputs.latest_version }}"
 
       - name: Create Pull Request
         if: steps.check-update.outputs.update_needed == 'true'
@@ -150,10 +64,10 @@ jobs:
           title: "chore: update GitOps Promoter to ${{ steps.get-latest-release.outputs.latest_version }}"
           signoff: true
           body: |
-            This PR updates GitOps Promoter from v${{ steps.get-current-version.outputs.current_version }} to ${{ steps.get-latest-release.outputs.latest_version }}.
+            This PR updates GitOps Promoter from v${{ steps.check-update.outputs.current_version }} to ${{ steps.get-latest-release.outputs.latest_version }}.
 
             **Changes:**
-            - Updated manifests using kubebuilder
+            - Updated manifests using kubebuilder (hack/apply-promoter-version-to-chart.sh)
             - Updated controllerConfiguration in chart/values.yaml from upstream (hack/update-controllerconfiguration.sh)
             - Updated appVersion in Chart.yaml
             - Updated gitops_promoter_version
