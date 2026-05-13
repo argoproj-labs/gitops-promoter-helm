@@ -19,6 +19,7 @@ CHART_DIR="$(cd "$1" && pwd)"
 CRD="${CHART_DIR}/templates/crd/argocdcommitstatuses.promoter.argoproj.io.yaml"
 WRCS_CRD="${CHART_DIR}/templates/crd/webrequestcommitstatuses.promoter.argoproj.io.yaml"
 PROM="${CHART_DIR}/templates/prometheus/controller-manager-metrics-monitor.yaml"
+MANAGER="${CHART_DIR}/templates/manager/manager.yaml"
 
 if [[ ! -d "$CHART_DIR/templates" ]]; then
   echo "Error: not a chart directory (missing templates/): $CHART_DIR" >&2
@@ -52,4 +53,12 @@ fi
 if [[ -f "$PROM" ]]; then
   echo "Aligning Prometheus ServiceMonitor app.kubernetes.io/name with metrics Service..."
   sed_i 's/app.kubernetes.io\/name: {{ include "promoter.name" . }}/app.kubernetes.io\/name: service/g' "$PROM"
+fi
+
+if [[ -f "$MANAGER" ]]; then
+  # kubebuilder helm/v2-alpha emits a literal replica count; chart consumers expect
+  # manager.replicas in values.yaml (see chart-diff / CONTRIBUTING). Idempotent if
+  # the line is already templated.
+  echo "Wiring manager Deployment replicas to .Values.manager.replicas..."
+  sed_i 's/^  replicas: 1$/  replicas: {{ .Values.manager.replicas }}/' "$MANAGER"
 fi

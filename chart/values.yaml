@@ -9,8 +9,9 @@
 ## Configure the controller manager deployment
 ##
 manager:
+  ## Replica count for the controller-manager Deployment (default 1).
   replicas: 1
-  
+
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
     tag: v0.28.0
