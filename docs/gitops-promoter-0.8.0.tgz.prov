@@ -1,0 +1,666 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: integration-delivery
+  artifacthub.io/crds: |-
+    - kind: ArgoCDCommitStatus
+      version: v1alpha1
+      name: argocdcommitstatuses
+      displayName: ArgoCDCommitStatus
+      description: ArgoCDCommitStatus is the Schema for the argocdcommitstatuses API.
+    - kind: ChangeTransferPolicy
+      version: v1alpha1
+      name: changetransferpolicies
+      displayName: ChangeTransferPolicy
+      description: ChangeTransferPolicy is the Schema for the changetransferpolicies API
+    - kind: ClusterScmProvider
+      version: v1alpha1
+      name: clusterscmproviders
+      displayName: ClusterScmProvider
+      description: ClusterScmProvider is the Schema for the clusterscmproviders API.
+    - kind: CommitStatus
+      version: v1alpha1
+      name: commitstatuses
+      displayName: CommitStatus
+      description: CommitStatus is the Schema for the commitstatuses API
+    - kind: ControllerConfiguration
+      version: v1alpha1
+      name: controllerconfigurations
+      displayName: ControllerConfiguration
+      description: ControllerConfiguration is the Schema for the controllerconfigurations API.
+    - kind: GitCommitStatus
+      version: v1alpha1
+      name: gitcommitstatuses
+      displayName: GitCommitStatus
+      description: |-
+        GitCommitStatus is the Schema for the gitcommitstatuses API.
+
+        It validates commits from PromotionStrategy environments using configurable expressions
+        and creates CommitStatus resources with the validation results.
+
+        Use the Target field to control which commit is validated:
+        - "active" (default): Validates the currently deployed commit
+        - "proposed": Validates the incoming commit
+
+        The validation result is always reported on the PROPOSED commit to enable promotion gating,
+        regardless of which commit was validated.
+
+        Workflow:
+         1. Controller reads PromotionStrategy to get ProposedHydratedSha and ActiveHydratedSha
+         2. Controller selects SHA to validate based on Target field
+         3. Controller fetches commit data (subject, body, author, trailers) for selected SHA
+         4. Controller evaluates expression against selected commit data
+         5. Controller creates/updates CommitStatus with result attached to PROPOSED SHA
+         6. PromotionStrategy checks CommitStatus on PROPOSED SHA before allowing promotion
+
+        Common use cases:
+          - "Ensure active commit is not a revert before promoting"
+    - kind: GitRepository
+      version: v1alpha1
+      name: gitrepositories
+      displayName: GitRepository
+      description: GitRepository is the Schema for the gitrepositories API
+    - kind: PromotionStrategy
+      version: v1alpha1
+      name: promotionstrategies
+      displayName: PromotionStrategy
+      description: PromotionStrategy is the Schema for the promotionstrategies API
+    - kind: PullRequest
+      version: v1alpha1
+      name: pullrequests
+      displayName: PullRequest
+      description: PullRequest is the Schema for the pullrequests API
+    - kind: RevertCommit
+      version: v1alpha1
+      name: revertcommits
+      displayName: RevertCommit
+      description: RevertCommit is the Schema for the revertcommits API
+    - kind: ScmProvider
+      version: v1alpha1
+      name: scmproviders
+      displayName: ScmProvider
+      description: ScmProvider is the Schema for the scmproviders API
+    - kind: TimedCommitStatus
+      version: v1alpha1
+      name: timedcommitstatuses
+      displayName: TimedCommitStatus
+      description: TimedCommitStatus is the Schema for the timedcommitstatuses API
+    - kind: WebRequestCommitStatus
+      version: v1alpha1
+      name: webrequestcommitstatuses
+      displayName: WebRequestCommitStatus
+      description: WebRequestCommitStatus is the Schema for the webrequestcommitstatuses API
+  artifacthub.io/crdsExamples: |-
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: ArgoCDCommitStatus
+      metadata:
+        # An ArgoCDCommitStatus produces CommitStatuses with the key `argocd-health`. That key is hardcoded, and the name of
+        # the ArgoCDCommitStatus does not affect the key name.
+        name: argocdcommitstatus-sample
+      spec:
+        applicationSelector:
+          matchLabels:
+            app: demo
+        promotionStrategyRef:
+          name: argocon-demo
+        url:
+          template: |
+            {{- $baseURL := "https://argocd.local" -}}
+            {{- $labels := "" -}}
+            {{- range $key, $value := .ArgoCDCommitStatus.Spec.ApplicationSelector.MatchLabels -}}
+            {{- $labels = printf "%s%s=%s," $labels $key $value -}}
+            {{- end -}}
+            {{- printf "%s/applications?labels=%s" $baseURL (urlQueryEscape $labels) -}}
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: ChangeTransferPolicy
+      metadata:
+        name: environment
+      spec:
+        gitRepositoryRef:
+          name: example-git-repository
+        proposedBranch: environment/dev-next
+        activeBranch: environment/dev
+        activeCommitStatuses:
+          - key: argocd-app-health
+        proposedCommitStatuses:
+          - key: security-scan
+          - key: promoter-previous-environment
+      status:
+        conditions:
+          # The Ready condition indicates that the resource has been successfully reconciled, when there is an error during
+          # reconciliation, the condition will be False with a reason of ReconciliationError. When we successfully reconcile the resource,
+          # the condition will be True with a reason of ReconciliationSuccess. The Ready condition is essentially a way to show reconciliation
+          # errors to the user. This condition exists on all resources that have reconciliation logic.
+          - type: Ready
+            lastTransitionTime: 2023-10-01T00:00:00Z
+            message: Reconciliation succeeded
+            reason: ReconciliationSuccess # ReconciliationSuccess ReconciliationError, or PullRequestNotReady
+            status: "True" # "True," "False," or "Unknown"
+            # observedGeneration is the generation of the resource that was last reconciled. This is used to track if the
+            # resource has changed since the last reconciliation.
+            observedGeneration: 123
+        proposed:
+          dry:
+            author: "Author Name <author@example.com>"
+            body: "Body of the commit message (i.e. excluding the subject line)"
+            commitTime: 2023-10-01T00:00:00Z
+            repoURL: "https://git.example.com/org/repo.git"
+            sha: "abcdef1234567890abcdef1234567890abcdef12"
+            subject: "chore: Example commit subject line"
+          hydrated:
+          # The hydrated field contains the same fields as proposed.dry.
+          commitStatuses:
+            - key: example-key
+              phase: pending # pending, success, or failure
+        active:
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: ClusterScmProvider
+      metadata:
+        name: example-cluster-scm-provider
+      spec:
+        secretRef:
+          # Secret must be in the same namespace where the promoter is running
+          name: example-cluster-scm-provider-secret
+        # You must specify either github, gitlab, forgejo, or bitbucketCloud. Multiple are provided here as examples.
+        # If you do not need to specify any sub-fields, just set the field to {}.
+        github:
+          domain: github.example.com # Optional, leave empty for default github.com
+          appID: 1234
+          installationID: 1234 # Optional, will query ListInstallations if not provided
+        gitlab:
+          domain: gitlab.com # Optional
+        forgejo:
+          domain: forgejo.example.com
+        bitbucketCloud: {}
+        azureDevOps:
+          organization: example-org
+          domain: dev.azure.com # Optional
+        gitea:
+          domain: gitea.
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: CommitStatus
+      metadata:
+        name: example-commit-status
+        labels:
+          # This label is used to define the "key" of the commit status. The value is referenced via the `key` field in a
+          # PromotionStrategy's (or ChangeTransferPolicy's) `activeCommitStatuses` or `proposedCommitStatuses` field.
+          #
+          # CommitStatuses should be unique per key/sha combination. For example, there may be one CommitStatus with the key
+          # `example` for shas abc123 and def456, but there should not be two CommitStatuses with the key `example` for sha
+          # abc123.
+          promoter.argoproj.io/commit-status: example
+      spec:
+        gitRepositoryRef:
+          name: example-git-repo
+        sha: abcdef1234567890abcdef1234567890abcdef12
+        name: argocd-app-health
+        description: Argo CD application `example-app` is healthy
+        # Can be pending, success, failure. Default is pending.
+        phase: success
+        # Optional URL to link to more information about the commit status.
+        url: https://argocd.example.com/applications/example-app
+      status:
+        conditions:
+          # The Ready condition indicates that the resource has been successfully reconciled, when there is an error during
+          # reconciliation, the condition will be False with a reason of ReconciliationError. When we successfully reconcile the resource,
+          # the condition will be True with a reason of ReconciliationSuccess. The Ready condition is essentially a way to show reconciliation
+          # errors to the user. This condition exists on all resources that have reconciliation logic.
+          - type: Ready
+            lastTransitionTime: 2023-10-01T00:00:00Z
+            message: Reconciliation succeeded
+            reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+            status: "True" # "True," "False," or "Unknown"
+            # observedGeneration is the generation of the resource that was last reconciled. This is used to track if the
+            # resource has changed since the last reconciliation.
+            observedGeneration: 123
+        id: example-commit-status-id
+        phase: success # pending, success, or failure
+        sha: abcdef1234567890abcdef1234567890abcdef12
+    - # ControllerConfiguration defines the global settings for all promoter controllers.
+      # Each controller has its own configuration section with WorkQueue settings that control
+      # how frequently resources are reconciled, how many can run concurrently, and how
+      # rate limiting is applied to prevent overwhelming external systems.
+      apiVersion: promoter.argoproj.io/v1alpha1
+      kind: ControllerConfiguration
+      metadata:
+        name: example-controller-configuration
+      spec:
+        # PromotionStrategy controller manages promotion strategies and creates ChangeTransferPolicies
+        promotionStrategy:
+          workQueue:
+            # How often to automatically requeue resources for reconciliation
+            requeueDuration: "5m"
+            # Maximum number of concurrent reconcile operations for this controller
+            maxConcurrentReconciles: 3
+            # Rate limiter controls retry behavior for failed reconciliations
+            rateLimiter:
+              # Exponential backoff: start at 1s, max out at 1 minute
+              exponentialFailure:
+                baseDelay: "1s"
+                maxDelay: "1m"
+        # ChangeTransferPolicy controller handles the actual promotion logic and creates PRs
+        changeTransferPolicy:
+          workQueue:
+            requeueDuration: "5m"
+            maxConcurrentReconciles: 5
+            rateLimiter:
+              # MaxOf combiner: use the maximum delay from multiple rate limiters
+              # This combines per-item exponential backoff with a global rate limit
+              maxOf:
+                - exponentialFailure:
+                    baseDelay: "1s"
+                    maxDelay: "2m"
+                - bucket:
+                    # Allow 10 operations per second with bursts up to 20
+                    qps: 10
+                    bucket: 20
+        # PullRequest controller manages pull request lifecycle
+        pullRequest:
+          # Template configuration for generating PR titles and descriptions.
+          # Template data has access to: .ChangeTransferPolicy, .PromotionStrategy
+          template:
+            title: "Promote {{ trunc 7 .ChangeTransferPolicy.Status.Proposed.Dry.Sha }} to `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`"
+            description: |
+              This PR is promoting the environment branch `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`.
+
+              **Changes:**
+              - Current SHA: {{ .ChangeTransferPolicy.Status.Active.Dry.Sha }}
+              - Proposed SHA: {{ .ChangeTransferPolicy.Status.Proposed.Dry.Sha }}
+          workQueue:
+            requeueDuration: "5m"
+            maxConcurrentReconciles: 3
+            rateLimiter:
+              # FastSlow: retry quickly for the first 3 attempts, then slow down
+              # Good for handling transient SCM API errors
+              fastSlow:
+                fastDelay: "500ms"
+                slowDelay: "30s"
+                maxFastAttempts: 3
+        # CommitStatus controller updates commit status based on policies
+        commitStatus:
+          workQueue:
+            requeueDuration: "2m"
+            maxConcurrentReconciles: 5
+            rateLimiter:
+              exponentialFailure:
+                baseDelay: "500ms"
+                maxDelay: "1m"
+        # ArgoCDCommitStatus controller syncs ArgoCD application status to commit statuses
+        argocdCommitStatus:
+          watchLocalApplications: true
+          workQueue:
+            requeueDuration: "5m"
+            maxConcurrentReconciles: 10
+            rateLimiter:
+              # Bucket rate limiter: control overall request rate to external APIs
+              bucket:
+                qps: 20
+                bucket: 50
+        # WebRequestCommitStatus controller runs HTTP requests and reports commit status from response
+        webRequestCommitStatus:
+          workQueue:
+            requeueDuration: "2m"
+            maxConcurrentReconciles: 5
+            rateLimiter:
+              exponentialFailure:
+                baseDelay: "500ms"
+                maxDelay: "1m"
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: GitRepository
+      metadata:
+        name: example-git-repository
+      spec:
+        # Only one of the git providers should be specified.
+        github:
+          name:
+          owner:
+        gitlab:
+          name:
+          namespace:
+          projectId:
+        forgejo:
+          name:
+          owner:
+        bitbucketCloud:
+          owner:
+          name:
+        azureDevOps:
+          name:
+          project:
+        scmProviderRef:
+          kind: ScmProvider
+          name: example-scm-provider
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: PromotionStrategy
+      metadata:
+        name: example-promotion-strategy
+      spec:
+        gitRepositoryRef:
+          name: example-git-repo
+        activeCommitStatuses:
+          - key: argocd-app-health
+        proposedCommitStatuses:
+          - key: security-scan
+        environments:
+          - branch: environment/dev
+          - branch: environment/test
+          - branch: environment/prod
+            autoMerge: false
+            activeCommitStatuses:
+              - key: performance-test
+            proposedCommitStatuses:
+              - key: deployment-freeze
+      status:
+        conditions:
+          # The Ready condition indicates that the resource has been successfully reconciled, when there is an error during
+          # reconciliation, the condition will be False with a reason of ReconciliationError. When we successfully reconcile the resource,
+          # the condition will be True with a reason of ReconciliationSuccess. The Ready condition is essentially a way to show reconciliation
+          # errors to the user. This condition exists on all resources that have reconciliation logic.
+          - type: Ready
+            lastTransitionTime: 2023-10-01T00:00:00Z
+            message: Reconciliation succeeded
+            reason: ReconciliationSuccess # ReconciliationSuccess, ReconciliationError, ChangeTransferPolicyNotReady, or PreviousEnvironmentCommitStatusNotReady
+            status: "True" # "True," "False," or "Unknown"
+            # observedGeneration is the generation of the resource that was last reconciled. This is used to track if the
+            # resource has changed since the last reconciliation.
+            observedGeneration: 123
+        environments:
+          - branch: environment/dev
+            # The proposed and active fields are pulled directly from the status of the environment's ChangeTransferPolicy resource.
+            proposed:
+              dry:
+                author: "Author Name <author@example.com>"
+                body: "Body of the commit message (i.e. excluding the subject line)"
+                commitTime: 2023-10-01T00:00:00Z
+                repoURL: "https://git.example.com/org/repo.git"
+                sha: "abcdef1234567890abcdef1234567890abcdef12"
+                subject: "chore: Example commit subject line"
+                references:
+                  # An array of reference commits that where used to create the dry commit. This is used generally via CI systems to add tracing information to the commit.
+                  # For example, in a code/deployment repo setup this could contain the commit from the code repo that triggered the deployment commit in the deployment repo.
+                  - commit:
+                      author: '"Zach Aller" <code@example.com>'
+                      body: |-
+                        Commit message of the code commit
+
+                        Signed-off-by: Author Name <author@example.com>
+                      date: '2025-07-19T17:50:18Z'
+                      repoURL: https://github.com/org/repo
+                      sha: 9d5ccef278218dea4caa903bb6abb9ed974a1d90
+                      subject: This change fixes a bug in the code
+              hydrated:
+              # The hydrated field contains the same fields as proposed.dry, but the contents correspond to a hydrated commit
+              # instead of a dry commit.
+              commitStatuses:
+                - key: example-key
+                  phase: pending # pending, success, or failure
+            active:
+            # The active field contains the same fields as proposed.
+            history:
+              # The history field contains a snapshot of each promotion that has occurred in the environment. The most recent promotion
+              # is at the front of the list. The fields here are similar to those in proposed and active top level fields. They only differ in
+              # that the proposed field does not contain a dry field, because in the context of history proposed becomes active when promoted.
+              - active:
+                # same as top level active
+                proposed:
+                # same as top level proposed but without dry field because in the context of history proposed.dry becomes active when promoted.
+                pullRequest:
+                  # The pullRequest field contains information about the pull request that was merged to create this history item.
+                  id: '848'
+                  prCreationTime: '2025-08-04T19:50:15Z'
+                  url: https://github.com/org/repo/pull/848
+            lastHealthyDryShas:
+              - sha: "abcdef1234567890abcdef1234567890abcdef12"
+                time: 2023-10-01T00:00:00Z
+          - branch: environment/test
+            # same fields as dev
+          - branch: environment/prod
+            # same fields as dev
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: PullRequest
+      metadata:
+        name: example-proposed-commit
+      spec:
+        gitRepositoryRef:
+          name: example-git-repository
+        title:
+        targetBranch:
+        sourceBranch:
+        description:
+        # The commit SHA that must be at the head of the source branch for the merge to succeed.
+        # This prevents race conditions where a different commit gets merged than intended.
+        mergeSha: abc123def456789012345678901234567890abcd
+        # Must be closed, merged, or open. Default is open.
+        # Must be set to "open" when initially created, and cannot be set to "closed" or "merged" unless status.id is set
+        # (which the controller should do automatically as long as there are no errors).
+        state:
+      status:
+        conditions:
+          # The Ready condition indicates that the resource has been successfully reconciled, when there is an error during
+          # reconciliation, the condition will be False with a reason of ReconciliationError. When we successfully reconcile the resource,
+          # the condition will be True with a reason of ReconciliationSuccess. The Ready condition is essentially a way to show reconciliation
+          # errors to the user. This condition exists on all resources that have reconciliation logic.
+          - type: Ready
+            lastTransitionTime: 2023-10-01T00:00:00Z
+            message: Reconciliation succeeded
+            reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+            status: "True" # "True," "False," or "Unknown"
+            # observedGeneration is the generation of the resource that was last reconciled. This is used to track if the
+            # resource has changed since the last reconciliation.
+            observedGeneration: 123
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: ScmProvider
+      metadata:
+        name: example-scm-provider
+      spec:
+        secretRef:
+          name: example-scm-provider-secret
+        # You must specify either github, gitlab, forgejo, bitbucketCloud or azureDevops. Multiple are provided here as examples.
+        # If you do not need to specify any sub-fields, just set the field to {}.
+        github:
+          domain: github.example.com # Optional, leave empty for default github.com
+          appID: 1234
+          installationID: 1234 # Optional, will query ListInstallations if not provided
+        gitlab:
+          domain: gitlab.com # Optional
+        forgejo:
+          domain:
+        bitbucketCloud: {}
+        azureDevOps:
+          organization: example-organization
+          domain: dev.azure.com # Optional
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: TimedCommitStatus
+      metadata:
+        name: webservice-tier-1
+        namespace: default
+      spec:
+        # Reference to the PromotionStrategy this TimedCommitStatus monitors
+        promotionStrategyRef:
+          name: webservice-tier-1
+        # List of environments to monitor for time-based gating
+        # For each environment, the controller will:
+        # 1. Check how long the active commit has been running
+        # 2. Create a CommitStatus for the CURRENT environment's active SHA
+        # 3. Set the CommitStatus phase based on whether duration is met
+        environments:
+          # Monitor development environment
+          # Creates an active CommitStatus that gates promotions from development
+          - branch: environment/development
+            duration: 1h
+          # Monitor staging environment
+          # Creates an active CommitStatus that gates promotions from staging
+          - branch: environment/staging
+            duration: 4h
+          # Monitor production environment
+          # Creates an active CommitStatus for production (useful for audit/compliance)
+          - branch: environment/production
+            duration: 24h
+      status:
+        # Status is populated by the controller
+        environments:
+          - branch: environment/development
+            # The active commit SHA being monitored
+            sha: abc123def456
+            # When this commit was deployed to the environment
+            commitTime: "2024-01-15T10:00:00Z"
+            # The configured required duration
+            requiredDuration: 1h
+            # How long the commit has been running
+            timeElapsed: 45m30s
+            # Current gate status: "pending" or "success"
+            phase: pending
+          - branch: environment/staging
+            sha: def456ghi789
+            commitTime: "2024-01-14T06:00:00Z"
+            requiredDuration: 4h
+            timeElapsed: 5h15m20s
+            phase: success
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: WebRequestCommitStatus
+      metadata:
+        name: external-approval
+        namespace: default
+      spec:
+        # Reference to the PromotionStrategy this WebRequestCommitStatus applies to
+        promotionStrategyRef:
+          name: my-app
+        # Unique key for this validation; matched against proposedCommitStatuses or activeCommitStatuses
+        key: external-approval
+        # Human-readable description shown in the SCM (Go templates supported). Optional.
+        descriptionTemplate: "Waiting for external approval"
+        # URL for the commit status target link in the SCM (Go templates supported). Optional.
+        urlTemplate: ""
+        # Which SHA to report on: "proposed" (default) or "active". Optional.
+        reportOn: proposed
+        # HTTP request configuration; URL, headers, and body support Go templates
+        httpRequest:
+          urlTemplate: "https://approvals.example.com/api/check/{{ range .PromotionStrategy.Status.Environments }}{{ if eq .Branch $.Branch }}{{ .Proposed.Hydrated.Sha }}{{ end }}{{ end }}"
+          method: GET
+          # Optional: header name -> template value
+          headerTemplates: {}
+          # Optional: request body template
+          bodyTemplate: ""
+          timeout: 30s
+          # Optional: authentication (basic, bearer, oauth2, or tls with secretRef); omit if none
+        # When the HTTP response is considered successful (phase success)
+        success:
+          when:
+            expression: 'Response != nil ? (Response.StatusCode == 200 && Response.Body.approved == true) : Phase == "success"'
+            # output:
+            #   expression: ""      # optional; expr returning map, stored in status.successOutput (available as SuccessOutput)
+        # Exactly one of polling or trigger must be set.
+        mode:
+          # context: environments (default) — one HTTP request per environment; status.environments[] below.
+          # Use context: promotionstrategy for one shared request; then status.promotionStrategyContext is set instead.
+          context: environments
+          # Polling: single optional field. Interval (default 1m) controls how often the HTTP request runs.
+          polling:
+            interval: 2m
+            # Trigger: use this instead of polling for expression-based triggering.
+            # trigger:
+            #   requeueDuration: 1m     # optional, default 1m
+            #   when:
+            #     variables:            # optional; expr returning a map, exposed as Variables to expression + output below
+            #       expression: '{ "ready": true }'
+            #     expression: "Variables.ready"   # required; boolean expr deciding whether to fire the request
+            #     output:
+            #       expression: '{ tracked: Variables.ready }'  # optional; map stored in status.triggerOutput
+            #   response:               # optional
+            #     output:
+            #       expression: ""      # expr returning map, stored in status.responseOutput
+      status:
+        conditions:
+          # The Ready condition indicates that the resource has been successfully reconciled.
+          - type: Ready
+            lastTransitionTime: 2023-10-01T00:00:00Z
+            message: Reconciliation succeeded
+            reason: ReconciliationSuccess
+            status: "True"
+            observedGeneration: 1
+        # Status per environment; populated by the controller
+        environments:
+          - branch: environment/development
+            reportedSha: abc123def456789012345678901234567890abcd
+            lastSuccessfulSha: abc123def456789012345678901234567890abcd
+            phase: success
+            lastRequestTime: "2024-01-15T10:30:00Z"
+            lastResponseStatusCode: 200
+            # triggerOutput (trigger mode): output from trigger.when.output.expression (available as TriggerOutput in expressions/templates)
+            # responseOutput (trigger + response.output): output from response.output.expression (available as ResponseOutput in expressions/templates)
+            # successOutput: output from success.when.output.expression (available as SuccessOutput in expressions/templates)
+      # --- promotionstrategy context (illustrative; use a separate WebRequestCommitStatus resource) ---
+      # spec:
+      #   promotionStrategyRef: { name: my-app }
+      #   key: pipeline-gate
+      #   descriptionTemplate: "Gate: {{ .Phase }} (use .PromotionStrategy for branch-specific text)"
+      #   reportOn: proposed
+      #   httpRequest:
+      #     urlTemplate: "https://deployments.example.com/apps/{{ .PromotionStrategy.Spec.RepositoryReference.Name }}/status"
+      #     method: GET
+      #   success:
+      #     when:
+      #       # Boolean (all envs same phase) or object { defaultPhase, environments } — see docs/commit-status-controllers/web-request.md
+      #       expression: "Response.StatusCode == 200"
+      #   mode:
+      #     context: promotionstrategy
+      #     polling:
+      #       interval: 2m
+      # status:
+      #   promotionStrategyContext:
+      #     phasePerBranch:
+      #       - branch: environment/dev
+      #         phase: success
+      #     lastSuccessfulShas:
+      #       - branch: environment/dev
+      #         lastSuccessfulSha: abc123def456789012345678901234567890abcd
+      #     lastRequestTime: "2024-01-15T10:30:00Z"
+      #     lastResponseStatusCode: 200
+  artifacthub.io/screenshots: |-
+    - title: GitOps Promoter UI
+      url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
+  artifacthub.io/signKey: |
+    fingerprint: 042F39C026783046DCA1CF2A73C36C56C3F06E8E
+    url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
+apiVersion: v2
+appVersion: 0.28.0
+description: A Helm chart to install GitOps Promoter, a GitOps-native environment
+  promotion tool.
+home: https://github.com/argoproj-labs/gitops-promoter-helm
+icon: https://raw.githubusercontent.com/argoproj-labs/gitops-promoter/main/docs/assets/logo/favicon-large.png
+keywords:
+- - kubernetes
+- - environment
+- - deployment
+- - continuous-delivery
+- - cd
+- - promotions
+- - gitops
+- - progressive-delivery
+name: gitops-promoter
+sources:
+- - https://github.com/argoproj-labs/gitops-promoter
+- - https://github.com/argoproj-labs/gitops-promoter-helm
+type: application
+version: 0.8.0
+
+...
+files:
+  gitops-promoter-0.8.0.tgz: sha256:d331e21d1d86adf65c99b2b608b5610432a14aec2a34ac86edb2f7aadbe8429c
+-----BEGIN PGP SIGNATURE-----
+
+wsFcBAEBCgAQBQJqBOr6CRBzw2xWw/BujgAA7oEQAG4i+pQ8yM1ReNgjR5Tw5i9D
+dlpDEx8+QhCwTyRiicOC+HEuD3OseokYopfPkdrQRVkUTgN+hlTREU+CIrIyX8FZ
+K4SJMWp/LrAHJNtbyaeS53iJ2CaMqTm/+O0WEUo5DazU662HeqfrvcG5fAJsmpBy
+fMhAf2mDQMMGCQ5M5Qi2h0FMOsa6y5BJDht1uegMG7Wzcc5yHhKwQdlliqmBIxg9
+GSkeVhp+ZHg+xRbzdxeWNk05Kbt5Q0rkoyiIJ1FdRaiVQMIL5RlGzTgThSn9BMwG
+/g1t4d6ipYFY7eDyDt5UWYRJRoR9v1BIpsKVsM4aisKZKQSHIj0F7XUxpaYAHJuE
+L82/eshGIctS3MeG3pZSCjuMpcJs7wQcRIXREnePbT+agkCMyokwpB9xISEhrbKA
+QbIfFEvuoSR4tg/uvecej9jYJmOkanWpEjn036hBkswHL8iXMs6CnsBTDVKDMNQu
+MkVmVYNjBKxZ++R7veVtrXm1XLf8GZumOEJsVEzLp4eU0VfkwAWFwb/3su39xKSd
++zU8HGr6bjMaNpWsL+0CWvpVAqZBexPdPgWZ3scJ9SbGaCVUuuXulG3hl9an1uuL
+UzjnxOttzeeQoxwt/fDGCpEVMdaOR36hOfgczuAHzEw+KTN73u/MYDMuzzeuVKRS
+g+ZNIVLAExSz8n7FRXAF
+=jshF
+-----END PGP SIGNATURE-----
