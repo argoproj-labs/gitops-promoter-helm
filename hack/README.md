@@ -6,7 +6,7 @@ These scripts mirror what GitHub Actions does so you can reproduce chart updates
 
 | Script | Purpose |
 |--------|---------|
-| [`install-kubebuilder.sh`](install-kubebuilder.sh) | Download the pinned `kubebuilder` CLI (`KUBEBUILDER_VERSION`, default `v4.14.0`) into `/usr/local/bin` or `--install-dir`. Uses `sudo` when the directory is not writable. |
+| [`install-kubebuilder.sh`](install-kubebuilder.sh) | Download the pinned `kubebuilder` CLI (`KUBEBUILDER_VERSION`, default `v4.14.0`) into **`~/.local/bin`** by default (no `sudo`). Override with `INSTALL_DIR` or `--install-dir`. |
 | [`regenerate-helm-chart.sh`](regenerate-helm-chart.sh) | Run `kubebuilder edit --plugins=helm/v2-alpha` from a **gitops-promoter** clone into this repo’s `chart/`, then run post-fixes. Requires `kubebuilder` on `PATH`. |
 | [`apply-post-kubebuilder-chart-fixes.sh`](apply-post-kubebuilder-chart-fixes.sh) | Apply the same `sed` post-processing as CI (ArgoCDCommitStatus CRD escapes + Prometheus ServiceMonitor label). Takes a single argument: path to the **chart** directory. |
 | [`chart-diff.sh`](chart-diff.sh) | Snapshot `chart/`, install kubebuilder, regenerate, then `diff` against the snapshot (excluding `templates/extra/` and `templates/extras/`). Exits non-zero if the committed chart does not match regen + fixes. |

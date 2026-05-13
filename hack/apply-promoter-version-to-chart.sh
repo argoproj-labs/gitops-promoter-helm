@@ -63,7 +63,7 @@ fi
 
 if ! command -v kubebuilder >/dev/null 2>&1; then
   echo "kubebuilder not on PATH; installing..."
-  export INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+  export INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
   bash "$SCRIPT_DIR/install-kubebuilder.sh"
   export PATH="$INSTALL_DIR:$PATH"
 fi
@@ -80,13 +80,26 @@ else
 fi
 
 echo "Regenerating chart from kubebuilder..."
+EXTRAS_BACKUP=""
+if [[ -d "$CHART_DIR/templates/extras" ]]; then
+  EXTRAS_BACKUP="$(mktemp -d)"
+  cp -a "$CHART_DIR/templates/extras" "$EXTRAS_BACKUP/saved"
+fi
 bash "$SCRIPT_DIR/regenerate-helm-chart.sh" \
   --helm-repo "$HELM_REPO" \
   --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
+if [[ -n "$EXTRAS_BACKUP" && -d "$EXTRAS_BACKUP/saved" ]]; then
+  rm -rf "$CHART_DIR/templates/extras"
+  cp -a "$EXTRAS_BACKUP/saved" "$CHART_DIR/templates/extras"
+  rm -rf "$EXTRAS_BACKUP"
+fi
 
 echo "Syncing controllerConfiguration from upstream..."
-bash "$SCRIPT_DIR/update-controllerconfiguration.sh" \
-  --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
+(
+  cd "$HELM_REPO"
+  bash "$SCRIPT_DIR/update-controllerconfiguration.sh" \
+    --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
+)
 
 echo "Setting manager image tag to ${VERSION}..."
 sed_i "s/^[[:space:]]*tag: .*/    tag: ${VERSION}/" "$VALUES_YAML"
@@ -123,7 +136,10 @@ sed_i "s/^version: .*/version: ${NEW_CHART_VERSION}/" "$CHART_YAML"
 echo "Chart version set to ${NEW_CHART_VERSION}"
 
 echo "Updating Artifact Hub CRD annotations..."
-bash "$SCRIPT_DIR/update-artifacthub-crd-annotations.sh" \
-  --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
+(
+  cd "$HELM_REPO"
+  bash "$SCRIPT_DIR/update-artifacthub-crd-annotations.sh" \
+    --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
+)
 
 echo "Done. Review with: git -C \"$HELM_REPO\" diff && helm lint \"$CHART_DIR\""

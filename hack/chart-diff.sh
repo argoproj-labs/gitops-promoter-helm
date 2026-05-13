@@ -68,13 +68,20 @@ trap 'rm -rf "$SNAPSHOT"' EXIT
 echo "Saving chart snapshot to $SNAPSHOT/chart ..."
 cp -a "$CHART_DIR" "$SNAPSHOT/chart"
 
-export INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+export INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
 bash "$SCRIPT_DIR/install-kubebuilder.sh"
 export PATH="$INSTALL_DIR:$PATH"
 
 bash "$SCRIPT_DIR/regenerate-helm-chart.sh" \
   --helm-repo "$HELM_REPO" \
   --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
+
+# kubebuilder may rewrite templates/extras/ even though chart-diff excludes it from
+# comparison — restore chart-owned extras from the snapshot so the worktree stays clean.
+if [[ -d "$SNAPSHOT/chart/templates/extras" ]]; then
+  rm -rf "$CHART_DIR/templates/extras"
+  cp -a "$SNAPSHOT/chart/templates/extras" "$CHART_DIR/templates/"
+fi
 
 DIFF_OUT="${WRITE_DIFF:-/tmp/chart-diff.diff}"
 echo "=== Diff between committed chart and regenerated chart ==="

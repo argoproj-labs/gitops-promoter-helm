@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 #
-# Download and install the kubebuilder CLI to a bin directory (default /usr/local/bin).
+# Download and install the kubebuilder CLI (no sudo).
+#
+# Default install directory is ~/.local/bin (user-writable). Override with
+# INSTALL_DIR or --install-dir (e.g. /usr/local/bin on systems where you own it).
 #
 # Usage:
 #   KUBEBUILDER_VERSION=v4.14.0 hack/install-kubebuilder.sh [--install-dir DIR]
 #
-# If DIR is not writable, uses sudo mv (typical for /usr/local/bin on CI).
+# After install, ensure DIR is on PATH, e.g. export PATH="$HOME/.local/bin:$PATH"
 #
 set -euo pipefail
 
 VERSION="${KUBEBUILDER_VERSION:-v4.14.0}"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -55,14 +58,17 @@ echo "Downloading kubebuilder ${VERSION} for ${GOOS}/${GOARCH}..."
 curl -fsSL -o "$TMP" "$URL"
 chmod +x "$TMP"
 
-mkdir -p "$INSTALL_DIR"
+mkdir -p "$INSTALL_DIR" || {
+  echo "Error: cannot create install directory: $INSTALL_DIR" >&2
+  exit 1
+}
 DEST="${INSTALL_DIR}/kubebuilder"
-if [[ -w "$INSTALL_DIR" ]]; then
-  mv "$TMP" "$DEST"
-else
-  sudo mv "$TMP" "$DEST"
+if ! mv "$TMP" "$DEST" 2>/dev/null; then
+  echo "Error: cannot install kubebuilder to $DEST (not writable?). Set INSTALL_DIR or create the directory." >&2
+  exit 1
 fi
 trap - EXIT
 
 echo "Installed: $DEST"
+echo "Add to PATH if needed: export PATH=\"${INSTALL_DIR}:\$PATH\"" >&2
 "$DEST" version
