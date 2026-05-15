@@ -126,6 +126,25 @@ def yaml_string(s):
         return '"' + escaped + '"'
     return s
 
+def shorten_git_shas(text):
+    """Use 7-character prefixes for long hex SHAs (release notes often use full 40-char hashes)."""
+    def shorten_leading(m):
+        h = m.group(1)
+        return (h[:7] + ':') if len(h) > 7 else m.group(0)
+
+    text = re.sub(r'^([a-fA-F0-9]{8,}):', shorten_leading, text)
+
+    def shorten_commit_url(m):
+        sha = m.group(2)
+        return m.group(1) + (sha[:7] if len(sha) > 7 else sha)
+
+    text = re.sub(
+        r'(https://github\.com/[^/\s]+/[^/\s]+/commit/)([a-fA-F0-9]{8,})',
+        shorten_commit_url,
+        text,
+    )
+    return text
+
 lines = release_body.splitlines()
 changes = []
 current_kind = 'changed'
@@ -172,6 +191,8 @@ for line in lines:
 
     if not description:
         continue
+
+    description = shorten_git_shas(description)
 
     # For generic "what's changed" style sections, detect kind from text
     kind = current_kind
