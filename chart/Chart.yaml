@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.9.0
-appVersion: 0.29.0
+version: 0.9.1
+appVersion: 0.29.1
 keywords:
   - kubernetes
   - environment
@@ -644,35 +644,7 @@ annotations:
       #     lastRequestTime: "2024-01-15T10:30:00Z"
       #     lastResponseStatusCode: 200
   artifacthub.io/changes: |-
-    - kind: added
-      description: "ca3d57273d7a348b31320b159f47edba463e4576: feat: add webrequestcommitstatus methodTemplate support (#1424) (@zachaller)"
-    - kind: added
-      description: "473ac3dbbe837b9a3e33944530bce49726e2d624: feat: expr variables in http go templates (#1399) (@zachaller)"
-    - kind: added
-      description: "4db8d4955f205147e89745aae009f7256bb3f255: feat: log delivery id in findChangeTransferPolicy (#1425) (@crenshaw-dev)"
     - kind: fixed
-      description: "899bb41698b7de0fe42b897fb01c80cb20a431de: fix(ctp): avoid SSA empty-object null (#1406) (@crenshaw-dev)"
-    - kind: fixed
-      description: "ad3ed317d4b3bd2a345fb7ec8b176e0d25b157a5: fix(github): prefix owner in FindOpen head filter (#1417) (@patjlm)"
+      description: "4e2fc5d2a119f02551a2da0b0d222dcc487e263c: fix: fix out of order promotion (#1428) (@zachaller)"
     - kind: changed
-      description: "78abde842d71834002b66d9ee356efdce743cc0a: docs: PullRequest commit.message field (#1409) (@crenshaw-dev)"
-    - kind: changed
-      description: "6d531cff7f17f44b93b259c5e5a03dd2f6c48cc0: docs: bump manifest versions to v0.29.0 (#1427) (@github-actions[bot])"
-    - kind: changed
-      description: "8887c2c8fe0b0eb48f989266d6e2ce6b5add7f0a: docs: use tabs for SCMs in Getting Started (#1398) (@crenshaw-dev)"
-    - kind: changed
-      description: "b05b6b6c8707971651dade82bce13fa338ac4352: chore(deps): bump actions/create-github-app-token from 3.1.1 to 3.2.0 (#1422) (@dependabot[bot])"
-    - kind: changed
-      description: "f94583db1f2ee376a65bc8c07d773678ea40f069: chore(deps): bump code.gitea.io/sdk/gitea from 0.25.0 to 0.25.1 (#1420) (@dependabot[bot])"
-    - kind: changed
-      description: "2eb6d4838f3ccf2d51429d9139a6bf884985a93b: chore(deps): bump crate-ci/typos from 1.46.0 to 1.46.1 (#1416) (@dependabot[bot])"
-    - kind: changed
-      description: "ea4424eb7a01040171ac422c80ba975f7bea0818: chore(deps): bump github.com/tidwall/gjson from 1.18.0 to 1.19.0 (#1414) (@dependabot[bot])"
-    - kind: changed
-      description: "a584406b452ea32f94082e2d6274a1ef702114b4: chore(deps): bump github/codeql-action from 4.35.3 to 4.35.4 (#1410) (@dependabot[bot])"
-    - kind: changed
-      description: "98b2e49de46733635aea4c10bfc6db317d66cea5: chore(deps): bump renovatebot/github-action from 46.1.13 to 46.1.14 (#1415) (@dependabot[bot])"
-    - kind: changed
-      description: "4cc4e1a60096e43ab255bb225de5d6b2ac7aca5e: chore(deps): bump sigstore/cosign-installer from 4.1.1 to 4.1.2 (#1407) (@dependabot[bot])"
-    - kind: changed
-      description: "7d01261242f49539c575a9d4a8b88fbe363447de: chore(deps): bump urllib3 from 2.6.3 to 2.7.0 in /docs (#1418) (@dependabot[bot])"
+      description: "771c6b45ef3a2a52a83e48642b041e037f99aaa7: docs: bump manifest versions to v0.29.1 (#1431) (@github-actions[bot])"
