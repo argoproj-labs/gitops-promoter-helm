@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.9.1
-appVersion: 0.29.1
+version: 0.9.2
+appVersion: 0.29.2
 keywords:
   - kubernetes
   - environment
@@ -645,6 +645,8 @@ annotations:
       #     lastResponseStatusCode: 200
   artifacthub.io/changes: |-
     - kind: fixed
-      description: "4e2fc5d2a119f02551a2da0b0d222dcc487e263c: fix: fix out of order promotion (#1428) (@zachaller)"
+      description: "bf727e5: fix: cache github client / transports (#1432) (@seanl-circle)"
     - kind: changed
-      description: "771c6b45ef3a2a52a83e48642b041e037f99aaa7: docs: bump manifest versions to v0.29.1 (#1431) (@github-actions[bot])"
+      description: "fc6b401: docs: bump manifest versions to v0.29.2 (#1433) (@github-actions[bot])"
+    - kind: changed
+      description: "20e3237: chore: switch to errors.AsType (#1429) (@crenshaw-dev)"
