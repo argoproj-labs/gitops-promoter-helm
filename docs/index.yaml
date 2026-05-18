@@ -635,10 +635,10 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.29.2
-    created: "2026-05-16T01:11:24.920700468Z"
+    created: "2026-05-18T13:41:02.607361314Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
-    digest: ae50f4123642624c82cb3cd0e46d8e06b8fdfc062d97d7280bcfb9fef15de3df
+    digest: 153d48ff7d6ed30a99c96ba7c7715d324d104e68fcb3a6266eaa0a8f78793e2f
     home: https://github.com/argoproj-labs/gitops-promoter-helm
     icon: https://raw.githubusercontent.com/argoproj-labs/gitops-promoter/main/docs/assets/logo/favicon-large.png
     keywords:
@@ -1290,7 +1290,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.29.1
-    created: "2026-05-16T01:11:24.918054389Z"
+    created: "2026-05-18T13:41:02.604918179Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: f4fd2efd019d0a660e31b6dd1f5b20300366e044f3af8c24a40a988fdf130ab0
@@ -1973,7 +1973,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.29.0
-    created: "2026-05-16T01:11:24.914766041Z"
+    created: "2026-05-18T13:41:02.601695177Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: bfa76980837a1c99551b04ad0d522905cb59c0a11fd862e0534630bec7a13ecb
@@ -2620,7 +2620,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.28.0
-    created: "2026-05-16T01:11:24.911851016Z"
+    created: "2026-05-18T13:41:02.599167675Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: d331e21d1d86adf65c99b2b608b5610432a14aec2a34ac86edb2f7aadbe8429c
@@ -3267,7 +3267,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.28.0
-    created: "2026-05-16T01:11:24.908939005Z"
+    created: "2026-05-18T13:41:02.59584459Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 513940868824affaf2c391b61c4a8bb9e5b886df4c85b1083d271ade109a806c
@@ -3909,7 +3909,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.26.2
-    created: "2026-05-16T01:11:24.905456492Z"
+    created: "2026-05-18T13:41:02.593371563Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 33d43da8e214b96e06b3fc19d7a69ce5e55459575f9e797c152c416717a1e321
@@ -4551,7 +4551,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.26.2
-    created: "2026-05-16T01:11:24.902958978Z"
+    created: "2026-05-18T13:41:02.590110569Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: ce4d8f3df921a104be88cc7bcf66f66cbfe7a8f1d22001763cb5506d2e54c20c
@@ -5163,7 +5163,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.25.1
-    created: "2026-05-16T01:11:24.899766545Z"
+    created: "2026-05-18T13:41:02.587020841Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 2253ba1ea5200306143919f488cffdc051904e2fd06ec608d20a638b41b6adf9
@@ -5775,7 +5775,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.25.0
-    created: "2026-05-16T01:11:24.896665799Z"
+    created: "2026-05-18T13:41:02.584581112Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 019bdd332f2007bec0c6df210b9513e835037064424fc23a8a11718ba35c8653
@@ -6386,7 +6386,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.24.0
-    created: "2026-05-16T01:11:24.894108835Z"
+    created: "2026-05-18T13:41:02.581317816Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: dc873d4742eef348393e9c5a1a8f387efdba7355cbcbadc592ee39326f45aa16
@@ -6997,7 +6997,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.24.0
-    created: "2026-05-16T01:11:24.890810721Z"
+    created: "2026-05-18T13:41:02.578901027Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 5c734bc7ef703ff961bc933ac47eb8b5782dad410bb885383a642db03bfe8e56
@@ -7608,7 +7608,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.24.0
-    created: "2026-05-16T01:11:24.888548032Z"
+    created: "2026-05-18T13:41:02.576066603Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 74a26b903ca7ebac19abb4605df7e0ab6edd511e3fb91f7d1050ae28849fbc1b
@@ -8218,7 +8218,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.23.1
-    created: "2026-05-16T01:11:24.885725767Z"
+    created: "2026-05-18T13:41:02.573924713Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: a133b52431ccbd5e9a2051caf18491f78f9b1c868879f4ffef6c3926cc3546d8
@@ -8749,7 +8749,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.7
-    created: "2026-05-16T01:11:24.860988456Z"
+    created: "2026-05-18T13:41:02.553253501Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: f0a8bb116d0ac85b15deb933b58f55ee00859fde975814410a332993451cd361
@@ -9280,7 +9280,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.7
-    created: "2026-05-16T01:11:24.883295204Z"
+    created: "2026-05-18T13:41:02.570974994Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 647b1ddc9dfae60062b0d68f13144dfc3e6448498fad4eb325d9253d4ad19889
@@ -9811,7 +9811,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.6
-    created: "2026-05-16T01:11:24.880740374Z"
+    created: "2026-05-18T13:41:02.569008609Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 85df5c18b4dd0c06a631c9eece1a5f54340d882d342959fe0e5837a856fed5a0
@@ -10342,7 +10342,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.4
-    created: "2026-05-16T01:11:24.878307136Z"
+    created: "2026-05-18T13:41:02.566299465Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 9cde131e88f678a744d0ba6ad832eae571b247559a3420308c99e879de08ebb6
@@ -10873,7 +10873,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.4
-    created: "2026-05-16T01:11:24.876120312Z"
+    created: "2026-05-18T13:41:02.563717089Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 6e08eab47785e715e90bd2b896f667ced876beea361cb97d58d67971bbdbeb81
@@ -11404,7 +11404,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.2
-    created: "2026-05-16T01:11:24.873389896Z"
+    created: "2026-05-18T13:41:02.561814265Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 2ec7e8abf54b3c30afd4db536bf13dfa78b9f479dcc8411d6a115c90b1442278
@@ -11935,7 +11935,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-05-16T01:11:24.871350784Z"
+    created: "2026-05-18T13:41:02.559150644Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: ee5b014f7e9670bce005cf4499832b2a056715bab9b885275895fb114dca0994
@@ -12463,7 +12463,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-05-16T01:11:24.8649616Z"
+    created: "2026-05-18T13:41:02.557215735Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: f9f0ce488a82308c0d7253859b999003607dec8fa9174b8d07dd3712dd018c04
@@ -12492,7 +12492,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-05-16T01:11:24.862933235Z"
+    created: "2026-05-18T13:41:02.554605906Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 1eba471548462f9ea8017439e120971ae6ad1d26c22640aa9cdd557e0682bfc0
@@ -12521,7 +12521,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-05-16T01:11:24.858889694Z"
+    created: "2026-05-18T13:41:02.550694765Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 07131834751b0fe6a2d74bff87f3c223fa43275dadee8cff2bd5e4c8949b1f8f
@@ -12550,7 +12550,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.0
-    created: "2026-05-16T01:11:24.856812876Z"
+    created: "2026-05-18T13:41:02.549341278Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 0a9686fcc4ba7efa95a777dfc30674c81a54544cd121ea1308df218750095f52
@@ -12572,4 +12572,4 @@ entries:
     urls:
     - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.0.tgz
     version: 0.2.0
-generated: "2026-05-16T01:11:24.855076923Z"
+generated: "2026-05-18T13:41:02.546986229Z"
