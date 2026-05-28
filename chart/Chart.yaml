@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.10.0
-appVersion: 0.30.0
+version: 0.10.1
+appVersion: 0.30.1
 keywords:
   - kubernetes
   - environment
@@ -800,61 +800,13 @@ annotations:
       #     lastResponseStatusCode: 200
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
-    - kind: added
-      description: "1ed15e0: feat(security): add sbom in releases (#1413) (@emirot)"
-    - kind: added
-      description: "c21b3ad: feat: don't reconcile on stale state (#1472) (@zachaller)"
-    - kind: added
-      description: "68a2758: feat(acdcs/tcs): add optional spec.key field (#1446) (@crenshaw-dev)"
     - kind: fixed
-      description: "34108cb: fix(ui): NaN days ago (#1467) (#1468) (@crenshaw-dev)"
+      description: "d7f2b8c: fix(gitlab): use project-scoped ListProjectMergeRequests in FindOpen (#1488) (@ZeBidule)"
+    - kind: changed
+      description: "655a802: docs: bump manifest versions to v0.30.1 (#1490) (@github-actions[bot])"
+    - kind: changed
+      description: "19a2ba6: chore(deps): bump docker/setup-qemu-action from 4.0.0 to 4.1.0 (#1487) (@dependabot[bot])"
     - kind: fixed
-      description: "c3b0f57: fix: image digest (#1480) (@crenshaw-dev)"
-    - kind: fixed
-      description: "7312dbe: Revert \"docs: bump manifest versions to v0.30.0\" (#1481) (@zachaller)"
-    - kind: changed
-      description: "5d13449: docs: bump manifest versions to v0.30.0 (#1479) (@github-actions[bot])"
-    - kind: changed
-      description: "daad38a: docs: bump manifest versions to v0.30.0 (#1483) (@github-actions[bot])"
-    - kind: changed
-      description: "eab53dd: docs: harden custom hydrator git-notes example against concurrent notes-ref updates (#1471) (@Copilot)"
-    - kind: changed
-      description: "4ad93b1: docs: more CRD fields (#1473) (@crenshaw-dev)"
-    - kind: changed
-      description: "d631c34: chore(deps): bump codecov/codecov-action from 6.0.0 to 6.0.1 (#1442) (@dependabot[bot])"
-    - kind: changed
-      description: "3438543: chore(deps): bump crate-ci/typos from 1.46.1 to 1.46.2 (#1435) (@dependabot[bot])"
-    - kind: changed
-      description: "015f5b7: chore(deps): bump crate-ci/typos from 1.46.2 to 1.46.3 (#1477) (@dependabot[bot])"
-    - kind: changed
-      description: "51fe291: chore(deps): bump docker/login-action from 4.1.0 to 4.2.0 (#1475) (@dependabot[bot])"
-    - kind: changed
-      description: "9c09605: chore(deps): bump github.com/ktrysmt/go-bitbucket from 0.9.100 to 0.10.0 (#1476) (@dependabot[bot])"
-    - kind: changed
-      description: "15868f8: chore(deps): bump github.com/onsi/ginkgo/v2 from 2.28.3 to 2.29.0 (#1436) (@dependabot[bot])"
-    - kind: changed
-      description: "be5c36b: chore(deps): bump github.com/onsi/gomega from 1.40.0 to 1.41.0 (#1437) (@dependabot[bot])"
-    - kind: changed
-      description: "a2aa9d3: chore(deps): bump github/codeql-action from 4.35.4 to 4.35.5 (#1438) (@dependabot[bot])"
-    - kind: changed
-      description: "a90637f: chore(deps): bump github/codeql-action from 4.35.5 to 4.36.0 (#1478) (@dependabot[bot])"
-    - kind: changed
-      description: "1b34f7a: chore(deps): bump golangci/golangci-lint-action from 9.2.0 to 9.2.1 (#1463) (@dependabot[bot])"
-    - kind: changed
-      description: "0ad9a41: chore(deps): bump goreleaser/goreleaser-action from 7.2.1 to 7.2.2 (#1441) (@dependabot[bot])"
-    - kind: changed
-      description: "977f32c: chore(deps): bump idna from 3.11 to 3.15 in /docs (#1443) (@dependabot[bot])"
-    - kind: changed
-      description: "2acdf6a: chore(deps): bump pymdown-extensions from 10.21.2 to 10.21.3 in /docs (#1444) (@dependabot[bot])"
-    - kind: changed
-      description: "6f55951: chore(deps): bump sigs.k8s.io/multicluster-runtime from 0.23.3 to 0.24.1 (#1469) (@crenshaw-dev)"
-    - kind: changed
-      description: "37dbfb7: chore(deps): bump zizmorcore/zizmor-action from 0.5.3 to 0.5.6 (#1439) (@dependabot[bot])"
-    - kind: changed
-      description: "b798558: chore(deps-dev): bump fast-uri from 3.0.6 to 3.1.2 in /ui/extension (#1411) (@dependabot[bot])"
-    - kind: changed
-      description: "0b8a495: refactor: extract EnqueueChangeTransferPolicies into shared utils (#1454) (@Copilot)"
-    - kind: changed
-      description: "4ae309e: refactor: extract GetApplicableEnvironments to utils package (#1461) (@Copilot)"
-    - kind: changed
-      description: "c14d6ab: refactor: remove `ctx` param from `KubeSafeUniqueName` (#1451) (@Copilot)"
+      description: "8b5a210: chore: fix release trigger on revert (#1484) (@zachaller)"
+    - kind: added
+      description: "fd0eddd: chore: remove dead code and add CI check (#1489) (@crenshaw-dev)"
