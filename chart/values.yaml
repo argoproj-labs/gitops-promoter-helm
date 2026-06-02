@@ -14,7 +14,7 @@ manager:
 
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
-    tag: v0.30.1
+    tag: v0.31.0
     pullPolicy: IfNotPresent
 
   ## Arguments
@@ -168,8 +168,8 @@ controllerConfiguration:
               slowDelay: "5m"
               maxFastAttempts: 3
     template:
-      title: "Promote {{ trunc 5 .ChangeTransferPolicy.Status.Proposed.Dry.Sha }} to `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`"
-      description: "This PR is promoting the environment branch `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}` which is currently on dry sha {{ .ChangeTransferPolicy.Status.Active.Dry.Sha }} to dry sha {{ .ChangeTransferPolicy.Status.Proposed.Dry.Sha }}."
+      title: "Promote {{ with .ChangeTransferPolicy.Spec.ActivePath }}`{{ . }}` {{ end }}({{ trunc 5 .ChangeTransferPolicy.Status.Proposed.Dry.Sha }}) to `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`"
+      description: "This PR is promoting {{ with .ChangeTransferPolicy.Spec.ActivePath }}`{{ . }}` on {{ end }}the environment branch `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}` from dry sha {{ .ChangeTransferPolicy.Status.Active.Dry.Sha }} to {{ .ChangeTransferPolicy.Status.Proposed.Dry.Sha }}."
   commitStatus:
     workQueue:
       maxConcurrentReconciles: 10

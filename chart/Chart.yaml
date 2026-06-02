@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.10.1
-appVersion: 0.30.1
+version: 0.11.0
+appVersion: 0.31.0
 keywords:
   - kubernetes
   - environment
@@ -800,13 +800,57 @@ annotations:
       #     lastResponseStatusCode: 200
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
-    - kind: fixed
-      description: "d7f2b8c: fix(gitlab): use project-scoped ListProjectMergeRequests in FindOpen (#1488) (@ZeBidule)"
-    - kind: changed
-      description: "655a802: docs: bump manifest versions to v0.30.1 (#1490) (@github-actions[bot])"
-    - kind: changed
-      description: "19a2ba6: chore(deps): bump docker/setup-qemu-action from 4.0.0 to 4.1.0 (#1487) (@dependabot[bot])"
-    - kind: fixed
-      description: "8b5a210: chore: fix release trigger on revert (#1484) (@zachaller)"
     - kind: added
-      description: "fd0eddd: chore: remove dead code and add CI check (#1489) (@crenshaw-dev)"
+      description: "7f7f6fa: feat: activePath support for monorepo environments (#1486) (@patjlm)"
+    - kind: fixed
+      description: "55df545: fix(ctp): avoid git operation races between CTPs (#1495) (#1498) (@crenshaw-dev)"
+    - kind: fixed
+      description: "15dccdc: fix(ctp): update PR merge sha after conflict (#1496) (#1497) (@crenshaw-dev)"
+    - kind: fixed
+      description: "21067d7: fix: incorrect error message (#1500) (@crenshaw-dev)"
+    - kind: fixed
+      description: "49152f5: fix: typos (#1499) (@Copilot)"
+    - kind: changed
+      description: "107049b: docs: bump manifest versions to v0.31.0 (#1536) (@github-actions[bot])"
+    - kind: changed
+      description: "1823074: chore(deps): bump crate-ci/typos from 1.46.3 to 1.47.0 (#1494) (@dependabot[bot])"
+    - kind: changed
+      description: "c58f874: chore(deps): update dependency goreleaser/goreleaser to v2.16.0 (#1503) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "fd1d134: chore(deps): update dependency helm/helm to v3.21.0 (#1504) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "92fb6da: chore(deps): update dependency helm/helm to v4 (#1510) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "151632e: chore(deps): update dependency kubernetes-sigs/kind to v0.31.0 (#1505) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "21b4f0a: chore(deps): update dependency kubernetes-sigs/kubebuilder to v4.14.0 (#1516) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "eba06a6: chore(deps): update dependency kubernetes-sigs/kustomize to v5.8.1 (#1521) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "4f60a02: chore(deps): update dependency vektra/mockery to v2.53.6 (#1531) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "efdf4c8: chore(deps): update go and linter tooling to v2.12.2 (#1532) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "b25de41: chore(deps): update kubernetes platform (#1515) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "cd39c53: chore(deps): update node.js to v24.16.0 (#1527) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "b883939: chore(deps): update quay.io/brancz/kube-rbac-proxy docker tag to v0.22.0 (#1528) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "97a3816: chore: Improve renovate (#1502) (@crenshaw-dev)"
+    - kind: changed
+      description: "24ebb34: chore: don't set hourly limit on Renovate (#1522) (@crenshaw-dev)"
+    - kind: fixed
+      description: "ce21080: chore: fix renovate author (#1518) (@crenshaw-dev)"
+    - kind: fixed
+      description: "b5c8ecc: chore: fix renovate for mockgen (#1529) (@crenshaw-dev)"
+    - kind: fixed
+      description: "ba3f359: chore: fix renovate mockery (#1523) (@crenshaw-dev)"
+    - kind: changed
+      description: "e911f18: chore: improve renovate config (#1514) (@crenshaw-dev)"
+    - kind: added
+      description: "e1f4e61: chore: use renovate built in go support (#1524) (@crenshaw-dev)"
+    - kind: changed
+      description: "22fd47e: chore: use ssa for gitcommitstatus controller cs updates (#1492) (@zachaller)"
+    - kind: changed
+      description: "918fbd7: ci: check mockery gen (#1534) (@crenshaw-dev)"
