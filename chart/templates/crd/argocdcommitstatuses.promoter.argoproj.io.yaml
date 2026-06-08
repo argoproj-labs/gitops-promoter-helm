@@ -6,7 +6,7 @@ metadata:
     {{- if .Values.crd.keep }}
     "helm.sh/resource-policy": keep
     {{- end }}
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: argocdcommitstatuses.promoter.argoproj.io
 spec:
   group: promoter.argoproj.io
@@ -30,6 +30,9 @@ spec:
       openAPIV3Schema:
         description: ArgoCDCommitStatus is the Schema for the argocdcommitstatuses
           API.
+        externalDocs:
+          description: CRD reference (examples and behavior)
+          url: https://gitops-promoter.readthedocs.io/en/stable/crd-specs/#argocdcommitstatus
         properties:
           apiVersion:
             description: |-

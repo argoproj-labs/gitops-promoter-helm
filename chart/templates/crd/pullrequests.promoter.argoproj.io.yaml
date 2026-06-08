@@ -6,7 +6,7 @@ metadata:
     {{- if .Values.crd.keep }}
     "helm.sh/resource-policy": keep
     {{- end }}
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: pullrequests.promoter.argoproj.io
 spec:
   group: promoter.argoproj.io
@@ -43,6 +43,9 @@ spec:
     schema:
       openAPIV3Schema:
         description: PullRequest is the Schema for the pullrequests API
+        externalDocs:
+          description: CRD reference (examples and behavior)
+          url: https://gitops-promoter.readthedocs.io/en/stable/crd-specs/#pullrequest
         properties:
           apiVersion:
             description: |-
@@ -106,7 +109,7 @@ spec:
                   merging into Head ---> Base
                 type: string
                 x-kubernetes-validations:
-                - message: Value is immutable
+                - message: field is immutable
                   rule: self == oldSelf
               state:
                 default: open
@@ -123,7 +126,7 @@ spec:
                   from Head ---> Base
                 type: string
                 x-kubernetes-validations:
-                - message: Value is immutable
+                - message: field is immutable
                   rule: self == oldSelf
               title:
                 description: Title is the title of the pull request.
