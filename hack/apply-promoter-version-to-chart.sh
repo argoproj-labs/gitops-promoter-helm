@@ -101,6 +101,15 @@ echo "Syncing controllerConfiguration from upstream..."
     --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
 )
 
+echo "Syncing dashboard apiserver templates from upstream..."
+if [[ -d "$GITOPS_PROMOTER_REPO/config/apiserver/base" ]]; then
+  bash "$SCRIPT_DIR/update-apiserver-templates.sh" \
+    --helm-repo "$HELM_REPO" \
+    --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
+else
+  echo "  Skipping: config/apiserver not present in this gitops-promoter version."
+fi
+
 echo "Setting manager image tag to ${VERSION}..."
 sed_i "s/^[[:space:]]*tag: .*/    tag: ${VERSION}/" "$VALUES_YAML"
 

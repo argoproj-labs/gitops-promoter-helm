@@ -51,6 +51,49 @@ helm template  gitops-promoter-helm/gitops-promoter --namespace promoter-system 
 ```
 
 
+## Dashboard aggregation API server
+
+The chart can optionally deploy the GitOps Promoter **dashboard aggregation API server**, an
+extension API server that serves the read-only `view.promoter.argoproj.io/v1alpha1`
+`PromotionStrategyDetails` API through the Kubernetes aggregation layer (it backs the
+GitOps Promoter UI). It is **disabled by default** and requires a GitOps Promoter version
+that ships the `apiserver` subcommand.
+
+Enable it with:
+
+```yaml
+apiserver:
+  enabled: true
+  certs:
+    mode: insecure   # insecure | cert-manager | manual
+```
+
+### Serving-certificate modes
+
+The aggregation layer requires the API server to serve TLS, and the `APIService` needs the
+matching CA (or to skip verification). Pick one of three modes via `apiserver.certs.mode`:
+
+- **`insecure`** (default): the API server self-signs its serving certificate in-pod and the
+  `APIService` is registered with `insecureSkipTLSVerify: true`. No `Secret` is rendered, so
+  there is nothing for Argo CD to churn on. **This is not production-safe** — the aggregator
+  does not verify the API server's certificate. Use `cert-manager` for production.
+- **`cert-manager`**: a self-signed cert-manager `Issuer` + `Certificate` issue the serving
+  certificate, and cert-manager's CA injector keeps the `APIService` `caBundle` in sync
+  (including on rotation). Requires cert-manager in the cluster. Point at an existing issuer
+  with `apiserver.certs.certManager.issuer.{create,name,kind}`.
+- **`manual`**: you provide the serving-certificate `Secret`
+  (`apiserver.certs.secretName`, default `promoter-apiserver-serving-cert`) out-of-band and
+  set `apiserver.certs.caBundle` (base64-encoded PEM) so it is written to the `APIService`.
+
+Verify the install with:
+
+```bash
+kubectl get apiservice v1alpha1.view.promoter.argoproj.io   # should report Available=True
+kubectl get promotionstrategydetails -A
+```
+
+See the upstream [Dashboard aggregation API docs](https://github.com/argoproj-labs/gitops-promoter/blob/main/docs/advanced-usage/dashboard-apiserver.md) for details.
+
 ## Known Limitations
 
 ### kube-rbac-proxy image and resources are not configurable

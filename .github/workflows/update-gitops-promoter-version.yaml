@@ -77,6 +77,7 @@ jobs:
             **Changes:**
             - Updated manifests using kubebuilder (hack/apply-promoter-version-to-chart.sh)
             - Updated controllerConfiguration in chart/values.yaml from upstream (hack/update-controllerconfiguration.sh)
+            - Regenerated the dashboard apiserver templates from upstream config/apiserver/ (hack/update-apiserver-templates.sh)
             - Updated appVersion in Chart.yaml
             - Updated gitops_promoter_version
 

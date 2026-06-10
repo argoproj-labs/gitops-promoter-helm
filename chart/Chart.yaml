@@ -2,7 +2,7 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.11.1
+version: 0.12.0
 appVersion: 0.31.1
 keywords:
   - kubernetes
@@ -800,6 +800,8 @@ annotations:
       #     lastResponseStatusCode: 200
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
+    - kind: added
+      description: "Add opt-in dashboard aggregation apiserver (view.promoter.argoproj.io) with insecure, cert-manager, and manual serving-cert modes"
     - kind: fixed
       description: "8e1876b: fix(ctp): handle missing <activePath>/hydrator.metadata + add concurrent shared-active-branch tests (#1535) (@crenshaw-dev)"
     - kind: fixed
