@@ -13,3 +13,16 @@ To learn more about the release, try:
 
   $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
   $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+{{- if .Values.apiserver.enabled }}
+
+The dashboard aggregation API server is enabled (certs mode: {{ .Values.apiserver.certs.mode }}).
+Verify the aggregation API is available with:
+
+  kubectl get apiservice v1alpha1.view.promoter.argoproj.io
+  kubectl get promotionstrategydetails -A
+{{- if eq .Values.apiserver.certs.mode "insecure" }}
+
+WARNING: certs mode "insecure" sets insecureSkipTLSVerify on the APIService and is not
+production-safe. Use certs.mode=cert-manager (or manual) for production.
+{{- end }}
+{{- end }}

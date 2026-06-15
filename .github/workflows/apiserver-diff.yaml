@@ -1,0 +1,53 @@
+name: apiserver-diff
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apiserver-diff:
+    name: Dashboard apiserver Diff
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: current-repo
+
+      - name: Read GitOps Promoter Version
+        working-directory: current-repo
+        id: get-promoter-version
+        run: |
+          echo "version=$(cat gitops_promoter_version)" >> $GITHUB_OUTPUT
+
+      - name: Checkout gitops-promoter at pinned release
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        with:
+          repository: argoproj-labs/gitops-promoter
+          ref: v${{ steps.get-promoter-version.outputs.version }}
+          path: gitops-promoter
+
+      - name: Apiserver diff (hack)
+        run: |
+          bash "${GITHUB_WORKSPACE}/current-repo/hack/apiserver-diff.sh" \
+            --helm-repo "${GITHUB_WORKSPACE}/current-repo" \
+            --gitops-promoter-repo "${GITHUB_WORKSPACE}/gitops-promoter" \
+            --write-diff /tmp/apiserver-diff.diff
+
+      - name: Upload diff artifact
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: apiserver-diff
+          path: /tmp/apiserver-diff.diff
+          if-no-files-found: ignore

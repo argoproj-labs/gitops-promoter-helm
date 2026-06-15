@@ -14,7 +14,7 @@ manager:
 
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
-    tag: v0.31.1
+    tag: v0.32.0
     pullPolicy: IfNotPresent
 
   ## Arguments
@@ -240,3 +240,75 @@ controllerConfiguration:
 
 webhook:
   enable: true
+
+## Dashboard aggregation apiserver (extension API server backing the GitOps Promoter UI).
+## Serves the read-only view.promoter.argoproj.io/v1alpha1 PromotionStrategyDetails API
+## through the Kubernetes aggregation layer. Opt-in; requires a gitops-promoter version
+## that ships the `apiserver` subcommand.
+##
+apiserver:
+  ## Enable the dashboard aggregation apiserver (APIService + Deployment + RBAC).
+  enabled: false
+
+  ## Replica count for the apiserver Deployment.
+  replicas: 1
+
+  ## Image override. Defaults to the manager image (the apiserver and controller share a
+  ## single image). Set repository/tag/pullPolicy to override.
+  image: {}
+    # repository: quay.io/argoprojlabs/gitops-promoter
+    # tag: ""
+    # pullPolicy: IfNotPresent
+
+  ## Resource limits and requests
+  ##
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+  ## Pod-level security settings
+  ##
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+  ## Container-level security settings
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  ## Serving certificate configuration for the aggregation API.
+  ##
+  certs:
+    ## How the apiserver's serving certificate and the APIService caBundle are managed:
+    ##   insecure     - the apiserver self-signs in-pod and the APIService sets
+    ##                  insecureSkipTLSVerify (no Secret rendered; NOT production-safe).
+    ##   cert-manager - a cert-manager Issuer + Certificate issue the serving cert and
+    ##                  ca-injector keeps the APIService caBundle in sync.
+    ##   manual       - you supply the serving-cert Secret out-of-band and set caBundle below.
+    mode: insecure
+
+    ## Name of the serving-cert Secret (mounted in cert-manager/manual modes; unused in insecure).
+    secretName: promoter-apiserver-serving-cert
+
+    ## Base64-encoded CA bundle injected into the APIService (manual mode only).
+    caBundle: ""
+
+    ## cert-manager mode settings.
+    certManager:
+      issuer:
+        ## Create a self-signed Issuer for the serving Certificate.
+        create: true
+        ## Use an existing issuer instead (leave empty to use the created one).
+        name: ""
+        ## Issuer kind: Issuer or ClusterIssuer.
+        kind: Issuer

@@ -10,6 +10,8 @@ These scripts mirror what GitHub Actions does so you can reproduce chart updates
 | [`regenerate-helm-chart.sh`](regenerate-helm-chart.sh) | Run `kubebuilder edit --plugins=helm/v2-alpha` from a **gitops-promoter** clone into this repo’s `chart/`, then run post-fixes. Requires `kubebuilder` on `PATH`. |
 | [`apply-post-kubebuilder-chart-fixes.sh`](apply-post-kubebuilder-chart-fixes.sh) | Apply the same `sed` post-processing as CI: ArgoCDCommitStatus CRD escapes, WebRequestCommitStatus CRD escapes, Prometheus ServiceMonitor label, manager `replicas` wired to `values.yaml`. Takes a single argument: path to the **chart** directory. |
 | [`chart-diff.sh`](chart-diff.sh) | Snapshot `chart/`, install kubebuilder, regenerate, then `diff` against the snapshot (excluding `templates/extra/` and `templates/extras/`). Exits non-zero if the committed chart does not match regen + fixes. |
+| [`update-apiserver-templates.sh`](update-apiserver-templates.sh) | Generator for the dashboard aggregation apiserver. "Helmifies" upstream `config/apiserver/` (base + cert overlays) into chart-owned templates under `chart/templates/extras/apiserver/`. The kubebuilder plugin never emits these (the apiserver is not in `config/release`), so this is the equivalent of `update-controllerconfiguration.sh` for the apiserver. Requires `yq` + `perl`. |
+| [`apiserver-diff.sh`](apiserver-diff.sh) | Verifier for the apiserver templates: regenerates into a temp area and `diff`s against the committed `chart/templates/extras/apiserver/`. Exits non-zero on drift. Mirrors `regenerate-helm-chart.sh` ↔ `chart-diff.sh`. |
 
 ### Local chart diff (same as PR `chart-diff` workflow)
 
@@ -43,7 +45,7 @@ Then run `helm lint chart` and review `git diff`.
 |--------|---------|
 | [`fetch-promoter-latest-release.sh`](fetch-promoter-latest-release.sh) | Print the latest `v…` tag from the GitHub API (`curl` + `jq`). Optional `GITHUB_TOKEN` for rate limits. |
 | [`check-promoter-version-update-needed.sh`](check-promoter-version-update-needed.sh) | Compare `gitops_promoter_version` to a target tag; when `GITHUB_OUTPUT` is set (Actions), writes `update_needed` and `current_version`. |
-| [`apply-promoter-version-to-chart.sh`](apply-promoter-version-to-chart.sh) | Full bump: `regenerate-helm-chart.sh`, `update-controllerconfiguration.sh`, image `tag` in `values.yaml`, `gitops_promoter_version`, `Chart.yaml` `appVersion` + semver `version` bump, `update-artifacthub-crd-annotations.sh`. Installs kubebuilder via `install-kubebuilder.sh` if missing. |
+| [`apply-promoter-version-to-chart.sh`](apply-promoter-version-to-chart.sh) | Full bump: `regenerate-helm-chart.sh`, `update-controllerconfiguration.sh`, `update-apiserver-templates.sh`, image `tag` in `values.yaml`, `gitops_promoter_version`, `Chart.yaml` `appVersion` + semver `version` bump, `update-artifacthub-crd-annotations.sh`. Installs kubebuilder via `install-kubebuilder.sh` if missing. Requires gitops-promoter >= 0.32.0. |
 
 ### Local run (same steps as CI after you clone promoter at the tag)
 
@@ -62,6 +64,34 @@ helm lint chart
 **Requirements:** `curl`, `jq` (for fetch); `helm`, `yq` (for Artifact Hub step; same as `update-artifacthub-crd-annotations.sh`).
 
 ---
+
+## Dashboard apiserver templates (generator + verifier)
+
+The dashboard aggregation apiserver (`view.promoter.argoproj.io`) lives in upstream
+`config/apiserver/` and is **never** part of `config/release`/`install.yaml`, so the
+kubebuilder helm plugin does not emit it. Instead it is generated, the same way
+`controllerConfiguration` is:
+
+- [`update-apiserver-templates.sh`](update-apiserver-templates.sh) **resolves drift**: it
+  reads upstream `config/apiserver/` and writes chart-owned, value-gated templates under
+  `chart/templates/extras/apiserver/` (namespace → `.Release.Namespace`, names →
+  `promoter.resourceName`, image → manager image, and `apiserver.certs.mode` conditionals
+  for `insecure` / `cert-manager` / `manual`). It is idempotent and is run automatically by
+  `apply-promoter-version-to-chart.sh` during a version bump.
+- [`apiserver-diff.sh`](apiserver-diff.sh) **detects drift**: it regenerates into a temp area
+  and diffs against the committed templates, failing CI when they are stale.
+
+```bash
+# Regenerate from a local gitops-promoter checkout (that contains config/apiserver/):
+bash hack/update-apiserver-templates.sh --gitops-promoter-repo /path/to/gitops-promoter
+
+# Verify the committed templates match the generator output:
+bash hack/apiserver-diff.sh --gitops-promoter-repo /path/to/gitops-promoter
+```
+
+**Requirements:** `yq` (https://github.com/mikefarah/yq) and `perl`. Requires gitops-promoter
+>= 0.32.0 (the first release shipping `config/apiserver/` and `dist/install-without-ui.yaml`);
+older versions are not supported.
 
 ## update-artifacthub-crd-annotations.sh
 
