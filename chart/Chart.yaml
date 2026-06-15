@@ -3,7 +3,7 @@ name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
 version: 0.12.0
-appVersion: 0.31.1
+appVersion: 0.32.0
 keywords:
   - kubernetes
   - environment
@@ -773,7 +773,7 @@ annotations:
       #     method: GET
       #   success:
       #     when:
-      #       # Boolean (all envs same phase) or object { defaultPhase, environments } — see docs/commit-status-controllers/web-request.md
+      #       # Boolean (all envs same phase) or object { defaultPhase, environments } — see docs/gating-promotions/built-in-gates/web-request-commit-status/index.md
       #       expression: "Response.StatusCode == 200"
       #   mode:
       #     context: promotionstrategy
@@ -802,39 +802,51 @@ annotations:
   artifacthub.io/changes: |-
     - kind: added
       description: "Add opt-in dashboard aggregation apiserver (view.promoter.argoproj.io) with insecure, cert-manager, and manual serving-cert modes"
-    - kind: fixed
-      description: "8e1876b: fix(ctp): handle missing <activePath>/hydrator.metadata + add concurrent shared-active-branch tests (#1535) (@crenshaw-dev)"
-    - kind: fixed
-      description: "ae06ddf: fix(test): retry PromotionStrategy update when disabling AutoMerge (#1556) (@crenshaw-dev)"
-    - kind: fixed
-      description: "c204543: fix: keep GitRepository until referencing PullRequests are removed (#1542) (@crenshaw-dev)"
+    - kind: changed
+      description: "`install-with-dashboard-cert-manager.yaml` for cert-manager users"
+    - kind: changed
+      description: "`install-with-dashboard-byo-cert.yaml` for users who want to create/manage their own cert (we have scripts to help with this)"
+    - kind: changed
+      description: "`install-without-ui.yaml` for users who don't need the UI and would rather not bother with certs"
     - kind: added
-      description: "0c00c01: docs: add CEL cost estimate page (#1544) (@crenshaw-dev)"
-    - kind: changed
-      description: "372d61c: docs: bump manifest versions to v0.31.1 (#1560) (@github-actions[bot])"
-    - kind: changed
-      description: "997f193: chore(deps): bump actions/checkout from 6.0.2 to 6.0.3 (#1551) (@dependabot[bot])"
-    - kind: changed
-      description: "1883603: chore(deps): bump actions/checkout from 6.0.2 to 6.0.3 (#1557) (@dependabot[bot])"
-    - kind: changed
-      description: "f7a4512: chore(deps): bump controller-tools to v0.21.0 and regenerate codegen (#1533) (@crenshaw-dev)"
-    - kind: changed
-      description: "d1a81fd: chore(deps): bump crate-ci/typos from 1.47.0 to 1.47.1 (#1552) (@dependabot[bot])"
-    - kind: changed
-      description: "96dfbf7: chore(deps): bump crate-ci/typos from 1.47.1 to 1.47.2 (#1558) (@dependabot[bot])"
-    - kind: changed
-      description: "1a70f9d: chore(deps): bump github.com/quic-go/quic-go from 0.59.0 to 0.59.1 (#1547) (@dependabot[bot])"
-    - kind: changed
-      description: "d37410b: chore(deps): bump github/codeql-action from 4.36.0 to 4.36.1 (#1553) (@dependabot[bot])"
-    - kind: changed
-      description: "611aeb8: chore(deps): bump go.opentelemetry.io/otel/sdk from 1.40.0 to 1.43.0 in /hack/celcost (#1546) (@dependabot[bot])"
-    - kind: changed
-      description: "f0d4f7b: chore(deps): bump react-router and react-router-dom in /ui/dashboard (#1549) (@dependabot[bot])"
-    - kind: changed
-      description: "9a30417: chore(deps): update dependency kubernetes-sigs/kind to v0.32.0 (#1538) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "d24189e: chore(deps): update go and linter tooling to v1.26.4 (#1537) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "e20bd52: chore(deps): update kubernetes platform (#1554) (@gitops-promoter-renovate-bot[bot])"
+      description: "5555353: feat: APIService for dashboard (#1512) (@zachaller)"
     - kind: fixed
-      description: "8b7d63d: chore: npm audit fix (#1550) (@github-actions[bot])"
+      description: "a0fae79: fix(api): make CRD validation rule ordering deterministic in generated manifests (#1577) (@zachaller)"
+    - kind: fixed
+      description: "d461708: fix(apiserver): fix watch streams capping out at 64 events (#1572) (@zachaller)"
+    - kind: fixed
+      description: "84327d0: fix(ctp): unclean worktree after failed merge (#1543) (@crenshaw-dev)"
+    - kind: added
+      description: "2752644: docs: Add FRAYT to USERS.md (#1573) (@ianstanton)"
+    - kind: changed
+      description: "44a1876: docs: bump manifest versions to v0.32.0 (#1587) (@github-actions[bot])"
+    - kind: fixed
+      description: "89e688a: docs: remove dupe field and fix expression (#1575) (@crenshaw-dev)"
+    - kind: changed
+      description: "d859efe: docs: restructure site navigation and layout (#1569) (@crenshaw-dev)"
+    - kind: changed
+      description: "5cba51d: chore(deps): bump codecov/codecov-action from 6.0.1 to 7.0.0 (#1566) (@dependabot[bot])"
+    - kind: changed
+      description: "185f777: chore(deps): bump github.com/bradleyfalzon/ghinstallation/v2 from 2.18.0 to 2.19.0 (#1582) (@dependabot[bot])"
+    - kind: changed
+      description: "3878984: chore(deps): bump github.com/onsi/ginkgo/v2 from 2.29.0 to 2.30.0 (#1581) (@dependabot[bot])"
+    - kind: changed
+      description: "4ffbef8: chore(deps): bump github/codeql-action from 4.36.1 to 4.36.2 (#1561) (@dependabot[bot])"
+    - kind: changed
+      description: "95a7334: chore(deps): bump go.opentelemetry.io/otel/sdk from 1.40.0 to 1.43.0 (#1568) (@dependabot[bot])"
+    - kind: changed
+      description: "7c9cb26: chore(deps): bump golang.org/x/sync from 0.20.0 to 0.21.0 (#1570) (@dependabot[bot])"
+    - kind: changed
+      description: "a4d46dd: chore(deps): bump renovatebot/github-action from 46.1.14 to 46.1.15 (#1565) (@dependabot[bot])"
+    - kind: changed
+      description: "62dabf3: chore(deps): update dependency helm/helm to v4.2.1 (#1584) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "9bfecf9: chore(deps): update kubernetes platform to v2.0.0-20260408192533-25e2208e0dc3 (#1567) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "672b905: chore(deps): update module golang.org/x/tools to v0.46.0 (#1585) (@gitops-promoter-renovate-bot[bot])"
+    - kind: added
+      description: "ea90eca: chore!: add branch name validation (#1545) (@crenshaw-dev)"
+    - kind: changed
+      description: "2344428: chore: move lint for faster CI feedback (#1574) (@zachaller)"
+    - kind: fixed
+      description: "10c3fce: ci: fix version bump job (#1583) (@crenshaw-dev)"

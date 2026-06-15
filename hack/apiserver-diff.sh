@@ -56,13 +56,12 @@ GITOPS_PROMOTER_REPO="$(cd "$GITOPS_PROMOTER_REPO" && pwd)"
 HELM_REPO="$(cd "$HELM_REPO" && pwd)"
 APISERVER_DIR="$HELM_REPO/chart/templates/extras/apiserver"
 
-# If the pinned gitops-promoter version predates config/apiserver/ we cannot verify the
-# committed templates against it. The chart may intentionally stage these templates ahead
-# of the release that ships the apiserver (see the plan's sequencing note), so skip rather
-# than fail; the strict check kicks in once gitops_promoter_version includes the apiserver.
+# gitops-promoter >= 0.32.0 is required (it ships config/apiserver/). Versions < 0.32.0
+# are not supported, so a missing config/apiserver/ is an error rather than a skip.
 if [[ ! -d "$GITOPS_PROMOTER_REPO/config/apiserver/base" ]]; then
-  echo "Skipping: this gitops-promoter version has no config/apiserver/ to verify against."
-  exit 0
+  echo "Error: config/apiserver/ not found under: $GITOPS_PROMOTER_REPO" >&2
+  echo "       gitops-promoter >= 0.32.0 is required." >&2
+  exit 1
 fi
 
 SNAPSHOT="$(mktemp -d)"

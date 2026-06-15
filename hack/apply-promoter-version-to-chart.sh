@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 #
-# Bump the helm chart to match a GitOps Promoter release: regenerate from
-# dist/install.yaml, sync controllerConfiguration, values image tag, appVersion,
-# chart semver bump, Artifact Hub annotations.
+# Bump the helm chart to match a GitOps Promoter release: regenerate from the
+# controller-only manifests (dist/install-without-ui.yaml, or dist/install.yaml for
+# pre-0.32.0), sync controllerConfiguration, regenerate the dashboard apiserver
+# templates, values image tag, appVersion, chart semver bump, Artifact Hub annotations.
 #
 # Prerequisites:
 #   - gitops-promoter clone checked out at the release tag passed to --version
-#   - dist/install.yaml present in that clone
+#   - dist/install-without-ui.yaml (>=0.32.0) or dist/install.yaml (<0.32.0) present in that clone
 #
 # kubebuilder is installed automatically (hack/install-kubebuilder.sh) if not on PATH.
 #
@@ -102,13 +103,9 @@ echo "Syncing controllerConfiguration from upstream..."
 )
 
 echo "Syncing dashboard apiserver templates from upstream..."
-if [[ -d "$GITOPS_PROMOTER_REPO/config/apiserver/base" ]]; then
-  bash "$SCRIPT_DIR/update-apiserver-templates.sh" \
-    --helm-repo "$HELM_REPO" \
-    --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
-else
-  echo "  Skipping: config/apiserver not present in this gitops-promoter version."
-fi
+bash "$SCRIPT_DIR/update-apiserver-templates.sh" \
+  --helm-repo "$HELM_REPO" \
+  --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
 
 echo "Setting manager image tag to ${VERSION}..."
 sed_i "s/^[[:space:]]*tag: .*/    tag: ${VERSION}/" "$VALUES_YAML"

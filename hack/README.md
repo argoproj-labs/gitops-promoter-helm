@@ -45,7 +45,7 @@ Then run `helm lint chart` and review `git diff`.
 |--------|---------|
 | [`fetch-promoter-latest-release.sh`](fetch-promoter-latest-release.sh) | Print the latest `v…` tag from the GitHub API (`curl` + `jq`). Optional `GITHUB_TOKEN` for rate limits. |
 | [`check-promoter-version-update-needed.sh`](check-promoter-version-update-needed.sh) | Compare `gitops_promoter_version` to a target tag; when `GITHUB_OUTPUT` is set (Actions), writes `update_needed` and `current_version`. |
-| [`apply-promoter-version-to-chart.sh`](apply-promoter-version-to-chart.sh) | Full bump: `regenerate-helm-chart.sh`, `update-controllerconfiguration.sh`, `update-apiserver-templates.sh` (skipped if the version predates `config/apiserver/`), image `tag` in `values.yaml`, `gitops_promoter_version`, `Chart.yaml` `appVersion` + semver `version` bump, `update-artifacthub-crd-annotations.sh`. Installs kubebuilder via `install-kubebuilder.sh` if missing. |
+| [`apply-promoter-version-to-chart.sh`](apply-promoter-version-to-chart.sh) | Full bump: `regenerate-helm-chart.sh`, `update-controllerconfiguration.sh`, `update-apiserver-templates.sh`, image `tag` in `values.yaml`, `gitops_promoter_version`, `Chart.yaml` `appVersion` + semver `version` bump, `update-artifacthub-crd-annotations.sh`. Installs kubebuilder via `install-kubebuilder.sh` if missing. Requires gitops-promoter >= 0.32.0. |
 
 ### Local run (same steps as CI after you clone promoter at the tag)
 
@@ -89,7 +89,9 @@ bash hack/update-apiserver-templates.sh --gitops-promoter-repo /path/to/gitops-p
 bash hack/apiserver-diff.sh --gitops-promoter-repo /path/to/gitops-promoter
 ```
 
-**Requirements:** `yq` (https://github.com/mikefarah/yq) and `perl`.
+**Requirements:** `yq` (https://github.com/mikefarah/yq) and `perl`. Requires gitops-promoter
+>= 0.32.0 (the first release shipping `config/apiserver/` and `dist/install-without-ui.yaml`);
+older versions are not supported.
 
 ## update-artifacthub-crd-annotations.sh
 

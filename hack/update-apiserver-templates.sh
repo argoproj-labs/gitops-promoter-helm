@@ -74,7 +74,7 @@ OUT="$HELM_REPO/chart/templates/extras/apiserver"
 
 if [[ ! -d "$BASE" ]]; then
   echo "Error: upstream apiserver base not found: $BASE" >&2
-  echo "       (the apiserver may predate this gitops-promoter version)" >&2
+  echo "       gitops-promoter >= 0.32.0 is required (it ships config/apiserver/)." >&2
   exit 1
 fi
 

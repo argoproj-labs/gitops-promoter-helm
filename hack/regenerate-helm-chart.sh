@@ -9,7 +9,7 @@
 #
 # Defaults:
 #   --helm-repo  parent of hack/ (this repository root)
-#   --manifests  <promoter-repo>/dist/install.yaml
+#   --manifests  <promoter-repo>/dist/install-without-ui.yaml (requires gitops-promoter >= 0.32.0)
 #
 # Requires: kubebuilder on PATH (run hack/install-kubebuilder.sh first on CI).
 #
@@ -61,14 +61,13 @@ GITOPS_PROMOTER_REPO="$(cd "$GITOPS_PROMOTER_REPO" && pwd)"
 HELM_REPO="$(cd "$HELM_REPO" && pwd)"
 CHART_DIR="${HELM_REPO}/chart"
 
-if [[ ! -f "${GITOPS_PROMOTER_REPO}/dist/install.yaml" ]]; then
-  echo "Error: dist/install.yaml not found under: $GITOPS_PROMOTER_REPO" >&2
-  exit 1
-fi
-
-MANIFESTS="${MANIFESTS:-${GITOPS_PROMOTER_REPO}/dist/install.yaml}"
+# Controller-only manifests the chart is generated from. gitops-promoter >= 0.32.0 ships
+# this as dist/install-without-ui.yaml (the dashboard apiserver ships separately and is
+# helmified by hack/update-apiserver-templates.sh). Versions < 0.32.0 are not supported.
+MANIFESTS="${MANIFESTS:-${GITOPS_PROMOTER_REPO}/dist/install-without-ui.yaml}"
 if [[ ! -f "$MANIFESTS" ]]; then
   echo "Error: manifests file not found: $MANIFESTS" >&2
+  echo "       gitops-promoter >= 0.32.0 is required (it ships dist/install-without-ui.yaml)." >&2
   exit 1
 fi
 
