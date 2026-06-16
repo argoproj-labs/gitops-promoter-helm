@@ -67,12 +67,14 @@ jobs:
           HELM_SIGNING_PASSPHRASE: ${{ secrets.HELM_SIGNING_PASSPHRASE }}
         run: |
           set -ex
-          git fetch origin gh-pages
-          git switch gh-pages
+          # Package from a clean main tree. gh-pages historically tracked chart/ with
+          # stale templates; overlaying main onto that working tree left orphan files
+          # (e.g. duplicate webhook-receiver Service). git archive avoids that entirely.
+          CHART_STAGING="$(mktemp -d)"
+          git fetch origin main
+          git archive origin/main chart README.md | tar -x -C "$CHART_STAGING"
+          cp "$CHART_STAGING/README.md" "$CHART_STAGING/chart/"
 
-          mkdir -p docs
-          git checkout origin/main -- chart/ README.md docs/index.html
-          cp README.md chart/
           if [ -n "$HELM_SIGNING_KEY_NAME" ] && [ -n "$HELM_SIGNING_PRIVATE_KEY" ]; then
             mkdir -p ~/.gnupg
             chmod 700 ~/.gnupg
@@ -83,26 +85,38 @@ jobs:
             gpg --export > ~/.gnupg/pubring.gpg
             gpg --batch --pinentry-mode loopback --passphrase-file /tmp/helm-passphrase --export-secret-keys > ~/.gnupg/secring.gpg
             chmod 600 ~/.gnupg/secring.gpg
-            gpg --export --armor "$HELM_SIGNING_KEY_NAME" > docs/pgp_keys.asc
             if [ -n "$HELM_SIGNING_PASSPHRASE" ]; then
-              helm package --sign --key "$HELM_SIGNING_KEY_NAME" --keyring ~/.gnupg/secring.gpg --passphrase-file /tmp/helm-passphrase chart
+              helm package --sign --key "$HELM_SIGNING_KEY_NAME" --keyring ~/.gnupg/secring.gpg --passphrase-file /tmp/helm-passphrase "$CHART_STAGING/chart"
             else
-              helm package --sign --key "$HELM_SIGNING_KEY_NAME" --keyring ~/.gnupg/secring.gpg chart
+              helm package --sign --key "$HELM_SIGNING_KEY_NAME" --keyring ~/.gnupg/secring.gpg "$CHART_STAGING/chart"
             fi
           else
-            helm package chart
+            helm package "$CHART_STAGING/chart"
+          fi
+
+          git fetch origin gh-pages
+          git switch gh-pages
+
+          mkdir -p docs
+          git checkout origin/main -- docs/index.html
+          if [ -n "$HELM_SIGNING_KEY_NAME" ] && [ -n "$HELM_SIGNING_PRIVATE_KEY" ]; then
+            gpg --export --armor "$HELM_SIGNING_KEY_NAME" > docs/pgp_keys.asc
           fi
           mv gitops-promoter-*.tgz docs/
           for f in gitops-promoter-*.tgz.prov; do [ -f "$f" ] && mv "$f" docs/ && break; done
           helm repo index docs/ --url https://argoproj-labs.github.io/gitops-promoter-helm/
           echo "Packaged new chart and updated index.yaml"
           ls docs/
+
+          # Drop legacy chart/ tracked on gh-pages so it cannot pollute future releases.
+          if [ -d chart ]; then
+            git rm -rf chart/
+          fi
+
           git add -A docs/
-          
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "ci: update gh-pages with latest chart" docs/
-          
+          git commit -m "ci: update gh-pages with latest chart"
           git push origin gh-pages --force
 
       - name: Create and push tag
