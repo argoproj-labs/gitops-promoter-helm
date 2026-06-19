@@ -241,6 +241,66 @@ controllerConfiguration:
 webhook:
   enable: true
 
+## Dashboard web UI deployment.
+## Deploys the dashboard as an in-cluster Deployment + Service so teams can access
+## it through their own Ingress/Gateway without requiring local CLI + kubeconfig.
+## Requires the apiserver (below) to be enabled for the dashboard to function.
+##
+dashboard:
+  ## Enable the in-cluster dashboard UI (Deployment + Service + RBAC).
+  enabled: false
+
+  ## Replica count for the dashboard Deployment.
+  replicas: 1
+
+  ## Image override. Defaults to the manager image (the dashboard and controller share a
+  ## single image). Set repository/tag/pullPolicy to override.
+  image: {}
+    # repository: quay.io/argoprojlabs/gitops-promoter
+    # tag: ""
+    # pullPolicy: IfNotPresent
+
+  ## Port the dashboard listens on inside the container.
+  port: 8080
+
+  ## Resource limits and requests
+  ##
+  resources:
+    limits:
+      cpu: 250m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  ## Pod-level security settings
+  ##
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+  ## Container-level security settings
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  ## Dashboard pod's node selector
+  ##
+  nodeSelector: {}
+
+  ## Dashboard pod's tolerations
+  ##
+  tolerations: []
+
+  ## Dashboard pod's affinity
+  ##
+  affinity: {}
+
 ## Dashboard aggregation apiserver (extension API server backing the GitOps Promoter UI).
 ## Serves the read-only view.promoter.argoproj.io/v1alpha1 PromotionStrategyDetails API
 ## through the Kubernetes aggregation layer. Opt-in; requires a gitops-promoter version

@@ -94,6 +94,27 @@ kubectl get promotionstrategydetails -A
 
 See the upstream [Dashboard aggregation API docs](https://github.com/argoproj-labs/gitops-promoter/blob/main/docs/advanced-usage/dashboard-apiserver.md) for details.
 
+## In-cluster dashboard UI
+
+The chart can optionally deploy the GitOps Promoter **dashboard web UI** as an in-cluster
+Deployment + Service, so teams can access a shared, always-available dashboard through their
+own Ingress/Gateway without requiring every user to have local CLI + kubeconfig access.
+It is **disabled by default** and requires the apiserver (above) to be enabled.
+
+Enable it with:
+
+```yaml
+apiserver:
+  enabled: true
+  certs:
+    mode: cert-manager   # or insecure / manual
+dashboard:
+  enabled: true
+```
+
+The dashboard Service listens on port 80 (targeting the container's port 8080). Add your own
+Ingress, Gateway API HTTPRoute, or other routing and authentication resources on top.
+
 ## Known Limitations
 
 ### kube-rbac-proxy image and resources are not configurable
