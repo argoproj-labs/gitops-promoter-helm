@@ -27,7 +27,7 @@ jobs:
           version: v3.20.0
 
       - name: Checkout Repository
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           path: current-repo
@@ -39,7 +39,7 @@ jobs:
           echo "version=$(cat gitops_promoter_version)" >> $GITHUB_OUTPUT
 
       - name: Checkout gitops-promoter at latest release
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
         with:
           repository: argoproj-labs/gitops-promoter
           ref: v${{ steps.get-promoter-version.outputs.version }}
