@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.1
+        uses: actions/checkout@e8d4307400f9427dba7cb98e488d6ab85f1cec5f # v6.0.1
         with:
           path: current-repo
 
@@ -39,7 +39,7 @@ jobs:
 
       - name: Checkout gitops-promoter at latest release
         if: steps.check-update.outputs.update_needed == 'true'
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        uses: actions/checkout@e8d4307400f9427dba7cb98e488d6ab85f1cec5f
         with:
           repository: argoproj-labs/gitops-promoter
           ref: ${{ steps.get-latest-release.outputs.latest_version }}
