@@ -5,6 +5,953 @@ entries:
       artifacthub.io/category: integration-delivery
       artifacthub.io/changes: |-
         - kind: added
+          description: "43a8ca3: feat(webrequestcommitstatus): allow failure phase from success expression in environments context (#1900) (@zachaller)"
+        - kind: fixed
+          description: "bc456ae: fix(controller): stop re-enqueueing unchanged CTP note disagreements (#1831) (@zachaller)"
+        - kind: changed
+          description: "fb7e534: docs: bump manifest versions to v0.36.0 (#1903) (@github-actions[bot])"
+        - kind: changed
+          description: "132e91a: docs: structuring changes (#1896) (@crenshaw-dev)"
+        - kind: changed
+          description: "61bed4a: docs: update roadmap (#1892) (@crenshaw-dev)"
+        - kind: changed
+          description: "06844ef: chore(deps): bump cel.dev/expr from 0.25.2 to 0.25.3 (#1884) (@dependabot[bot])"
+        - kind: changed
+          description: "16d9584: chore(deps): bump github.com/google/cel-go from 0.30.0 to 0.31.0 (#1877) (@dependabot[bot])"
+        - kind: changed
+          description: "b2163a3: chore(deps): bump github.com/grpc-ecosystem/grpc-gateway/v2 from 2.29.0 to 2.30.0 (#1875) (@dependabot[bot])"
+        - kind: changed
+          description: "b8a33ed: chore(deps): bump github.com/ugorji/go/codec from 1.3.1 to 1.3.2 (#1876) (@dependabot[bot])"
+        - kind: changed
+          description: "fdfe9bc: chore(deps): bump golang.org/x/arch from 0.29.0 to 0.30.0 in the golang-org-x group (#1874) (@dependabot[bot])"
+        - kind: changed
+          description: "30c56d3: chore(deps): bump golang.org/x/mod from 0.38.0 to 0.39.0 in the golang-org-x group (#1882) (@dependabot[bot])"
+        - kind: changed
+          description: "1e7b429: chore(deps): bump google.golang.org/protobuf from 1.36.12-0.20260120151049-f2248ac996af to 1.36.12 in the google-golang-org group (#1883) (@dependabot[bot])"
+        - kind: changed
+          description: "f3930d9: chore(deps): bump pymdown-extensions from 11.0 to 11.0.1 in /docs (#1872) (@dependabot[bot])"
+        - kind: changed
+          description: "4dc1f9a: chore(deps): bump renovatebot/github-action from 46.2.1 to 46.2.2 (#1878) (@dependabot[bot])"
+        - kind: changed
+          description: "94fb23d: chore(deps): bump the codeql-action group with 3 updates (#1890) (@dependabot[bot])"
+        - kind: changed
+          description: "6a76880: chore(deps): bump the golang-org-x group with 5 updates (#1889) (@dependabot[bot])"
+        - kind: changed
+          description: "f837328: chore(deps): bump the opentelemetry group with 2 updates (#1873) (@dependabot[bot])"
+        - kind: changed
+          description: "57d9f99: chore(deps): update dependency argoproj/argo-cd to v3.5.1 (#1879) (@gitops-promoter-renovate-bot[bot])"
+        - kind: changed
+          description: "817c639: chore(deps): update dependency helm/helm to v4.2.4 (#1885) (@gitops-promoter-renovate-bot[bot])"
+        - kind: changed
+          description: "ddd2ec4: chore(deps): update dependency tilt-dev/tilt to v0.37.7 (#1886) (@gitops-promoter-renovate-bot[bot])"
+        - kind: changed
+          description: "dfcc332: chore(deps): update dependency vektra/mockery to v3.7.3 (#1880) (@gitops-promoter-renovate-bot[bot])"
+        - kind: changed
+          description: "cace43a: chore(deps): update go and linter tooling to v1.26.6 (#1887) (@gitops-promoter-renovate-bot[bot])"
+        - kind: changed
+          description: "0ac5483: chore(deps): update kubernetes platform (#1782) (@gitops-promoter-renovate-bot[bot])"
+        - kind: changed
+          description: "8aa47fb: chore(deps): update module golang.org/x/tools to v0.49.0 (#1888) (@gitops-promoter-renovate-bot[bot])"
+        - kind: changed
+          description: "5496eb9: chore(docs): update dependency pygments to v2.21.0 (#1894) (@gitops-promoter-renovate-bot[bot])"
+      artifacthub.io/crds: |-
+        - kind: ArgoCDCommitStatus
+          version: v1alpha1
+          name: argocdcommitstatuses
+          displayName: ArgoCDCommitStatus
+          description: ArgoCDCommitStatus is the Schema for the argocdcommitstatuses API.
+        - kind: ChangeTransferPolicy
+          version: v1alpha1
+          name: changetransferpolicies
+          displayName: ChangeTransferPolicy
+          description: ChangeTransferPolicy is the Schema for the changetransferpolicies API
+        - kind: ClusterScmProvider
+          version: v1alpha1
+          name: clusterscmproviders
+          displayName: ClusterScmProvider
+          description: ClusterScmProvider is the Schema for the clusterscmproviders API.
+        - kind: CommitStatus
+          version: v1alpha1
+          name: commitstatuses
+          displayName: CommitStatus
+          description: CommitStatus is the Schema for the commitstatuses API
+        - kind: ControllerConfiguration
+          version: v1alpha1
+          name: controllerconfigurations
+          displayName: ControllerConfiguration
+          description: ControllerConfiguration is the Schema for the controllerconfigurations API.
+        - kind: GitCommitStatus
+          version: v1alpha1
+          name: gitcommitstatuses
+          displayName: GitCommitStatus
+          description: |-
+            GitCommitStatus is the Schema for the gitcommitstatuses API.
+
+            It validates commits from PromotionStrategy environments using configurable expressions
+            and creates CommitStatus resources with the validation results.
+
+            Use the Target field to control which commit is validated:
+            - "active" (default): Validates the currently deployed commit
+            - "proposed": Validates the incoming commit
+
+            The validation result is always reported on the PROPOSED commit to enable promotion gating,
+            regardless of which commit was validated.
+
+            Workflow:
+             1. Controller reads PromotionStrategy to get ProposedHydratedSha and ActiveHydratedSha
+             2. Controller selects SHA to validate based on Target field
+             3. Controller fetches commit data (subject, body, author, trailers) for selected SHA
+             4. Controller evaluates expression against selected commit data
+             5. Controller creates/updates CommitStatus with result attached to PROPOSED SHA
+             6. PromotionStrategy checks CommitStatus on PROPOSED SHA before allowing promotion
+
+            Common use cases:
+              - "Ensure active commit is not a revert before promoting"
+        - kind: GitRepository
+          version: v1alpha1
+          name: gitrepositories
+          displayName: GitRepository
+          description: GitRepository is the Schema for the gitrepositories API
+        - kind: PromotionStrategy
+          version: v1alpha1
+          name: promotionstrategies
+          displayName: PromotionStrategy
+          description: PromotionStrategy is the Schema for the promotionstrategies API
+        - kind: PullRequest
+          version: v1alpha1
+          name: pullrequests
+          displayName: PullRequest
+          description: PullRequest is the Schema for the pullrequests API
+        - kind: RevertCommit
+          version: v1alpha1
+          name: revertcommits
+          displayName: RevertCommit
+          description: RevertCommit is the Schema for the revertcommits API
+        - kind: ScheduledCommitStatus
+          version: v1alpha1
+          name: scheduledcommitstatuses
+          displayName: ScheduledCommitStatus
+          description: ScheduledCommitStatus is the Schema for the scheduledcommitstatuses API.
+        - kind: ScmProvider
+          version: v1alpha1
+          name: scmproviders
+          displayName: ScmProvider
+          description: ScmProvider is the Schema for the scmproviders API
+        - kind: TimedCommitStatus
+          version: v1alpha1
+          name: timedcommitstatuses
+          displayName: TimedCommitStatus
+          description: TimedCommitStatus is the Schema for the timedcommitstatuses API
+        - kind: WebRequestCommitStatus
+          version: v1alpha1
+          name: webrequestcommitstatuses
+          displayName: WebRequestCommitStatus
+          description: WebRequestCommitStatus is the Schema for the webrequestcommitstatuses API
+      artifacthub.io/crdsExamples: |-
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: ArgoCDCommitStatus
+          metadata:
+            name: argocdcommitstatus-sample
+          spec:
+            key: argocd-health
+            applicationSelector:
+              matchLabels:
+                app: demo
+            promotionStrategyRef:
+              name: argocon-demo
+            url:
+              template: |
+                {{- $baseURL := "https://argocd.local" -}}
+                {{- $labels := "" -}}
+                {{- range $key, $value := .ArgoCDCommitStatus.Spec.ApplicationSelector.MatchLabels -}}
+                {{- $labels = printf "%s%s=%s," $labels $key $value -}}
+                {{- end -}}
+                {{- printf "%s/applications?labels=%s" $baseURL (urlQueryEscape $labels) -}}
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: ChangeTransferPolicy
+          metadata:
+            name: environment
+          spec:
+            gitRepositoryRef:
+              name: example-git-repository
+            proposedBranch: environment/dev-next
+            activeBranch: environment/dev
+            # Defaults to true when omitted
+            autoMerge: true
+            activeCommitStatuses:
+              - key: argocd-app-health
+            proposedCommitStatuses:
+              - key: security-scan
+              - key: promoter-previous-environment
+            pullRequest:
+              labels:
+                expression: "all(Status.Proposed.CommitStatuses, {.Phase == 'success'}) ? ['lgtm'] : []"
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              # The Ready condition indicates that the resource has been successfully reconciled, when there is an error during
+              # reconciliation, the condition will be False with a reason of ReconciliationError. When we successfully reconcile the resource,
+              # the condition will be True with a reason of ReconciliationSuccess. The Ready condition is essentially a way to show reconciliation
+              # errors to the user. This condition exists on all resources that have reconciliation logic.
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess # ReconciliationSuccess ReconciliationError, or PullRequestNotReady
+                status: "True" # "True," "False," or "Unknown"
+                observedGeneration: 123
+            proposed:
+              dry:
+                author: "Author Name <author@example.com>"
+                body: "Body of the commit message (i.e. excluding the subject line)"
+                commitTime: 2023-10-01T00:00:00Z
+                repoURL: "https://git.example.com/org/repo.git"
+                sha: "abcdef1234567890abcdef1234567890abcdef12"
+                subject: "chore: Example commit subject line"
+              hydrated:
+              # The hydrated field contains the same fields as proposed.dry.
+              note:
+                # Only drySha is populated from the hydrator git note
+                drySha: "abcdef1234567890abcdef1234567890abcdef12"
+              commitStatuses:
+                - key: example-key
+                  phase: pending # pending, success, or failure
+                  url: https://example.com/checks/example-key
+                  description: Waiting for check
+            active:
+              dry:
+                sha: "fedcba0987654321fedcba0987654321fedcba09"
+                commitTime: 2023-09-15T00:00:00Z
+                repoURL: "https://git.example.com/org/repo.git"
+                subject: "chore: Currently deployed commit"
+              hydrated:
+              # same structure as proposed.dry
+              commitStatuses:
+                - key: argocd-app-health
+                  phase: success
+            pullRequest:
+              id: "848"
+              state: open # open, closed, or merged; empty when externallyMergedOrClosed is true
+              url: https://github.com/org/repo/pull/848
+              prCreationTime: 2023-10-01T00:00:00Z
+              # prMergeTime: set when merged
+              # externallyMergedOrClosed: true  # PR closed/merged outside the controller
+            history:
+              # Recent promotions merged by the controller (newest first, at most 5 entries).
+              - active:
+                  dry:
+                    sha: "fedcba0987654321fedcba0987654321fedcba09"
+                proposed:
+                  hydrated:
+                    sha: "abcdef1234567890abcdef1234567890abcdef12"
+                  commitStatuses:
+                    - key: example-key
+                      phase: success
+                pullRequest:
+                  id: "847"
+                  state: merged
+                  prCreationTime: 2023-09-01T00:00:00Z
+                  prMergeTime: 2023-09-01T01:00:00Z
+                  url: https://github.com/org/repo/pull/847
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: ClusterScmProvider
+          metadata:
+            name: example-cluster-scm-provider
+          spec:
+            secretRef:
+              # Secret must be in the same namespace where the promoter is running
+              name: example-cluster-scm-provider-secret
+            # You must specify either github, gitlab, forgejo, or bitbucketCloud. Multiple are provided here as examples.
+            # If you do not need to specify any sub-fields, just set the field to {}.
+            github:
+              domain: github.example.com # Optional, leave empty for default github.com
+              appID: 1234
+              installationID: 1234 # Optional, will query ListInstallations if not provided
+            gitlab:
+              domain: gitlab.com # Optional
+            forgejo:
+              domain: forgejo.example.com
+            bitbucketCloud: {}
+            azureDevOps:
+              organization: example-org
+              domain: dev.azure.com # Optional
+            gitea:
+              domain: gitea.example.com
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+                status: "True"
+                observedGeneration: 123
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: CommitStatus
+          metadata:
+            name: example-commit-status
+            labels:
+              # This label is used to define the "key" of the commit status. The value is referenced via the `key` field in a
+              # PromotionStrategy's (or ChangeTransferPolicy's) `activeCommitStatuses` or `proposedCommitStatuses` field.
+              #
+              # CommitStatuses should be unique per key/sha combination. For example, there may be one CommitStatus with the key
+              # `example` for shas abc123 and def456, but there should not be two CommitStatuses with the key `example` for sha
+              # abc123.
+              promoter.argoproj.io/commit-status: example
+          spec:
+            gitRepositoryRef:
+              name: example-git-repo
+            sha: abcdef1234567890abcdef1234567890abcdef12
+            # SCM status name; PromotionStrategy/ChangeTransferPolicy selectors reference this via key
+            name: argocd-app-health
+            description: Argo CD application `example-app` is healthy
+            # Can be pending, success, failure. Default is pending.
+            phase: success
+            # Optional URL to link to more information about the commit status.
+            url: https://argocd.example.com/applications/example-app
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              # The Ready condition indicates that the resource has been successfully reconciled, when there is an error during
+              # reconciliation, the condition will be False with a reason of ReconciliationError. When we successfully reconcile the resource,
+              # the condition will be True with a reason of ReconciliationSuccess. The Ready condition is essentially a way to show reconciliation
+              # errors to the user. This condition exists on all resources that have reconciliation logic.
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+                status: "True" # "True," "False," or "Unknown"
+                observedGeneration: 123
+            id: example-commit-status-id
+            phase: success # pending, success, or failure
+            sha: abcdef1234567890abcdef1234567890abcdef12
+        - # ControllerConfiguration defines the global settings for all promoter controllers.
+          # Each controller has its own configuration section with WorkQueue settings that control
+          # how frequently resources are reconciled, how many can run concurrently, and how
+          # rate limiting is applied to prevent overwhelming external systems.
+          apiVersion: promoter.argoproj.io/v1alpha1
+          kind: ControllerConfiguration
+          metadata:
+            name: example-controller-configuration
+          spec:
+            # PromotionStrategy controller manages promotion strategies and creates ChangeTransferPolicies
+            promotionStrategy:
+              workQueue:
+                # How often to automatically requeue resources for reconciliation
+                requeueDuration: "5m"
+                # Maximum number of concurrent reconcile operations for this controller
+                maxConcurrentReconciles: 3
+                # Rate limiter controls retry behavior for failed reconciliations
+                rateLimiter:
+                  # Exponential backoff: start at 1s, max out at 1 minute
+                  exponentialFailure:
+                    baseDelay: "1s"
+                    maxDelay: "1m"
+            # ChangeTransferPolicy controller handles the actual promotion logic and creates PRs
+            changeTransferPolicy:
+              workQueue:
+                requeueDuration: "5m"
+                maxConcurrentReconciles: 5
+                rateLimiter:
+                  # MaxOf combiner: use the maximum delay from multiple rate limiters
+                  # This combines per-item exponential backoff with a global rate limit
+                  maxOf:
+                    - exponentialFailure:
+                        baseDelay: "1s"
+                        maxDelay: "2m"
+                    - bucket:
+                        # Allow 10 operations per second with bursts up to 20
+                        qps: 10
+                        bucket: 20
+            # PullRequest controller manages pull request lifecycle
+            pullRequest:
+              # Template configuration for generating PR titles and descriptions.
+              # Template data has access to: .ChangeTransferPolicy, .PromotionStrategy
+              template:
+                title: "Promote {{ trunc 7 .ChangeTransferPolicy.Status.Proposed.Dry.Sha }} to `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`"
+                description: |
+                  This PR is promoting the environment branch `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`.
+
+                  **Changes:**
+                  - Current SHA: {{ .ChangeTransferPolicy.Status.Active.Dry.Sha }}
+                  - Proposed SHA: {{ .ChangeTransferPolicy.Status.Proposed.Dry.Sha }}
+              workQueue:
+                requeueDuration: "5m"
+                maxConcurrentReconciles: 3
+                rateLimiter:
+                  # FastSlow: retry quickly for the first 3 attempts, then slow down
+                  # Good for handling transient SCM API errors
+                  fastSlow:
+                    fastDelay: "500ms"
+                    slowDelay: "30s"
+                    maxFastAttempts: 3
+            # CommitStatus controller updates commit status based on policies
+            commitStatus:
+              workQueue:
+                requeueDuration: "2m"
+                maxConcurrentReconciles: 5
+                rateLimiter:
+                  exponentialFailure:
+                    baseDelay: "500ms"
+                    maxDelay: "1m"
+            # ArgoCDCommitStatus controller syncs ArgoCD application status to commit statuses
+            argocdCommitStatus:
+              watchLocalApplications: true
+              workQueue:
+                requeueDuration: "5m"
+                maxConcurrentReconciles: 10
+                rateLimiter:
+                  # Bucket rate limiter: control overall request rate to external APIs
+                  bucket:
+                    qps: 20
+                    bucket: 50
+            # TimedCommitStatus controller enforces soak-time gates via CommitStatus resources
+            timedCommitStatus:
+              workQueue:
+                requeueDuration: "1m"
+                maxConcurrentReconciles: 5
+                rateLimiter:
+                  exponentialFailure:
+                    baseDelay: "500ms"
+                    maxDelay: "1m"
+            # GitCommitStatus controller evaluates commit expressions and creates CommitStatus resources
+            gitCommitStatus:
+              workQueue:
+                requeueDuration: "2m"
+                maxConcurrentReconciles: 5
+                rateLimiter:
+                  exponentialFailure:
+                    baseDelay: "500ms"
+                    maxDelay: "1m"
+            # WebRequestCommitStatus controller runs HTTP requests and reports commit status from response
+            webRequestCommitStatus:
+              workQueue:
+                requeueDuration: "2m"
+                maxConcurrentReconciles: 5
+                rateLimiter:
+                  exponentialFailure:
+                    baseDelay: "500ms"
+                    maxDelay: "1m"
+            # ScheduledCommitStatus controller gates promotions on cron-based time windows
+            scheduledCommitStatus:
+              workQueue:
+                requeueDuration: "5m"
+                maxConcurrentReconciles: 5
+                rateLimiter:
+                  exponentialFailure:
+                    baseDelay: "500ms"
+                    maxDelay: "1m"
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: GitCommitStatus
+          metadata:
+            name: no-revert-in-active
+          spec:
+            promotionStrategyRef:
+              name: example-promotion-strategy
+            # Matched against proposedCommitStatuses / activeCommitStatuses key in PromotionStrategy
+            key: revert-check
+            description: Block promotions if active commit is a revert
+            # active (default) validates the deployed commit; proposed validates the incoming commit
+            target: active
+            expression: '!(Commit.Subject startsWith "Revert" || Commit.Body startsWith "Revert")'
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+                status: "True"
+                observedGeneration: 123
+            environments:
+              - branch: environment/dev
+                proposedHydratedSha: abcdef1234567890abcdef1234567890abcdef12
+                activeHydratedSha: fedcba0987654321fedcba0987654321fedcba09
+                targetedSha: fedcba0987654321fedcba0987654321fedcba09
+                phase: success # pending, success, or failure
+                expressionResult: true
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: GitRepository
+          metadata:
+            name: example-git-repository
+          spec:
+            # Only one of the git providers should be specified.
+            github:
+              name:
+              owner:
+            gitlab:
+              name:
+              namespace:
+              projectId:
+            forgejo:
+              name:
+              owner:
+            gitea:
+              name:
+              owner:
+            bitbucketCloud:
+              owner:
+              name:
+            azureDevOps:
+              name:
+              project:
+            # fake:
+            #   name: example
+            #   owner: example
+            scmProviderRef:
+              kind: ScmProvider # or ClusterScmProvider
+              name: example-scm-provider
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+                status: "True"
+                observedGeneration: 123
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: PromotionStrategy
+          metadata:
+            name: example-promotion-strategy
+          spec:
+            gitRepositoryRef:
+              name: example-git-repo
+            activeCommitStatuses:
+              - key: argocd-app-health
+            proposedCommitStatuses:
+              - key: security-scan
+            environments:
+              - branch: environment/dev
+              - branch: environment/test
+              - branch: environment/prod
+                autoMerge: false
+                activeCommitStatuses:
+                  - key: performance-test
+                proposedCommitStatuses:
+                  - key: deployment-freeze
+            pullRequest:
+              labels:
+                expression: |
+                  all(Status.Proposed.CommitStatuses, {.Phase == 'success'}) ? ['lgtm'] : []
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              # The Ready condition indicates that the resource has been successfully reconciled, when there is an error during
+              # reconciliation, the condition will be False with a reason of ReconciliationError. When we successfully reconcile the resource,
+              # the condition will be True with a reason of ReconciliationSuccess. The Ready condition is essentially a way to show reconciliation
+              # errors to the user. This condition exists on all resources that have reconciliation logic.
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess # ReconciliationSuccess, ReconciliationError, ChangeTransferPolicyNotReady, or PreviousEnvironmentCommitStatusNotReady
+                status: "True" # "True," "False," or "Unknown"
+                observedGeneration: 123
+            environments:
+              - branch: environment/dev
+                # The proposed and active fields are pulled directly from the status of the environment's ChangeTransferPolicy resource.
+                proposed:
+                  dry:
+                    author: "Author Name <author@example.com>"
+                    body: "Body of the commit message (i.e. excluding the subject line)"
+                    commitTime: 2023-10-01T00:00:00Z
+                    repoURL: "https://git.example.com/org/repo.git"
+                    sha: "abcdef1234567890abcdef1234567890abcdef12"
+                    subject: "chore: Example commit subject line"
+                    references:
+                      # An array of reference commits that where used to create the dry commit. This is used generally via CI systems to add tracing information to the commit.
+                      # For example, in a code/deployment repo setup this could contain the commit from the code repo that triggered the deployment commit in the deployment repo.
+                      - commit:
+                          author: '"Zach Aller" <code@example.com>'
+                          body: |-
+                            Commit message of the code commit
+
+                            Signed-off-by: Author Name <author@example.com>
+                          date: '2025-07-19T17:50:18Z'
+                          repoURL: https://github.com/org/repo
+                          sha: 9d5ccef278218dea4caa903bb6abb9ed974a1d90
+                          subject: This change fixes a bug in the code
+                  hydrated:
+                  # The hydrated field contains the same fields as proposed.dry, but the contents correspond to a hydrated commit
+                  # instead of a dry commit.
+                  note:
+                    # Dry SHA from the hydrator git note on the proposed hydrated commit (only drySha is populated today)
+                    drySha: "abcdef1234567890abcdef1234567890abcdef12"
+                  commitStatuses:
+                    - key: example-key
+                      phase: pending # pending, success, or failure
+                      url: https://example.com/checks/example-key
+                      description: Waiting for check
+                active:
+                # The active field contains the same fields as proposed.
+                pullRequest:
+                  id: "848"
+                  state: open # open, closed, or merged; empty when externallyMergedOrClosed is true
+                  url: https://github.com/org/repo/pull/848
+                  prCreationTime: 2023-10-01T00:00:00Z
+                history:
+                  # The history field contains a snapshot of each promotion that has occurred in the environment. The most recent promotion
+                  # is at the front of the list. The fields here are similar to those in proposed and active top level fields. They only differ in
+                  # that the proposed field does not contain a dry field, because in the context of history proposed becomes active when promoted.
+                  - active:
+                    # same as top level active
+                    proposed:
+                    # same as top level proposed but without dry field because in the context of history proposed.dry becomes active when promoted.
+                    pullRequest:
+                      # The pullRequest field contains information about the pull request that was merged to create this history item.
+                      id: '848'
+                      prCreationTime: '2025-08-04T19:50:15Z'
+                      url: https://github.com/org/repo/pull/848
+                lastHealthyDryShas:
+                  - sha: "abcdef1234567890abcdef1234567890abcdef12"
+                    time: 2023-10-01T00:00:00Z
+              - branch: environment/test
+                # same fields as dev
+              - branch: environment/prod
+                # same fields as dev
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: PullRequest
+          metadata:
+            name: example-proposed-commit
+          spec:
+            gitRepositoryRef:
+              name: example-git-repository
+            targetBranch:
+            sourceBranch:
+            title:
+            description:
+            commit:
+              # The commit message that will be written for the commit that's made when merging the PR
+              message: "example message"
+            # The commit SHA that must be at the head of the source branch for the merge to succeed.
+            # This prevents race conditions where a different commit gets merged than intended.
+            mergeSha: abc123def456789012345678901234567890abcd
+            # Must be closed, merged, or open. Default is open.
+            # Must be set to "open" when initially created, and cannot be set to "closed" or "merged" unless status.id is set
+            # (which the controller should do automatically as long as there are no errors).
+            state:
+            # SCM pull request labels (not Kubernetes metadata.labels). Written by the ChangeTransferPolicy controller.
+            labels:
+              - lgtm
+              - approved
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              # The Ready condition indicates that the resource has been successfully reconciled, when there is an error during
+              # reconciliation, the condition will be False with a reason of ReconciliationError. When we successfully reconcile the resource,
+              # the condition will be True with a reason of ReconciliationSuccess. The Ready condition is essentially a way to show reconciliation
+              # errors to the user. This condition exists on all resources that have reconciliation logic.
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+                status: "True" # "True," "False," or "Unknown"
+                observedGeneration: 123
+            id: "848"
+            state: open # open, closed, or merged; empty when externallyMergedOrClosed is true
+            url: https://github.com/org/repo/pull/848
+            prCreationTime: 2023-10-01T00:00:00Z
+            # SCM labels successfully applied by gitops-promoter (bookkeeping for sync/retraction).
+            # appliedLabels:
+            #   - lgtm
+            #   - approved
+            # externallyMergedOrClosed: true
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: ScheduledCommitStatus
+          metadata:
+            name: webservice-tier-1
+            namespace: default
+          spec:
+            key: promotion-window
+            promotionStrategyRef:
+              name: webservice-tier-1
+            timezone: UTC
+            exclude:
+              - description: Holiday deployment freeze
+                cron: "0 0 25 12 *"
+                duration: 48h
+            environments:
+              - branch: environment/development
+                allow:
+                  - description: US East business hours
+                    cron: "0 6 * * 1-5"
+                    duration: 12h
+                    timezone: America/New_York
+              - branch: environment/staging
+                allow:
+                  - description: Tuesday deployment window
+                    cron: "0 9 * * 2"
+                    duration: 8h
+              - branch: environment/production
+                exclude:
+                  - description: Sunday maintenance blackout
+                    cron: "0 0 * * 0"
+                    duration: 24h
+          status:
+            observedGeneration: 1
+            environments:
+              - branch: environment/development
+                sha: abc1234567890abc1234567890abc1234567890a
+                phase: success
+                active:
+                  allow: "0 6 * * 1-5"
+                  transition: "2026-07-07T18:00:00Z"
+                next:
+                  allow: "0 6 * * 1-5"
+                  transition: "2026-07-07T18:00:00Z"
+              - branch: environment/staging
+                sha: def4567890abc1234567890abc1234567890abcd
+                phase: pending
+                next:
+                  allow: "0 9 * * 2"
+                  transition: "2026-07-08T09:00:00Z"
+              - branch: environment/production
+                sha: 1234567890abc1234567890abc1234567890abcd
+                phase: success
+                next:
+                  exclude: "0 0 * * 0"
+                  transition: "2026-07-13T00:00:00Z"
+            conditions:
+              - type: Ready
+                status: "True"
+                reason: Reconciled
+                message: "All environments evaluated"
+                lastTransitionTime: "2026-07-07T10:00:00Z"
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: ScmProvider
+          metadata:
+            name: example-scm-provider
+          spec:
+            secretRef:
+              name: example-scm-provider-secret
+            # You must specify exactly one provider. Multiple are shown here as examples.
+            # If you do not need to specify any sub-fields, just set the field to {}.
+            github:
+              domain: github.example.com # Optional, leave empty for default github.com
+              appID: 1234
+              installationID: 1234 # Optional, will query ListInstallations if not provided
+            gitlab:
+              domain: gitlab.com # Optional
+            forgejo:
+              domain: forgejo.example.com
+            gitea:
+              domain: gitea.example.com
+            bitbucketCloud: {}
+            azureDevOps:
+              organization: example-organization
+              domain: dev.azure.com # Optional
+              # fake: {}  # testing only
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+                status: "True"
+                observedGeneration: 123
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: TimedCommitStatus
+          metadata:
+            name: webservice-tier-1
+            namespace: default
+          spec:
+            # Gate key for PromotionStrategy; default timer
+            key: timer
+            # Reference to the PromotionStrategy this TimedCommitStatus monitors
+            promotionStrategyRef:
+              name: webservice-tier-1
+            # List of environments to monitor for time-based gating
+            # For each environment, the controller will:
+            # 1. Check how long the active commit has been running
+            # 2. Create a CommitStatus for the CURRENT environment's active SHA
+            # 3. Set the CommitStatus phase based on whether duration is met
+            environments:
+              # Monitor development environment
+              # Creates an active CommitStatus that gates promotions from development
+              - branch: environment/development
+                duration: 1h
+              # Monitor staging environment
+              # Creates an active CommitStatus that gates promotions from staging
+              - branch: environment/staging
+                duration: 4h
+              # Monitor production environment
+              # Creates an active CommitStatus for production (useful for audit/compliance)
+              - branch: environment/production
+                duration: 24h
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+                status: "True"
+                observedGeneration: 123
+            # Status is populated by the controller
+            environments:
+              - branch: environment/development
+                # The active commit SHA being monitored
+                sha: abcdef1234567890abcdef1234567890abcdef12
+                # When this commit was deployed to the environment
+                commitTime: "2024-01-15T10:00:00Z"
+                # The configured required duration
+                requiredDuration: 1h
+                # Maximum time remaining until the gate is satisfied (0 when phase is success)
+                atMostDurationRemaining: 14m30s
+                # Current gate status: "pending" or "success"
+                phase: pending
+              - branch: environment/staging
+                sha: abcdef1234567890abcdef1234567890abcdef99
+                commitTime: "2024-01-14T06:00:00Z"
+                requiredDuration: 4h
+                atMostDurationRemaining: 0s
+                phase: success
+        - apiVersion: promoter.argoproj.io/v1alpha1
+          kind: WebRequestCommitStatus
+          metadata:
+            name: external-approval
+            namespace: default
+          spec:
+            # Reference to the PromotionStrategy this WebRequestCommitStatus applies to
+            promotionStrategyRef:
+              name: my-app
+            # Unique key for this validation; matched against proposedCommitStatuses or activeCommitStatuses
+            key: external-approval
+            # Human-readable description shown in the SCM (Go templates supported). Optional.
+            descriptionTemplate: "Waiting for external approval"
+            # URL for the commit status target link in the SCM (Go templates supported). Optional.
+            urlTemplate: ""
+            # Which SHA to report on: "proposed" (default) or "active". Optional.
+            reportOn: proposed
+            # HTTP request configuration; URL, headers, and body support Go templates
+            httpRequest:
+              urlTemplate: "https://approvals.example.com/api/check/{{ range .PromotionStrategy.Status.Environments }}{{ if eq .Branch $.Branch }}{{ .Proposed.Hydrated.Sha }}{{ end }}{{ end }}"
+              methodTemplate: GET
+              # Optional: header name -> template value
+              headerTemplates: {}
+              # Optional: request body template
+              bodyTemplate: ""
+              timeout: 30s
+              # Optional: authentication (basic, bearer, oauth2, or tls with secretRef); omit if none
+            # When the HTTP response is considered successful (phase success)
+            success:
+              when:
+                expression: 'Response != nil ? (Response.StatusCode == 200 && Response.Body.approved == true) : Phase == "success"'
+                # output:
+                #   expression: ""      # optional; expr returning map, stored in status.successOutput (available as SuccessOutput)
+            # Exactly one of polling or trigger must be set.
+            mode:
+              # context: environments (default) — one HTTP request per environment; status.environments[] below.
+              # Use context: promotionstrategy for one shared request; then status.promotionStrategyContext is set instead.
+              context: environments
+              # Polling: single optional field. Interval (default 1m) controls how often the HTTP request runs.
+              polling:
+                interval: 2m
+                # Trigger: use this instead of polling for expression-based triggering.
+                # trigger:
+                #   requeueDuration: 1m     # optional, default 1m
+                #   when:
+                #     variables:            # optional; expr returning a map, exposed as Variables to expression + output below
+                #       expression: '{ "ready": true }'
+                #     expression: "Variables.ready"   # required; boolean expr deciding whether to fire the request
+                #     output:
+                #       expression: '{ tracked: Variables.ready }'  # optional; map stored in status.triggerOutput
+                #   response:               # optional
+                #     output:
+                #       expression: ""      # expr returning map, stored in status.responseOutput
+          status:
+            observedGeneration: 123 # compare with metadata.generation to detect stale status
+            conditions:
+              # The Ready condition indicates that the resource has been successfully reconciled.
+              - type: Ready
+                lastTransitionTime: 2023-10-01T00:00:00Z
+                message: Reconciliation succeeded
+                reason: ReconciliationSuccess
+                status: "True"
+                observedGeneration: 123
+            # Status per environment; populated by the controller
+            environments:
+              - branch: environment/development
+                reportedSha: abc123def456789012345678901234567890abcd
+                lastSuccessfulSha: abc123def456789012345678901234567890abcd
+                phase: success
+                lastRequestTime: "2024-01-15T10:30:00Z"
+                lastResponseStatusCode: 200
+                # triggerOutput (trigger mode): output from trigger.when.output.expression (available as TriggerOutput in expressions/templates)
+                # responseOutput (trigger + response.output): output from response.output.expression (available as ResponseOutput in expressions/templates)
+                # successOutput: output from success.when.output.expression (available as SuccessOutput in expressions/templates)
+          # --- promotionstrategy context (illustrative; use a separate WebRequestCommitStatus resource) ---
+          # spec:
+          #   promotionStrategyRef: { name: my-app }
+          #   key: pipeline-gate
+          #   descriptionTemplate: "Gate: {{ .Phase }} (use .PromotionStrategy for branch-specific text)"
+          #   reportOn: proposed
+          #   httpRequest:
+          #     urlTemplate: "https://deployments.example.com/apps/{{ .PromotionStrategy.Spec.RepositoryReference.Name }}/status"
+          #     method: GET
+          #   success:
+          #     when:
+          #       # Boolean (all envs same phase) or object { defaultPhase, environments } — see docs/gating-promotions/built-in-gates/web-request-commit-status/index.md
+          #       expression: "Response.StatusCode == 200"
+          #   mode:
+          #     context: promotionstrategy
+          #     polling:
+          #       interval: 2m
+          # status:
+          #   observedGeneration: 123
+          #   conditions:
+          #     - type: Ready
+          #       reason: ReconciliationSuccess
+          #       status: "True"
+          #       observedGeneration: 123
+          #   # status.environments is empty when context is promotionstrategy
+          #   promotionStrategyContext:
+          #     phasePerBranch:
+          #       - branch: environment/dev
+          #         phase: success
+          #       - branch: environment/staging
+          #         phase: pending
+          #     lastSuccessfulShas:
+          #       - branch: environment/dev
+          #         lastSuccessfulSha: abcdef1234567890abcdef1234567890abcdef12
+          #     lastRequestTime: "2024-01-15T10:30:00Z"
+          #     lastResponseStatusCode: 200
+          #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
+      artifacthub.io/screenshots: |-
+        - title: GitOps Promoter UI
+          url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
+      artifacthub.io/signKey: |
+        fingerprint: 042F39C026783046DCA1CF2A73C36C56C3F06E8E
+        url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
+    apiVersion: v2
+    appVersion: 0.36.0
+    created: "2026-08-24T13:32:56.018628298Z"
+    description: A Helm chart to install GitOps Promoter, a GitOps-native environment
+      promotion tool.
+    digest: f38acf5d66f0c625882b18db9ac9161ef913893933ce2f9de3fa63b2e1f20ef7
+    home: https://github.com/argoproj-labs/gitops-promoter-helm
+    icon: https://raw.githubusercontent.com/argoproj-labs/gitops-promoter/main/docs/assets/logo/favicon-large.png
+    keywords:
+    - kubernetes
+    - environment
+    - deployment
+    - continuous-delivery
+    - cd
+    - promotions
+    - gitops
+    - progressive-delivery
+    name: gitops-promoter
+    sources:
+    - https://github.com/argoproj-labs/gitops-promoter
+    - https://github.com/argoproj-labs/gitops-promoter-helm
+    type: application
+    urls:
+    - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.15.0.tgz
+    version: 0.15.0
+  - annotations:
+      artifacthub.io/category: integration-delivery
+      artifacthub.io/changes: |-
+        - kind: added
           description: "6d2d227: feat(cli): add version cmd (#1833) (@zachaller)"
         - kind: added
           description: "d19c6f1: feat(ps): PR labels (#1683) (#1686) (@crenshaw-dev)"
@@ -999,7 +1946,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.35.0
-    created: "2026-08-20T21:03:10.840691773Z"
+    created: "2026-08-24T13:32:56.014200315Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 4476f9beccaad4294a3dae2d35d76db8654d3d6407ef0be89978be1943a47454
@@ -2042,7 +2989,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.33.0
-    created: "2026-08-20T21:03:10.836466815Z"
+    created: "2026-08-24T13:32:56.009975177Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: b8e54f867f1800ba40c70acfee9d9c8a6734d91bb3a3f36e8f871264f59097ac
@@ -2901,7 +3848,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.32.0
-    created: "2026-08-20T21:03:10.832935745Z"
+    created: "2026-08-24T13:32:56.006030308Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 99286fffcb12ff775c93249e1dbc233c6a44ddd919ac347665743b737fe05ac2
@@ -3758,7 +4705,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.32.0
-    created: "2026-08-20T21:03:10.829172155Z"
+    created: "2026-08-24T13:32:56.003091052Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 5869be210021cd5c4c68a403c0e26cee4c8619607a2bc0210953ae970e5e841b
@@ -4601,7 +5548,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.31.1
-    created: "2026-08-20T21:03:10.825369562Z"
+    created: "2026-08-24T13:32:55.999227487Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: f84c83269a0144959b96a55d67b9e17a1c59dc3de3ea492bec0976bf30c4d9ab
@@ -5462,7 +6409,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.31.0
-    created: "2026-08-20T21:03:10.821788743Z"
+    created: "2026-08-24T13:32:55.995875571Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: d8ff465d2e0b39a2523fe4e7220c0b2c1de6596909a48e7056d5ccdb96201959
@@ -6279,7 +7226,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.30.1
-    created: "2026-08-20T21:03:10.818791654Z"
+    created: "2026-08-24T13:32:55.992944368Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 00b3e71cd3421f4fe849d2bad64deec757b1251feba7fb26352db9951ba3e71a
@@ -7144,7 +8091,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.30.0
-    created: "2026-08-20T21:03:10.815200004Z"
+    created: "2026-08-24T13:32:55.989336294Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 8f38d1ef2bd2ff12d0fa5b8553740b95e5ecf0a86b1efef79c7f4ef7ffb1c7c4
@@ -7801,7 +8748,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.29.2
-    created: "2026-08-20T21:03:10.90272238Z"
+    created: "2026-08-24T13:32:56.077850118Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 153d48ff7d6ed30a99c96ba7c7715d324d104e68fcb3a6266eaa0a8f78793e2f
@@ -8456,7 +9403,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.29.1
-    created: "2026-08-20T21:03:10.899311584Z"
+    created: "2026-08-24T13:32:56.075358329Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: f4fd2efd019d0a660e31b6dd1f5b20300366e044f3af8c24a40a988fdf130ab0
@@ -9139,7 +10086,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.29.0
-    created: "2026-08-20T21:03:10.896667357Z"
+    created: "2026-08-24T13:32:56.07209745Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: bfa76980837a1c99551b04ad0d522905cb59c0a11fd862e0534630bec7a13ecb
@@ -9786,7 +10733,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.28.0
-    created: "2026-08-20T21:03:10.893370558Z"
+    created: "2026-08-24T13:32:56.06954072Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: d331e21d1d86adf65c99b2b608b5610432a14aec2a34ac86edb2f7aadbe8429c
@@ -10433,7 +11380,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.28.0
-    created: "2026-08-20T21:03:10.890786711Z"
+    created: "2026-08-24T13:32:56.06624789Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 513940868824affaf2c391b61c4a8bb9e5b886df4c85b1083d271ade109a806c
@@ -11075,7 +12022,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.26.2
-    created: "2026-08-20T21:03:10.887380721Z"
+    created: "2026-08-24T13:32:56.063831833Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 33d43da8e214b96e06b3fc19d7a69ce5e55459575f9e797c152c416717a1e321
@@ -11717,7 +12664,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.26.2
-    created: "2026-08-20T21:03:10.884806307Z"
+    created: "2026-08-24T13:32:56.060539977Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: ce4d8f3df921a104be88cc7bcf66f66cbfe7a8f1d22001763cb5506d2e54c20c
@@ -12329,7 +13276,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.25.1
-    created: "2026-08-20T21:03:10.881563118Z"
+    created: "2026-08-24T13:32:56.058088563Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 2253ba1ea5200306143919f488cffdc051904e2fd06ec608d20a638b41b6adf9
@@ -12941,7 +13888,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.25.0
-    created: "2026-08-20T21:03:10.879010117Z"
+    created: "2026-08-24T13:32:56.054938575Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 019bdd332f2007bec0c6df210b9513e835037064424fc23a8a11718ba35c8653
@@ -13552,7 +14499,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.24.0
-    created: "2026-08-20T21:03:10.875861853Z"
+    created: "2026-08-24T13:32:56.052509363Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: dc873d4742eef348393e9c5a1a8f387efdba7355cbcbadc592ee39326f45aa16
@@ -14163,7 +15110,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.24.0
-    created: "2026-08-20T21:03:10.873343373Z"
+    created: "2026-08-24T13:32:56.04925823Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 5c734bc7ef703ff961bc933ac47eb8b5782dad410bb885383a642db03bfe8e56
@@ -14774,7 +15721,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.24.0
-    created: "2026-08-20T21:03:10.870306595Z"
+    created: "2026-08-24T13:32:56.047120764Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 74a26b903ca7ebac19abb4605df7e0ab6edd511e3fb91f7d1050ae28849fbc1b
@@ -15384,7 +16331,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.23.1
-    created: "2026-08-20T21:03:10.868005446Z"
+    created: "2026-08-24T13:32:56.044011492Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: a133b52431ccbd5e9a2051caf18491f78f9b1c868879f4ffef6c3926cc3546d8
@@ -15915,7 +16862,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.7
-    created: "2026-08-20T21:03:10.846219226Z"
+    created: "2026-08-24T13:32:56.023963063Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: f0a8bb116d0ac85b15deb933b58f55ee00859fde975814410a332993451cd361
@@ -16446,7 +17393,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.7
-    created: "2026-08-20T21:03:10.865040695Z"
+    created: "2026-08-24T13:32:56.041915593Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 647b1ddc9dfae60062b0d68f13144dfc3e6448498fad4eb325d9253d4ad19889
@@ -16977,7 +17924,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.6
-    created: "2026-08-20T21:03:10.86297843Z"
+    created: "2026-08-24T13:32:56.039085621Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 85df5c18b4dd0c06a631c9eece1a5f54340d882d342959fe0e5837a856fed5a0
@@ -17508,7 +18455,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.4
-    created: "2026-08-20T21:03:10.860047704Z"
+    created: "2026-08-24T13:32:56.037225643Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 9cde131e88f678a744d0ba6ad832eae571b247559a3420308c99e879de08ebb6
@@ -18039,7 +18986,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.4
-    created: "2026-08-20T21:03:10.857865411Z"
+    created: "2026-08-24T13:32:56.034622165Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 6e08eab47785e715e90bd2b896f667ced876beea361cb97d58d67971bbdbeb81
@@ -18570,7 +19517,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.2
-    created: "2026-08-20T21:03:10.855086745Z"
+    created: "2026-08-24T13:32:56.032739484Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 2ec7e8abf54b3c30afd4db536bf13dfa78b9f479dcc8411d6a115c90b1442278
@@ -19101,7 +20048,7 @@ entries:
         url: https://argoproj-labs.github.io/gitops-promoter-helm/pgp_keys.asc
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-08-20T21:03:10.853046433Z"
+    created: "2026-08-24T13:32:56.029987155Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: ee5b014f7e9670bce005cf4499832b2a056715bab9b885275895fb114dca0994
@@ -19629,7 +20576,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-08-20T21:03:10.850283371Z"
+    created: "2026-08-24T13:32:56.027990982Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: f9f0ce488a82308c0d7253859b999003607dec8fa9174b8d07dd3712dd018c04
@@ -19658,7 +20605,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-08-20T21:03:10.848220245Z"
+    created: "2026-08-24T13:32:56.025342052Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 1eba471548462f9ea8017439e120971ae6ad1d26c22640aa9cdd557e0682bfc0
@@ -19687,7 +20634,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.1
-    created: "2026-08-20T21:03:10.844186134Z"
+    created: "2026-08-24T13:32:56.02129265Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 07131834751b0fe6a2d74bff87f3c223fa43275dadee8cff2bd5e4c8949b1f8f
@@ -19716,7 +20663,7 @@ entries:
           url: https://gitops-promoter.readthedocs.io/en/latest/assets/demo.gif
     apiVersion: v2
     appVersion: 0.22.0
-    created: "2026-08-20T21:03:10.84210708Z"
+    created: "2026-08-24T13:32:56.019986678Z"
     description: A Helm chart to install GitOps Promoter, a GitOps-native environment
       promotion tool.
     digest: 0a9686fcc4ba7efa95a777dfc30674c81a54544cd121ea1308df218750095f52
@@ -19738,4 +20685,4 @@ entries:
     urls:
     - https://argoproj-labs.github.io/gitops-promoter-helm/gitops-promoter-0.2.0.tgz
     version: 0.2.0
-generated: "2026-08-20T21:03:10.811939775Z"
+generated: "2026-08-24T13:32:55.985716194Z"
