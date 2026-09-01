@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.15.0
-appVersion: 0.36.0
+version: 0.16.0
+appVersion: 0.37.0
 keywords:
   - kubernetes
   - environment
@@ -93,7 +93,12 @@ annotations:
       version: v1alpha1
       name: pullrequests
       displayName: PullRequest
-      description: PullRequest is the Schema for the pullrequests API
+      description: |-
+        PullRequest is the Schema for the pullrequests API
+        Once recorded, the SHA can be neither replaced nor cleared: a resource merges at most once, so any
+        later disagreement is provider inconsistency or a status write built from a stale informer read, and
+        honoring it would strand the promotion history note already written against the original SHA. Such a
+        write is rejected rather than merged, which surfaces as a failed status apply and a retry.
     - kind: RevertCommit
       version: v1alpha1
       name: revertcommits
@@ -202,11 +207,12 @@ annotations:
               phase: success
         pullRequest:
           id: "848"
-          state: open # open, closed, or merged; empty when externallyMergedOrClosed is true
+          state: open # open, closed, merged, merged-or-closed, or unknown
           url: https://github.com/org/repo/pull/848
           prCreationTime: 2023-10-01T00:00:00Z
           # prMergeTime: set when merged
-          # externallyMergedOrClosed: true  # PR closed/merged outside the controller
+          # mergedTargetSha: set once the merge is observed on the SCM; the commit the active branch points at afterwards
+          # externallyMergedOrClosed: deprecated; use status.state merged-or-closed or unknown instead
         history:
           # Recent promotions merged by the controller (newest first, at most 5 entries).
           - active:
@@ -224,6 +230,29 @@ annotations:
               prCreationTime: 2023-09-01T00:00:00Z
               prMergeTime: 2023-09-01T01:00:00Z
               url: https://github.com/org/repo/pull/847
+              # In a history entry this is the active-branch commit the entry describes (same as active.hydrated.sha).
+              mergedTargetSha: "3333333333333333333333333333333333333333"
+          # A promotion whose PR was merged externally after the proposed branch advanced. The proposed dry sha is
+          # re-read from the merge commit, and the proposed hydrated sha from its second parent when the merge
+          # produced a real merge commit. A squash or fast-forward merge has no second parent, so the hydrated sha
+          # stays at the promoter's last snapshot and may be stale, as may the recorded commit statuses.
+          - active:
+              dry:
+                sha: "1111111111111111111111111111111111111111"
+            proposed:
+              hydrated:
+                sha: "2222222222222222222222222222222222222222"
+              commitStatuses:
+                - key: example-key
+                  phase: success
+            pullRequest:
+              id: "848"
+              state: merged
+              prCreationTime: 2023-09-02T00:00:00Z
+              prMergeTime: 2023-09-02T01:00:00Z
+              url: https://github.com/org/repo/pull/848
+              mergedTargetSha: "4444444444444444444444444444444444444444"
+            mergeCommitSnapshotMismatch: true
     - apiVersion: promoter.argoproj.io/v1alpha1
       kind: ClusterScmProvider
       metadata:
@@ -336,16 +365,51 @@ annotations:
                     bucket: 20
         # PullRequest controller manages pull request lifecycle
         pullRequest:
-          # Template configuration for generating PR titles and descriptions.
-          # Template data has access to: .ChangeTransferPolicy, .PromotionStrategy
+          # Template data: .ChangeTransferPolicy, .PromotionStrategy. Sprig helpers (e.g. trimSuffix) are available.
           template:
             title: "Promote {{ trunc 7 .ChangeTransferPolicy.Status.Proposed.Dry.Sha }} to `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`"
             description: |
-              This PR is promoting the environment branch `{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`.
+              This PR promotes changes to **`{{ .ChangeTransferPolicy.Spec.ActiveBranch }}`**{{ if .PromotionStrategy }} (PromotionStrategy `{{ .PromotionStrategy.Name }}`){{ end }}.
 
-              **Changes:**
-              - Current SHA: {{ .ChangeTransferPolicy.Status.Active.Dry.Sha }}
-              - Proposed SHA: {{ .ChangeTransferPolicy.Status.Proposed.Dry.Sha }}
+              ### Deployment commit
+              | | Active (deployed) | Proposed |
+              |---|---|---|
+              | SHA | {{ with .ChangeTransferPolicy.Status.Active.Dry }}{{ if and .RepoURL .Sha }}[{{ trunc 7 .Sha }}]({{ trimSuffix "/" .RepoURL }}/commit/{{ .Sha }}){{ else }}{{ trunc 7 .Sha }}{{ end }}{{ end }} | {{ with .ChangeTransferPolicy.Status.Proposed.Dry }}{{ if and .RepoURL .Sha }}[{{ trunc 7 .Sha }}]({{ trimSuffix "/" .RepoURL }}/commit/{{ .Sha }}){{ else }}{{ trunc 7 .Sha }}{{ end }}{{ end }} |
+              | Subject | {{ replace "|" "\\|" .ChangeTransferPolicy.Status.Active.Dry.Subject }} | {{ replace "|" "\\|" .ChangeTransferPolicy.Status.Proposed.Dry.Subject }} |
+
+              {{- $repo := "" -}}
+              {{- $base := "" -}}
+              {{- $head := "" -}}
+              {{- $activeSubject := "" -}}
+              {{- $proposedSubject := "" -}}
+              {{- with .ChangeTransferPolicy.Status.Active.Dry.References }}{{- with index . 0 }}{{- with .Commit -}}
+              {{- $base = .Sha -}}{{- $activeSubject = .Subject -}}{{- if .RepoURL -}}{{- $repo = .RepoURL -}}{{- end -}}
+              {{- end -}}{{- end -}}{{- end -}}
+              {{- with .ChangeTransferPolicy.Status.Proposed.Dry.References }}{{- with index . 0 }}{{- with .Commit -}}
+              {{- $head = .Sha -}}{{- $proposedSubject = .Subject -}}{{- if and (not $repo) .RepoURL -}}{{- $repo = .RepoURL -}}{{- end -}}
+              {{- end -}}{{- end -}}{{- end -}}
+              {{- if or $base $head }}
+
+              ### Code reference
+              {{- if $base }}
+              **Active:** {{ if and $repo $base }}[{{ trunc 7 $base }}]({{ trimSuffix "/" $repo }}/commit/{{ $base }}){{ else }}{{ trunc 7 $base }}{{ end }} — {{ $activeSubject }}
+              {{- end }}
+              {{- if $head }}
+              **Proposed:** {{ if and $repo $head }}[{{ trunc 7 $head }}]({{ trimSuffix "/" $repo }}/commit/{{ $head }}){{ else }}{{ trunc 7 $head }}{{ end }} — {{ $proposedSubject }}
+              {{- end }}
+              {{- if and $repo $base $head }}
+              **Diff:** [{{ trunc 7 $base }}...{{ trunc 7 $head }}]({{ trimSuffix "/" $repo }}/compare/{{ $base }}...{{ $head }})
+              {{- end }}
+              {{- end }}
+
+              {{- with .PromotionStrategy }}
+              {{- if .Status.Environments }}
+              ### Promotion pipeline
+              {{- range .Status.Environments }}
+              - `{{ .Branch }}`{{ if eq .Branch $.ChangeTransferPolicy.Spec.ActiveBranch }} **(this PR)**{{ end }}{{ with .PullRequest }}{{ if .Url }} — [PR #{{ .ID }}]({{ .Url }}){{ end }}{{ end }}
+              {{- end }}
+              {{- end }}
+              {{- end }}
           workQueue:
             requeueDuration: "5m"
             maxConcurrentReconciles: 3
@@ -557,7 +621,7 @@ annotations:
             # The active field contains the same fields as proposed.
             pullRequest:
               id: "848"
-              state: open # open, closed, or merged; empty when externallyMergedOrClosed is true
+              state: open # open, closed, merged, merged-or-closed, or unknown
               url: https://github.com/org/repo/pull/848
               prCreationTime: 2023-10-01T00:00:00Z
             history:
@@ -573,6 +637,8 @@ annotations:
                   id: '848'
                   prCreationTime: '2025-08-04T19:50:15Z'
                   url: https://github.com/org/repo/pull/848
+                  # The active-branch commit this history item describes, as reported by the SCM after the merge.
+                  mergedTargetSha: "3333333333333333333333333333333333333333"
             lastHealthyDryShas:
               - sha: "abcdef1234567890abcdef1234567890abcdef12"
                 time: 2023-10-01T00:00:00Z
@@ -619,14 +685,14 @@ annotations:
             status: "True" # "True," "False," or "Unknown"
             observedGeneration: 123
         id: "848"
-        state: open # open, closed, or merged; empty when externallyMergedOrClosed is true
+        state: open # open, closed, merged, merged-or-closed, or unknown
         url: https://github.com/org/repo/pull/848
         prCreationTime: 2023-10-01T00:00:00Z
+        # mergedTargetSha: abc123def456789012345678901234567890abcd # SCM-reported target branch SHA after merge
         # SCM labels successfully applied by gitops-promoter (bookkeeping for sync/retraction).
         # appliedLabels:
         #   - lgtm
         #   - approved
-        # externallyMergedOrClosed: true
     - apiVersion: promoter.argoproj.io/v1alpha1
       kind: ScheduledCommitStatus
       metadata:
@@ -891,52 +957,80 @@ annotations:
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
     - kind: added
-      description: "43a8ca3: feat(webrequestcommitstatus): allow failure phase from success expression in environments context (#1900) (@zachaller)"
+      description: "f247c66: feat(controller): enrich default PR description template (#1936) (@zachaller)"
+    - kind: added
+      description: "d092259: feat: Preserve promotion history via git notes when SCM rewrites merge commits (#1579) (@zachaller)"
     - kind: fixed
-      description: "bc456ae: fix(controller): stop re-enqueueing unchanged CTP note disagreements (#1831) (@zachaller)"
+      description: "d7eb497: fix(controller): adopt hydrator note from first-parent after ours-merge (#1930) (@zachaller)"
+    - kind: fixed
+      description: "da58ee7: fix(ui): use correct PR link in history view detail drawer (#1918) (@jwinters01)"
+    - kind: fixed
+      description: "ebd5465: fix: gcs test flake (#1919) (@zachaller)"
     - kind: changed
-      description: "fb7e534: docs: bump manifest versions to v0.36.0 (#1903) (@github-actions[bot])"
+      description: "c85df68: docs: bump manifest versions to v0.37.0 (#1950) (@github-actions[bot])"
     - kind: changed
-      description: "132e91a: docs: structuring changes (#1896) (@crenshaw-dev)"
+      description: "1e3976f: chore(deps): bump anchore/sbom-action/download-syft from 0.24.0 to 0.24.2 (#1942) (@dependabot[bot])"
     - kind: changed
-      description: "61bed4a: docs: update roadmap (#1892) (@crenshaw-dev)"
+      description: "d8e8274: chore(deps): bump crate-ci/typos from 1.49.0 to 1.50.0 (#1943) (@dependabot[bot])"
     - kind: changed
-      description: "06844ef: chore(deps): bump cel.dev/expr from 0.25.2 to 0.25.3 (#1884) (@dependabot[bot])"
+      description: "27c14c1: chore(deps): bump github.com/bytedance/sonic from 1.15.2 to 1.15.3 (#1924) (@dependabot[bot])"
     - kind: changed
-      description: "16d9584: chore(deps): bump github.com/google/cel-go from 0.30.0 to 0.31.0 (#1877) (@dependabot[bot])"
+      description: "a44e8f4: chore(deps): bump github.com/fxamacker/cbor/v2 from 2.9.2 to 2.9.3 (#1901) (@dependabot[bot])"
     - kind: changed
-      description: "b2163a3: chore(deps): bump github.com/grpc-ecosystem/grpc-gateway/v2 from 2.29.0 to 2.30.0 (#1875) (@dependabot[bot])"
+      description: "48320ad: chore(deps): bump github.com/go-openapi/jsonreference from 1.0.0 to 1.0.1 in the go-openapi group (#1938) (@dependabot[bot])"
     - kind: changed
-      description: "b8a33ed: chore(deps): bump github.com/ugorji/go/codec from 1.3.1 to 1.3.2 (#1876) (@dependabot[bot])"
+      description: "4e0924f: chore(deps): bump github.com/grpc-ecosystem/go-grpc-middleware/v2 from 2.3.3 to 2.3.4 (#1931) (@dependabot[bot])"
     - kind: changed
-      description: "fdfe9bc: chore(deps): bump golang.org/x/arch from 0.29.0 to 0.30.0 in the golang-org-x group (#1874) (@dependabot[bot])"
+      description: "3b9dd99: chore(deps): bump go.mongodb.org/mongo-driver/v2 from 2.8.0 to 2.8.1 (#1932) (@dependabot[bot])"
     - kind: changed
-      description: "30c56d3: chore(deps): bump golang.org/x/mod from 0.38.0 to 0.39.0 in the golang-org-x group (#1882) (@dependabot[bot])"
+      description: "901f2ea: chore(deps): bump go.mongodb.org/mongo-driver/v2 from 2.8.1 to 2.8.2 (#1940) (@dependabot[bot])"
     - kind: changed
-      description: "1e7b429: chore(deps): bump google.golang.org/protobuf from 1.36.12-0.20260120151049-f2248ac996af to 1.36.12 in the google-golang-org group (#1883) (@dependabot[bot])"
+      description: "5b072b9: chore(deps): bump google.golang.org/grpc from 1.83.0 to 1.83.1 in the google-golang-org group (#1908) (@dependabot[bot])"
     - kind: changed
-      description: "f3930d9: chore(deps): bump pymdown-extensions from 11.0 to 11.0.1 in /docs (#1872) (@dependabot[bot])"
+      description: "05cf6c0: chore(deps): bump google.golang.org/grpc from 1.83.1 to 1.83.2 in the google-golang-org group (#1939) (@dependabot[bot])"
     - kind: changed
-      description: "4dc1f9a: chore(deps): bump renovatebot/github-action from 46.2.1 to 46.2.2 (#1878) (@dependabot[bot])"
+      description: "72b6a4e: chore(deps): bump renovatebot/github-action from 46.2.2 to 46.2.4 (#1925) (@dependabot[bot])"
     - kind: changed
-      description: "94fb23d: chore(deps): bump the codeql-action group with 3 updates (#1890) (@dependabot[bot])"
+      description: "0809166: chore(deps): bump the codeql-action group with 3 updates (#1909) (@dependabot[bot])"
     - kind: changed
-      description: "6a76880: chore(deps): bump the golang-org-x group with 5 updates (#1889) (@dependabot[bot])"
+      description: "d0ceeff: chore(deps): bump the codeql-action group with 3 updates (#1941) (@dependabot[bot])"
     - kind: changed
-      description: "f837328: chore(deps): bump the opentelemetry group with 2 updates (#1873) (@dependabot[bot])"
+      description: "9de1800: chore(deps): bump the go-openapi group with 12 updates (#1907) (@dependabot[bot])"
     - kind: changed
-      description: "57d9f99: chore(deps): update dependency argoproj/argo-cd to v3.5.1 (#1879) (@gitops-promoter-renovate-bot[bot])"
+      description: "2720b28: chore(deps): bump the go-openapi group with 12 updates (#1911) (@dependabot[bot])"
     - kind: changed
-      description: "817c639: chore(deps): update dependency helm/helm to v4.2.4 (#1885) (@gitops-promoter-renovate-bot[bot])"
+      description: "a4997d3: chore(deps): bump the opentelemetry group with 8 updates (#1937) (@dependabot[bot])"
     - kind: changed
-      description: "ddd2ec4: chore(deps): update dependency tilt-dev/tilt to v0.37.7 (#1886) (@gitops-promoter-renovate-bot[bot])"
+      description: "47ea7d6: chore(deps): regenerate codegen after Kubernetes platform Renovate bumps (#1929) (@crenshaw-dev)"
     - kind: changed
-      description: "dfcc332: chore(deps): update dependency vektra/mockery to v3.7.3 (#1880) (@gitops-promoter-renovate-bot[bot])"
+      description: "3da923f: chore(deps): update dependency argoproj/argo-cd to v3.5.2 (#1933) (@gitops-promoter-renovate-bot[bot])"
     - kind: changed
-      description: "cace43a: chore(deps): update go and linter tooling to v1.26.6 (#1887) (@gitops-promoter-renovate-bot[bot])"
+      description: "f934ca5: chore(deps): update dependency goreleaser/goreleaser to v2.18.0 (#1915) (@gitops-promoter-renovate-bot[bot])"
     - kind: changed
-      description: "0ac5483: chore(deps): update kubernetes platform (#1782) (@gitops-promoter-renovate-bot[bot])"
+      description: "e0584ac: chore(deps): update dependency kubernetes-sigs/kind to v0.33.0 (#1926) (@gitops-promoter-renovate-bot[bot])"
     - kind: changed
-      description: "8aa47fb: chore(deps): update module golang.org/x/tools to v0.49.0 (#1888) (@gitops-promoter-renovate-bot[bot])"
+      description: "7456cfe: chore(deps): update kubernetes platform (#1904) (@gitops-promoter-renovate-bot[bot])"
     - kind: changed
-      description: "5496eb9: chore(docs): update dependency pygments to v2.21.0 (#1894) (@gitops-promoter-renovate-bot[bot])"
+      description: "da51ca3: chore(deps): update node.js to v24.20.0 (#1928) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "f045326: chore(deps): update node.js to v24.20.0 (#1934) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "3066e99: chore(deps-dev): bump brace-expansion from 2.1.1 to 2.1.4 in /ui/codegen (#1906) (@dependabot[bot])"
+    - kind: changed
+      description: "0e6d981: chore(ci): group interdependent upgrades (#1914) (@crenshaw-dev)"
+    - kind: changed
+      description: "a955b26: chore(ci): run build-installer to update manifests (#1916) (@crenshaw-dev)"
+    - kind: changed
+      description: "c3bc415: chore(pr): clarify Reconcile behavior w/ comments (#1947) (@crenshaw-dev)"
+    - kind: fixed
+      description: "582fc17: ci: enable ginkgolinter and fix no-op Eventually assertions (#1902) (@crenshaw-dev)"
+    - kind: changed
+      description: "6c9df62: perf(cache): retain only promoter credential keys in Secret informer … (#1921) (@zachaller)"
+    - kind: changed
+      description: "7cd8198: perf(git): batch commit metadata reads (#1923) (@zachaller)"
+    - kind: changed
+      description: "29e9247: perf: cache git path (#1922) (@crenshaw-dev)"
+    - kind: changed
+      description: "81bfeed: refactor(pr): formalize reconcile strategy (#1944) (@crenshaw-dev)"
+    - kind: changed
+      description: "1d53175: refactor(pr): simplify missing-dependency error handling (#1935) (@crenshaw-dev)"
