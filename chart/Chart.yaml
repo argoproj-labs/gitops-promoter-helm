@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.16.0
-appVersion: 0.37.0
+version: 0.16.1
+appVersion: 0.37.1
 keywords:
   - kubernetes
   - environment
@@ -956,81 +956,21 @@ annotations:
       #     lastResponseStatusCode: 200
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
-    - kind: added
-      description: "f247c66: feat(controller): enrich default PR description template (#1936) (@zachaller)"
-    - kind: added
-      description: "d092259: feat: Preserve promotion history via git notes when SCM rewrites merge commits (#1579) (@zachaller)"
     - kind: fixed
-      description: "d7eb497: fix(controller): adopt hydrator note from first-parent after ours-merge (#1930) (@zachaller)"
+      description: "6af07c2: fix(controller): never skip history recalculation when the newest entry has no PR ID (#1955) (@zachaller)"
     - kind: fixed
-      description: "da58ee7: fix(ui): use correct PR link in history view detail drawer (#1918) (@jwinters01)"
+      description: "1ae0202: fix(controller): write the promotion history note as soon as the PR reports a merge (#1956) (@zachaller)"
+    - kind: changed
+      description: "69f12b3: docs: bump manifest versions to v0.37.1 (#1959) (@github-actions[bot])"
+    - kind: changed
+      description: "734bd53: chore(deps): bump github.com/prometheus/procfs from 0.21.1 to 0.22.0 in the prometheus group across 1 directory (#1945) (@dependabot[bot])"
+    - kind: changed
+      description: "4ac4096: chore(deps): bump google.golang.org/grpc from 1.82.1 to 1.83.1 in /hack/celcost (#1958) (@dependabot[bot])"
+    - kind: changed
+      description: "6ef6ad9: chore(deps): bump zizmorcore/zizmor-action from 0.6.2 to 0.6.3 (#1957) (@dependabot[bot])"
+    - kind: changed
+      description: "ce3af5c: chore(deps-dev): bump browserslist from 4.28.1 to 4.28.8 in /ui/extension (#1951) (@dependabot[bot])"
+    - kind: changed
+      description: "ad5781f: chore(deps-dev): bump postcss-selector-parser from 7.1.0 to 7.1.5 in /ui/extension (#1948) (@dependabot[bot])"
     - kind: fixed
-      description: "ebd5465: fix: gcs test flake (#1919) (@zachaller)"
-    - kind: changed
-      description: "c85df68: docs: bump manifest versions to v0.37.0 (#1950) (@github-actions[bot])"
-    - kind: changed
-      description: "1e3976f: chore(deps): bump anchore/sbom-action/download-syft from 0.24.0 to 0.24.2 (#1942) (@dependabot[bot])"
-    - kind: changed
-      description: "d8e8274: chore(deps): bump crate-ci/typos from 1.49.0 to 1.50.0 (#1943) (@dependabot[bot])"
-    - kind: changed
-      description: "27c14c1: chore(deps): bump github.com/bytedance/sonic from 1.15.2 to 1.15.3 (#1924) (@dependabot[bot])"
-    - kind: changed
-      description: "a44e8f4: chore(deps): bump github.com/fxamacker/cbor/v2 from 2.9.2 to 2.9.3 (#1901) (@dependabot[bot])"
-    - kind: changed
-      description: "48320ad: chore(deps): bump github.com/go-openapi/jsonreference from 1.0.0 to 1.0.1 in the go-openapi group (#1938) (@dependabot[bot])"
-    - kind: changed
-      description: "4e0924f: chore(deps): bump github.com/grpc-ecosystem/go-grpc-middleware/v2 from 2.3.3 to 2.3.4 (#1931) (@dependabot[bot])"
-    - kind: changed
-      description: "3b9dd99: chore(deps): bump go.mongodb.org/mongo-driver/v2 from 2.8.0 to 2.8.1 (#1932) (@dependabot[bot])"
-    - kind: changed
-      description: "901f2ea: chore(deps): bump go.mongodb.org/mongo-driver/v2 from 2.8.1 to 2.8.2 (#1940) (@dependabot[bot])"
-    - kind: changed
-      description: "5b072b9: chore(deps): bump google.golang.org/grpc from 1.83.0 to 1.83.1 in the google-golang-org group (#1908) (@dependabot[bot])"
-    - kind: changed
-      description: "05cf6c0: chore(deps): bump google.golang.org/grpc from 1.83.1 to 1.83.2 in the google-golang-org group (#1939) (@dependabot[bot])"
-    - kind: changed
-      description: "72b6a4e: chore(deps): bump renovatebot/github-action from 46.2.2 to 46.2.4 (#1925) (@dependabot[bot])"
-    - kind: changed
-      description: "0809166: chore(deps): bump the codeql-action group with 3 updates (#1909) (@dependabot[bot])"
-    - kind: changed
-      description: "d0ceeff: chore(deps): bump the codeql-action group with 3 updates (#1941) (@dependabot[bot])"
-    - kind: changed
-      description: "9de1800: chore(deps): bump the go-openapi group with 12 updates (#1907) (@dependabot[bot])"
-    - kind: changed
-      description: "2720b28: chore(deps): bump the go-openapi group with 12 updates (#1911) (@dependabot[bot])"
-    - kind: changed
-      description: "a4997d3: chore(deps): bump the opentelemetry group with 8 updates (#1937) (@dependabot[bot])"
-    - kind: changed
-      description: "47ea7d6: chore(deps): regenerate codegen after Kubernetes platform Renovate bumps (#1929) (@crenshaw-dev)"
-    - kind: changed
-      description: "3da923f: chore(deps): update dependency argoproj/argo-cd to v3.5.2 (#1933) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "f934ca5: chore(deps): update dependency goreleaser/goreleaser to v2.18.0 (#1915) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "e0584ac: chore(deps): update dependency kubernetes-sigs/kind to v0.33.0 (#1926) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "7456cfe: chore(deps): update kubernetes platform (#1904) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "da51ca3: chore(deps): update node.js to v24.20.0 (#1928) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "f045326: chore(deps): update node.js to v24.20.0 (#1934) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "3066e99: chore(deps-dev): bump brace-expansion from 2.1.1 to 2.1.4 in /ui/codegen (#1906) (@dependabot[bot])"
-    - kind: changed
-      description: "0e6d981: chore(ci): group interdependent upgrades (#1914) (@crenshaw-dev)"
-    - kind: changed
-      description: "a955b26: chore(ci): run build-installer to update manifests (#1916) (@crenshaw-dev)"
-    - kind: changed
-      description: "c3bc415: chore(pr): clarify Reconcile behavior w/ comments (#1947) (@crenshaw-dev)"
-    - kind: fixed
-      description: "582fc17: ci: enable ginkgolinter and fix no-op Eventually assertions (#1902) (@crenshaw-dev)"
-    - kind: changed
-      description: "6c9df62: perf(cache): retain only promoter credential keys in Secret informer … (#1921) (@zachaller)"
-    - kind: changed
-      description: "7cd8198: perf(git): batch commit metadata reads (#1923) (@zachaller)"
-    - kind: changed
-      description: "29e9247: perf: cache git path (#1922) (@crenshaw-dev)"
-    - kind: changed
-      description: "81bfeed: refactor(pr): formalize reconcile strategy (#1944) (@crenshaw-dev)"
-    - kind: changed
-      description: "1d53175: refactor(pr): simplify missing-dependency error handling (#1935) (@crenshaw-dev)"
+      description: "0ece4a4: test(acdcs): fix flaky expectation (#1949) (@crenshaw-dev)"
