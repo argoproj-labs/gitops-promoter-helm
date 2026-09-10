@@ -14,7 +14,7 @@ manager:
 
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
-    tag: v0.37.1
+    tag: v0.38.1
     pullPolicy: IfNotPresent
 
   ## Arguments
@@ -270,6 +270,19 @@ controllerConfiguration:
               slowDelay: "5m"
               maxFastAttempts: 3
   webRequestCommitStatus:
+    workQueue:
+      maxConcurrentReconciles: 10
+      requeueDuration: "5m"
+      rateLimiter:
+        maxOf:
+          - bucket:
+              qps: 10
+              bucket: 100
+          - fastSlow:
+              fastDelay: "1s"
+              slowDelay: "5m"
+              maxFastAttempts: 3
+  dependentsSuccessfulCommitStatus:
     workQueue:
       maxConcurrentReconciles: 10
       requeueDuration: "5m"

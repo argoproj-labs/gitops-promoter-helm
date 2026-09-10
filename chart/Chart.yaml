@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.16.1
-appVersion: 0.37.1
+version: 0.17.0
+appVersion: 0.38.1
 keywords:
   - kubernetes
   - environment
@@ -52,6 +52,11 @@ annotations:
       name: controllerconfigurations
       displayName: ControllerConfiguration
       description: ControllerConfiguration is the Schema for the controllerconfigurations API.
+    - kind: DependentsSuccessfulCommitStatus
+      version: v1alpha1
+      name: dependentssuccessfulcommitstatuses
+      displayName: DependentsSuccessfulCommitStatus
+      description: DependentsSuccessfulCommitStatus is the Schema for the dependentssuccessfulcommitstatuses API
     - kind: GitCommitStatus
       version: v1alpha1
       name: gitcommitstatuses
@@ -159,7 +164,7 @@ annotations:
           - key: argocd-app-health
         proposedCommitStatuses:
           - key: security-scan
-          - key: promoter-previous-environment
+          - key: dependents-successful
         pullRequest:
           labels:
             expression: "all(Status.Proposed.CommitStatuses, {.Phase == 'success'}) ? ['lgtm'] : []"
@@ -440,6 +445,15 @@ annotations:
               bucket:
                 qps: 20
                 bucket: 50
+        # DependentsSuccessfulCommitStatus controller infers linear ordering when spec.environments is omitted
+        dependentsSuccessfulCommitStatus:
+          workQueue:
+            requeueDuration: "5m"
+            maxConcurrentReconciles: 5
+            rateLimiter:
+              exponentialFailure:
+                baseDelay: "500ms"
+                maxDelay: "1m"
         # TimedCommitStatus controller enforces soak-time gates via CommitStatus resources
         timedCommitStatus:
           workQueue:
@@ -476,6 +490,56 @@ annotations:
               exponentialFailure:
                 baseDelay: "500ms"
                 maxDelay: "1m"
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: DependentsSuccessfulCommitStatus
+      metadata:
+        name: example-dag
+      spec:
+        key: dependents-successful
+        promotionStrategyRef:
+          name: example-promotion-strategy
+        environments:
+          - branch: environment/dev
+          - branch: environment/staging
+            dependsOn:
+              - environment/dev
+          - branch: environment/prod
+            dependsOn:
+              - environment/staging
+        url:
+          template: "https://promoter.example.com/promotion-strategies/{{ .PromotionStrategy.Name }}?env={{ urlQueryEscape .Environment }}"
+      status:
+        observedGeneration: 1
+        environments:
+          - branch: environment/dev
+            activeCommitStatuses:
+              - key: argocd-health
+                phase: success
+                description: Application healthy
+            upstreams: []
+          - branch: environment/staging
+            activeCommitStatuses:
+              - key: argocd-health
+                phase: success
+                description: Application healthy
+            upstreams:
+              - branch: environment/dev
+                satisfied: true
+          - branch: environment/prod
+            activeCommitStatuses:
+              - key: argocd-health
+                phase: pending
+                description: Waiting for sync
+            upstreams:
+              - branch: environment/dev
+                satisfied: true
+              - branch: environment/staging
+                satisfied: false
+                reason: Waiting for "environment/staging" to be promoted
+            phase: pending
+            description: Waiting for "environment/staging" to be promoted
+            url: https://promoter.example.com/promotion-strategies/example-promotion-strategy?env=environment%2Fstaging
+            reportedSha: abc123def4567890abcdef1234567890abcdef12
     - apiVersion: promoter.argoproj.io/v1alpha1
       kind: GitCommitStatus
       metadata:
@@ -555,6 +619,8 @@ annotations:
         activeCommitStatuses:
           - key: argocd-app-health
         proposedCommitStatuses:
+          # Ordering gate key; must match DependentsSuccessfulCommitStatus.spec.key
+          - key: dependents-successful
           - key: security-scan
         environments:
           - branch: environment/dev
@@ -579,7 +645,7 @@ annotations:
           - type: Ready
             lastTransitionTime: 2023-10-01T00:00:00Z
             message: Reconciliation succeeded
-            reason: ReconciliationSuccess # ReconciliationSuccess, ReconciliationError, ChangeTransferPolicyNotReady, or PreviousEnvironmentCommitStatusNotReady
+            reason: ReconciliationSuccess # ReconciliationSuccess, ReconciliationError, or ChangeTransferPolicyNotReady
             status: "True" # "True," "False," or "Unknown"
             observedGeneration: 123
         environments:
@@ -957,20 +1023,10 @@ annotations:
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
     - kind: fixed
-      description: "6af07c2: fix(controller): never skip history recalculation when the newest entry has no PR ID (#1955) (@zachaller)"
-    - kind: fixed
-      description: "1ae0202: fix(controller): write the promotion history note as soon as the PR reports a merge (#1956) (@zachaller)"
+      description: "ca61bee: fix(controller): drop DSCS legacy cleanup annotation stamp (#2009) (@zachaller)"
     - kind: changed
-      description: "69f12b3: docs: bump manifest versions to v0.37.1 (#1959) (@github-actions[bot])"
+      description: "ee66b56: docs: bump manifest versions to v0.38.1 (#2010) (@github-actions[bot])"
     - kind: changed
-      description: "734bd53: chore(deps): bump github.com/prometheus/procfs from 0.21.1 to 0.22.0 in the prometheus group across 1 directory (#1945) (@dependabot[bot])"
+      description: "0290ded: chore(ci): align k8s platform versions (#2007) (@crenshaw-dev)"
     - kind: changed
-      description: "4ac4096: chore(deps): bump google.golang.org/grpc from 1.82.1 to 1.83.1 in /hack/celcost (#1958) (@dependabot[bot])"
-    - kind: changed
-      description: "6ef6ad9: chore(deps): bump zizmorcore/zizmor-action from 0.6.2 to 0.6.3 (#1957) (@dependabot[bot])"
-    - kind: changed
-      description: "ce3af5c: chore(deps-dev): bump browserslist from 4.28.1 to 4.28.8 in /ui/extension (#1951) (@dependabot[bot])"
-    - kind: changed
-      description: "ad5781f: chore(deps-dev): bump postcss-selector-parser from 7.1.0 to 7.1.5 in /ui/extension (#1948) (@dependabot[bot])"
-    - kind: fixed
-      description: "0ece4a4: test(acdcs): fix flaky expectation (#1949) (@crenshaw-dev)"
+      description: "c77005c: refactor(controller): use controller-runtime read-your-own-write cons… (#1998) (@zachaller)"
