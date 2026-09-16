@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.17.0
-appVersion: 0.38.1
+version: 0.18.0
+appVersion: 0.39.0
 keywords:
   - kubernetes
   - environment
@@ -498,14 +498,6 @@ annotations:
         key: dependents-successful
         promotionStrategyRef:
           name: example-promotion-strategy
-        environments:
-          - branch: environment/dev
-          - branch: environment/staging
-            dependsOn:
-              - environment/dev
-          - branch: environment/prod
-            dependsOn:
-              - environment/staging
         url:
           template: "https://promoter.example.com/promotion-strategies/{{ .PromotionStrategy.Name }}?env={{ urlQueryEscape .Environment }}"
       status:
@@ -616,17 +608,23 @@ annotations:
       spec:
         gitRepositoryRef:
           name: example-git-repo
+        orderCommitStatusRef:
+          group: promoter.argoproj.io
+          kind: DependentsSuccessfulCommitStatus
+          name: example-dag
         activeCommitStatuses:
           - key: argocd-app-health
         proposedCommitStatuses:
-          # Ordering gate key; must match DependentsSuccessfulCommitStatus.spec.key
-          - key: dependents-successful
           - key: security-scan
         environments:
           - branch: environment/dev
           - branch: environment/test
+            dependsOn:
+              - environment/dev
           - branch: environment/prod
             autoMerge: false
+            dependsOn:
+              - environment/test
             activeCommitStatuses:
               - key: performance-test
             proposedCommitStatuses:
@@ -1022,11 +1020,21 @@ annotations:
       #     lastResponseStatusCode: 200
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
-    - kind: fixed
-      description: "ca61bee: fix(controller): drop DSCS legacy cleanup annotation stamp (#2009) (@zachaller)"
+    - kind: added
+      description: "b4dcfc9: feat(api)!: move promotion order onto PromotionStrategy (#2014) (@zachaller)"
+    - kind: added
+      description: "238d954: docs: add upgrade docs (#2020) (@zachaller)"
     - kind: changed
-      description: "ee66b56: docs: bump manifest versions to v0.38.1 (#2010) (@github-actions[bot])"
+      description: "8fd9226: docs: bump manifest versions to v0.39.0 (#2021) (@github-actions[bot])"
     - kind: changed
-      description: "0290ded: chore(ci): align k8s platform versions (#2007) (@crenshaw-dev)"
+      description: "411ae67: chore(deps): bump github.com/bytedance/sonic from 1.15.3 to 1.15.4 (#2019) (@dependabot[bot])"
     - kind: changed
-      description: "c77005c: refactor(controller): use controller-runtime read-your-own-write cons… (#1998) (@zachaller)"
+      description: "543768c: chore(deps): bump go.mongodb.org/mongo-driver/v2 from 2.9.0 to 2.9.1 (#2018) (@dependabot[bot])"
+    - kind: changed
+      description: "358eed0: chore(deps): bump the golang-org-x group with 5 updates (#2017) (@dependabot[bot])"
+    - kind: changed
+      description: "be76117: chore(deps): update dependency helm/helm to v4.3.0 (#2015) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "c780c38: chore(deps): update dependency kubernetes-sigs/kubebuilder to v4.16.0 (#2016) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "ff5ecb9: chore(deps): update kubernetes platform (#1980) (@gitops-promoter-renovate-bot[bot])"
