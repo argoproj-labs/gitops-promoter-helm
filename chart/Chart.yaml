@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.18.0
-appVersion: 0.39.0
+version: 0.19.0
+appVersion: 0.40.1
 keywords:
   - kubernetes
   - environment
@@ -1020,21 +1020,7 @@ annotations:
       #     lastResponseStatusCode: 200
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
-    - kind: added
-      description: "b4dcfc9: feat(api)!: move promotion order onto PromotionStrategy (#2014) (@zachaller)"
-    - kind: added
-      description: "238d954: docs: add upgrade docs (#2020) (@zachaller)"
+    - kind: fixed
+      description: "581cf05: fix(ui): restore PromotionStrategy as the extension detection kind (#2037) (@jwinters01)"
     - kind: changed
-      description: "8fd9226: docs: bump manifest versions to v0.39.0 (#2021) (@github-actions[bot])"
-    - kind: changed
-      description: "411ae67: chore(deps): bump github.com/bytedance/sonic from 1.15.3 to 1.15.4 (#2019) (@dependabot[bot])"
-    - kind: changed
-      description: "543768c: chore(deps): bump go.mongodb.org/mongo-driver/v2 from 2.9.0 to 2.9.1 (#2018) (@dependabot[bot])"
-    - kind: changed
-      description: "358eed0: chore(deps): bump the golang-org-x group with 5 updates (#2017) (@dependabot[bot])"
-    - kind: changed
-      description: "be76117: chore(deps): update dependency helm/helm to v4.3.0 (#2015) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "c780c38: chore(deps): update dependency kubernetes-sigs/kubebuilder to v4.16.0 (#2016) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "ff5ecb9: chore(deps): update kubernetes platform (#1980) (@gitops-promoter-renovate-bot[bot])"
+      description: "1b61d63: docs: bump manifest versions to v0.40.1 (#2038) (@github-actions[bot])"
