@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.19.0
-appVersion: 0.40.1
+version: 0.20.0
+appVersion: 0.41.0
 keywords:
   - kubernetes
   - environment
@@ -37,6 +37,11 @@ annotations:
       name: changetransferpolicies
       displayName: ChangeTransferPolicy
       description: ChangeTransferPolicy is the Schema for the changetransferpolicies API
+    - kind: ChangeTransferPolicyHistory
+      version: v1alpha1
+      name: changetransferpolicyhistories
+      displayName: ChangeTransferPolicyHistory
+      description: ChangeTransferPolicyHistory is the Schema for the changetransferpolicyhistories API.
     - kind: ClusterScmProvider
       version: v1alpha1
       name: clusterscmproviders
@@ -218,8 +223,32 @@ annotations:
           # prMergeTime: set when merged
           # mergedTargetSha: set once the merge is observed on the SCM; the commit the active branch points at afterwards
           # externallyMergedOrClosed: deprecated; use status.state merged-or-closed or unknown instead
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: ChangeTransferPolicyHistory
+      metadata:
+        name: example-promotion-strategy-environment-dev-history
+      spec:
+        gitRepositoryRef:
+          name: example-git-repository
+        activeBranch: environment/dev
+        # Optional repository subpath for the environment's active state. When set, hydrator metadata
+        # is read from <activePath>/hydrator.metadata.
+        activePath: apps/dev
+      status:
+        observedGeneration: 123 # compare with metadata.generation to detect stale status
+        conditions:
+          # The Ready condition indicates that the resource has been successfully reconciled, when there is an error during
+          # reconciliation, the condition will be False with a reason of ReconciliationError. When we successfully reconcile the resource,
+          # the condition will be True with a reason of ReconciliationSuccess. The Ready condition is essentially a way to show reconciliation
+          # errors to the user. This condition exists on all resources that have reconciliation logic.
+          - type: Ready
+            lastTransitionTime: 2023-10-01T00:00:00Z
+            message: Reconciliation succeeded
+            reason: ReconciliationSuccess # ReconciliationSuccess or ReconciliationError
+            status: "True" # "True," "False," or "Unknown"
+            observedGeneration: 123
         history:
-          # Recent promotions merged by the controller (newest first, at most 5 entries).
+          # Recent promotions merged by the controller (newest first, at most 20 entries).
           - active:
               dry:
                 sha: "fedcba0987654321fedcba0987654321fedcba09"
@@ -349,6 +378,15 @@ annotations:
             # Rate limiter controls retry behavior for failed reconciliations
             rateLimiter:
               # Exponential backoff: start at 1s, max out at 1 minute
+              exponentialFailure:
+                baseDelay: "1s"
+                maxDelay: "1m"
+        # ChangeTransferPolicyHistory controller reconstructs promotion history from git
+        changeTransferPolicyHistory:
+          workQueue:
+            requeueDuration: "5m"
+            maxConcurrentReconciles: 3
+            rateLimiter:
               exponentialFailure:
                 baseDelay: "1s"
                 maxDelay: "1m"
@@ -688,21 +726,6 @@ annotations:
               state: open # open, closed, merged, merged-or-closed, or unknown
               url: https://github.com/org/repo/pull/848
               prCreationTime: 2023-10-01T00:00:00Z
-            history:
-              # The history field contains a snapshot of each promotion that has occurred in the environment. The most recent promotion
-              # is at the front of the list. The fields here are similar to those in proposed and active top level fields. They only differ in
-              # that the proposed field does not contain a dry field, because in the context of history proposed becomes active when promoted.
-              - active:
-                # same as top level active
-                proposed:
-                # same as top level proposed but without dry field because in the context of history proposed.dry becomes active when promoted.
-                pullRequest:
-                  # The pullRequest field contains information about the pull request that was merged to create this history item.
-                  id: '848'
-                  prCreationTime: '2025-08-04T19:50:15Z'
-                  url: https://github.com/org/repo/pull/848
-                  # The active-branch commit this history item describes, as reported by the SCM after the merge.
-                  mergedTargetSha: "3333333333333333333333333333333333333333"
             lastHealthyDryShas:
               - sha: "abcdef1234567890abcdef1234567890abcdef12"
                 time: 2023-10-01T00:00:00Z
@@ -1020,7 +1043,25 @@ annotations:
       #     lastResponseStatusCode: 200
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
+    - kind: added
+      description: "f81ddd0: feat(api)!: move promotion history to ChangeTransferPolicyHistory (#2036) (@zachaller)"
     - kind: fixed
-      description: "581cf05: fix(ui): restore PromotionStrategy as the extension detection kind (#2037) (@jwinters01)"
+      description: "e0610f1: fix(ctp): strip Pull-request-merge-time from status commit bodies (#2042) (@zachaller)"
+    - kind: fixed
+      description: "4f9e173: fix(ui): hide Proposed changes when dry SHAs already match (#2053) (@crenshaw-dev)"
     - kind: changed
-      description: "1b61d63: docs: bump manifest versions to v0.40.1 (#2038) (@github-actions[bot])"
+      description: "a8169b9: docs: bump manifest versions to v0.41.0 (#2057) (@github-actions[bot])"
+    - kind: changed
+      description: "928b435: chore(deps): bump github.com/fxamacker/cbor/v2 from 2.9.3 to 2.9.4 (#2048) (@dependabot[bot])"
+    - kind: changed
+      description: "1ee006a: chore(deps): bump go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc from 1.44.0 to 1.45.0 in /hack/celcost (#2045) (@dependabot[bot])"
+    - kind: changed
+      description: "6c28a8b: chore(deps): bump go.opentelemetry.io/otel/sdk from 1.44.0 to 1.45.0 in /hack/celcost (#2046) (@dependabot[bot])"
+    - kind: changed
+      description: "b0afdc9: chore(deps): bump google.golang.org/grpc from 1.83.2 to 1.84.0 in the google-golang-org group (#2055) (@dependabot[bot])"
+    - kind: changed
+      description: "fb588a7: chore(deps): bump the github-actions group with 9 updates (#2051) (@dependabot[bot])"
+    - kind: changed
+      description: "f605bd3: chore(deps): update dependency goreleaser/goreleaser to v2.18.2 (#2050) (@gitops-promoter-renovate-bot[bot])"
+    - kind: changed
+      description: "df390b4: chore(ci): go a bit easier on the go bumps (#2043) (#2049) (@crenshaw-dev)"
