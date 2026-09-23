@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.20.0
-appVersion: 0.41.0
+version: 0.21.0
+appVersion: 0.42.0
 keywords:
   - kubernetes
   - environment
@@ -1044,24 +1044,10 @@ annotations:
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
     - kind: added
-      description: "f81ddd0: feat(api)!: move promotion history to ChangeTransferPolicyHistory (#2036) (@zachaller)"
+      description: "5be5d7f: feat(wrcs): expose NamespaceMetadata to trigger and success expressions (#2062) (@zachaller)"
     - kind: fixed
-      description: "e0610f1: fix(ctp): strip Pull-request-merge-time from status commit bodies (#2042) (@zachaller)"
+      description: "797b145: fix(controller): release old Secret finalizer when ScmProvider secretRef changes (#2056) (@somaz94)"
     - kind: fixed
-      description: "4f9e173: fix(ui): hide Proposed changes when dry SHAs already match (#2053) (@crenshaw-dev)"
+      description: "b3195c8: fix(controller): requeue noteless CTPs after a note-based hydrator is seen (#2063) (@zachaller)"
     - kind: changed
-      description: "a8169b9: docs: bump manifest versions to v0.41.0 (#2057) (@github-actions[bot])"
-    - kind: changed
-      description: "928b435: chore(deps): bump github.com/fxamacker/cbor/v2 from 2.9.3 to 2.9.4 (#2048) (@dependabot[bot])"
-    - kind: changed
-      description: "1ee006a: chore(deps): bump go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc from 1.44.0 to 1.45.0 in /hack/celcost (#2045) (@dependabot[bot])"
-    - kind: changed
-      description: "6c28a8b: chore(deps): bump go.opentelemetry.io/otel/sdk from 1.44.0 to 1.45.0 in /hack/celcost (#2046) (@dependabot[bot])"
-    - kind: changed
-      description: "b0afdc9: chore(deps): bump google.golang.org/grpc from 1.83.2 to 1.84.0 in the google-golang-org group (#2055) (@dependabot[bot])"
-    - kind: changed
-      description: "fb588a7: chore(deps): bump the github-actions group with 9 updates (#2051) (@dependabot[bot])"
-    - kind: changed
-      description: "f605bd3: chore(deps): update dependency goreleaser/goreleaser to v2.18.2 (#2050) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "df390b4: chore(ci): go a bit easier on the go bumps (#2043) (#2049) (@crenshaw-dev)"
+      description: "0ab6d99: docs: bump manifest versions to v0.42.0 (#2064) (@github-actions[bot])"
