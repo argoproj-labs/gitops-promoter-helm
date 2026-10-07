@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.22.0
-appVersion: 0.43.0
+version: 0.23.0
+appVersion: 0.44.0
 keywords:
   - kubernetes
   - environment
@@ -109,6 +109,16 @@ annotations:
         later disagreement is provider inconsistency or a status write built from a stale informer read, and
         honoring it would strand the promotion history note already written against the original SHA. Such a
         write is rejected rather than merged, which surfaces as a failed status apply and a retry.
+    - kind: RestoreActiveCommit
+      version: v1alpha1
+      name: restoreactivecommits
+      displayName: RestoreActiveCommit
+      description: |-
+        RestoreActiveCommit restores one environment's active branch to a previously hydrated commit and records
+        the dry SHA that was on the active branch then, so that dry SHA is not promoted again.
+        Creating the resource is the authorization boundary: whoever can create a RestoreActiveCommit in the
+        strategy's namespace can restore that environment, and the controller's git credentials perform the push.
+        The controller sets the environment's ChangeTransferPolicy as owner, so deleting the policy removes its restores.
     - kind: RevertCommit
       version: v1alpha1
       name: revertcommits
@@ -287,6 +297,28 @@ annotations:
               url: https://github.com/org/repo/pull/848
               mergedTargetSha: "4444444444444444444444444444444444444444"
             mergeCommitSnapshotMismatch: true
+          # A manual restore of the active branch rather than a merged promotion. The tree (and so active.dry)
+          # repeats the version named by restoredFrom; the pull request (including prMergeTime) and commit statuses
+          # are copied from that version and describe the original promotion, not the restore. active.hydrated is the
+          # restore commit itself, so its commitTime is when the restore was written.
+          - active:
+              dry:
+                sha: "1111111111111111111111111111111111111111"
+              hydrated:
+                sha: "5555555555555555555555555555555555555555"
+                commitTime: 2023-09-03T01:00:00Z
+                subject: Restore environment/dev to 4444444
+            proposed:
+              hydrated:
+                sha: "2222222222222222222222222222222222222222"
+            pullRequest:
+              id: "848"
+              state: merged
+              prMergeTime: 2023-09-02T01:00:00Z
+              url: https://github.com/org/repo/pull/848
+              mergedTargetSha: "5555555555555555555555555555555555555555"
+            restoredFrom: "4444444444444444444444444444444444444444"
+            restoreUnblockedAt: 2023-09-03T02:00:00Z
     - apiVersion: promoter.argoproj.io/v1alpha1
       kind: ClusterScmProvider
       metadata:
@@ -521,6 +553,15 @@ annotations:
                 maxDelay: "1m"
         # ScheduledCommitStatus controller gates promotions on cron-based time windows
         scheduledCommitStatus:
+          workQueue:
+            requeueDuration: "5m"
+            maxConcurrentReconciles: 5
+            rateLimiter:
+              exponentialFailure:
+                baseDelay: "500ms"
+                maxDelay: "1m"
+        # RestoreActiveCommit controller restores an environment's active branch to a previous hydrated commit
+        restoreActiveCommit:
           workQueue:
             requeueDuration: "5m"
             maxConcurrentReconciles: 5
@@ -780,6 +821,27 @@ annotations:
         # appliedLabels:
         #   - lgtm
         #   - approved
+    - apiVersion: promoter.argoproj.io/v1alpha1
+      kind: RestoreActiveCommit
+      metadata:
+        name: example-revert
+      spec:
+        promotionStrategyRef:
+          name: example-promotion-strategy
+        branch: environment/development
+        sha: "abcdef1234567890abcdef1234567890abcdef12"
+      status:
+        observedGeneration: 123
+        activeSha: "1111111111111111111111111111111111111111"
+        blockedDrySha: "3333333333333333333333333333333333333333"
+        restoredFrom: "abcdef1234567890abcdef1234567890abcdef12"
+        conditions:
+          - type: Ready
+            lastTransitionTime: 2023-10-01T00:00:00Z
+            message: Reconciliation succeeded
+            reason: ReconciliationSuccess
+            status: "True"
+            observedGeneration: 123
     - apiVersion: promoter.argoproj.io/v1alpha1
       kind: ScheduledCommitStatus
       metadata:
@@ -1043,69 +1105,19 @@ annotations:
       #     lastResponseStatusCode: 200
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
-    - kind: changed
-      description: "40ade93: docs: bump manifest versions to v0.43.0 (#2123) (@github-actions[bot])"
-    - kind: changed
-      description: "2e59b68: docs: update gif (#2094) (@crenshaw-dev)"
-    - kind: changed
-      description: "5578841: chore(deps): bump github.com/42wim/httpsig from 1.2.4 to 1.3.0 (#2114) (@dependabot[bot])"
-    - kind: changed
-      description: "f39e9d0: chore(deps): bump github.com/go-openapi/jsonpointer from 1.0.1 to 1.0.2 in the go-openapi group (#2085) (@dependabot[bot])"
-    - kind: changed
-      description: "977d55b: chore(deps): bump github.com/go-openapi/jsonreference from 1.0.2 to 1.0.3 in the go-openapi group (#2091) (@dependabot[bot])"
-    - kind: changed
-      description: "69fe4d9: chore(deps): bump github.com/go-playground/locales from 0.14.1 to 0.14.2 (#2100) (@dependabot[bot])"
-    - kind: changed
-      description: "4ce5d79: chore(deps): bump github.com/goccy/go-json from 0.10.6 to 0.11.1 (#2101) (@dependabot[bot])"
-    - kind: changed
-      description: "b0b7554: chore(deps): bump github.com/grpc-ecosystem/grpc-gateway/v2 from 2.30.0 to 2.31.0 (#2092) (@dependabot[bot])"
-    - kind: changed
-      description: "14f78b3: chore(deps): bump github.com/prometheus/common from 0.71.0 to 0.72.0 in the prometheus group (#2106) (@dependabot[bot])"
-    - kind: changed
-      description: "9cdfc17: chore(deps): bump github.com/quic-go/quic-go from 0.62.0 to 0.63.0 (#2087) (@dependabot[bot])"
-    - kind: changed
-      description: "9e2cc09: chore(deps): bump github.com/tidwall/pretty from 1.2.1 to 1.2.2 (#2099) (@dependabot[bot])"
-    - kind: changed
-      description: "f5a437e: chore(deps): bump go.opentelemetry.io/proto/otlp from 1.11.0 to 1.11.1 in the opentelemetry group (#2113) (@dependabot[bot])"
-    - kind: changed
-      description: "82dac81: chore(deps): bump sigs.k8s.io/apiserver-network-proxy/konnectivity-client from 0.36.0 to 0.37.0 (#2086) (@dependabot[bot])"
-    - kind: changed
-      description: "f934e5c: chore(deps): bump the go-etcd group with 3 updates (#2084) (@dependabot[bot])"
-    - kind: changed
-      description: "8d701ec: chore(deps): bump urllib3 from 2.7.0 to 2.8.0 in /docs (#2104) (@dependabot[bot])"
-    - kind: changed
-      description: "f0a6966: chore(deps): update dependency kubernetes-sigs/kustomize to v5.8.2 (#2108) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "5fec38d: chore(deps): update dependency tilt-dev/tilt to v0.37.8 (#2109) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "680b182: chore(deps): update go and linter tooling to v0.51.0 (#2111) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "e58ba2d: chore(deps): update go and linter tooling to v2.14.0 (#2082) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "3743800: chore(deps): update kubernetes platform to v0.37.1 (#2081) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "1b195a6: chore(deps): update module sigs.k8s.io/controller-runtime to v0.25.2 (#2110) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "55dafc7: chore(deps): update quay.io/brancz/kube-rbac-proxy docker tag to v0.23.0 (#2083) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "dc12beb: chore(deps-dev): bump source-map-js from 1.2.1 to 1.2.2 in /ui/shared (#2125) (@dependabot[bot])"
-    - kind: changed
-      description: "a1a3032: chore: Update USERS.md (#2088) (@lossitomatossi)"
     - kind: added
-      description: "38eb8ce: chore: add skill for GIF updates (#2095) (@crenshaw-dev)"
+      description: "30e28d0: feat: add RestoreActiveCommit to roll back an environment and block promotion until released (#2080) (@zachaller)"
     - kind: fixed
-      description: "0385a7a: chore: npm audit fix (#2102) (@github-actions[bot])"
-    - kind: fixed
-      description: "c8b64d8: chore: npm audit fix (#2124) (@github-actions[bot])"
+      description: "35ff93b: fix(pr): storm and lock contention on list-installations (#1963) (@crenshaw-dev)"
     - kind: changed
-      description: "09b7d58: perf(ctph): fetch notes only when history needs a rebuild (#2069) (@zachaller)"
+      description: "f74386e: docs: bump manifest versions to v0.44.0 (#2129) (@github-actions[bot])"
     - kind: changed
-      description: "3dd25a3: perf(git): extract trailers in the batched git log (#2070) (@zachaller)"
+      description: "e7a9a18: chore(deps): bump github.com/goccy/go-json from 0.11.1 to 0.11.2 (#2115) (@dependabot[bot])"
     - kind: changed
-      description: "99d50fc: perf(git): list hydrator notes before walking ancestors (#2072) (@zachaller)"
+      description: "0dce99a: chore(deps): bump golang.org/x/tools from 0.50.0 to 0.51.0 in the golang-org-x group across 1 directory (#2121) (@dependabot[bot])"
     - kind: changed
-      description: "722528a: perf(git): memoize merge-tree results and skip redundant cat-file (#2073) (@zachaller)"
+      description: "9b05643: chore(deps): bump the opentelemetry group across 1 directory with 8 updates (#2120) (@dependabot[bot])"
     - kind: changed
-      description: "a8286be: perf(git): prefetch history notes in one git log (#2071) (@zachaller)"
+      description: "de5dada: chore: raise manager and apiserver CPU and memory requests (#2132) (@zachaller)"
     - kind: changed
-      description: "5846958: perf(git): snapshot remote refs and skip unchanged fetches (#2074) (@zachaller)"
+      description: "7026f92: perf(acdcs): don't deepcopy from provider clusters (#2127) (@crenshaw-dev)"
