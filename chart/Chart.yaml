@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.23.0
-appVersion: 0.44.0
+version: 0.24.0
+appVersion: 0.45.0
 keywords:
   - kubernetes
   - environment
@@ -1106,18 +1106,20 @@ annotations:
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
     - kind: added
-      description: "30e28d0: feat: add RestoreActiveCommit to roll back an environment and block promotion until released (#2080) (@zachaller)"
+      description: "e84a7ec: feat(cli): windows binaries (#2112) (#2126) (@crenshaw-dev)"
+    - kind: added
+      description: "9ef6c0f: feat(github): rate limit per account (#2137) (@crenshaw-dev)"
+    - kind: added
+      description: "21bf22f: feat(metrics): namespace labels (#2139) (@crenshaw-dev)"
+    - kind: added
+      description: "209de78: feat(ui): make selected history cells more prominent (#2117) (@jwinters01)"
     - kind: fixed
-      description: "35ff93b: fix(pr): storm and lock contention on list-installations (#1963) (@crenshaw-dev)"
+      description: "130a5ae: fix(github): record repository label listing in SCM metrics (#2135) (@zachaller)"
     - kind: changed
-      description: "f74386e: docs: bump manifest versions to v0.44.0 (#2129) (@github-actions[bot])"
+      description: "76b1efa: docs: bump manifest versions to v0.45.0 (#2140) (@github-actions[bot])"
     - kind: changed
-      description: "e7a9a18: chore(deps): bump github.com/goccy/go-json from 0.11.1 to 0.11.2 (#2115) (@dependabot[bot])"
+      description: "ba0c5af: chore(deps): bump source-map-js from 1.2.1 to 1.2.2 in /ui/storybook (#2138) (@dependabot[bot])"
     - kind: changed
-      description: "0dce99a: chore(deps): bump golang.org/x/tools from 0.50.0 to 0.51.0 in the golang-org-x group across 1 directory (#2121) (@dependabot[bot])"
+      description: "be70f14: chore(deps): update dependency argoproj/argo-cd to v3.5.4 (#2131) (@gitops-promoter-renovate-bot[bot])"
     - kind: changed
-      description: "9b05643: chore(deps): bump the opentelemetry group across 1 directory with 8 updates (#2120) (@dependabot[bot])"
-    - kind: changed
-      description: "de5dada: chore: raise manager and apiserver CPU and memory requests (#2132) (@zachaller)"
-    - kind: changed
-      description: "7026f92: perf(acdcs): don't deepcopy from provider clusters (#2127) (@crenshaw-dev)"
+      description: "eca1ab5: chore(ci): no fieldalignment lint for tests (#2130) (@crenshaw-dev)"
