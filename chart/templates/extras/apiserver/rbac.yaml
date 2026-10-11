@@ -18,13 +18,17 @@ rules:
       - promoter.argoproj.io
     resources:
       - promotionstrategies
+      - changetransferpolicyhistories
       - changetransferpolicies
+      - restoreactivecommits
       - pullrequests
       - commitstatuses
       - argocdcommitstatuses
       - gitcommitstatuses
       - timedcommitstatuses
       - webrequestcommitstatuses
+      - scheduledcommitstatuses
+      - dependentssuccessfulcommitstatuses
       - gitrepositories
       - scmproviders
       - clusterscmproviders
