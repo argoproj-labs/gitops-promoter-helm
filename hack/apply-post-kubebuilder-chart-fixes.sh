@@ -62,3 +62,12 @@ if [[ -f "$MANAGER" ]]; then
   echo "Wiring manager Deployment replicas to .Values.manager.replicas..."
   sed_i 's/^  replicas: 1$/  replicas: {{ .Values.manager.replicas }}/' "$MANAGER"
 fi
+
+if [[ -f "$MANAGER" ]]; then
+  # Make the kube-rbac-proxy image overridable (private registry mirrors); the generated
+  # repository and tag stay as defaults. Idempotent: only matches a literal image line.
+  echo "Wiring kube-rbac-proxy image to .Values.metrics.kubeRbacProxy.image..."
+  perl -0777 -i -pe '
+    s!^([ \t]*)image: ([^\s:"{]+):([^\s"{]+)\n([ \t]*name: kube-rbac-proxy)$!${1}image: "{{ ((.Values.metrics.kubeRbacProxy).image).repository | default "$2" }}:{{ ((.Values.metrics.kubeRbacProxy).image).tag | default "$3" }}"\n${4}!m;
+  ' "$MANAGER"
+fi

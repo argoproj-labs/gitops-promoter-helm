@@ -16,6 +16,7 @@
 #   * fixed resource names (promoter-*)     -> {{ include "promoter.resourceName" ... }}
 #   * controller-manager SA reference       -> {{ include "promoter.serviceAccountName" . }}
 #   * container image                       -> {{ include "promoter.apiserver.image" . }}
+#   * pod imagePullSecrets                  -> .Values.apiserver.imagePullSecrets
 #   * app.kubernetes.io/managed-by: kustomize -> chart managed-by + helm.sh/chart labels
 #   * every doc wrapped in {{- if .Values.apiserver.enabled }} ... {{- end }}
 #   * serving-cert / TLS handling made cert-mode conditional
@@ -178,6 +179,7 @@ nocomments "$BASE/apiservice.yaml" | yq '
 nocomments "$BASE/deployment.yaml" | yq '
   .spec.replicas = "__REPLICAS__" |
   .spec.template.spec.securityContext = "__PODSEC__" |
+  .spec.template.spec.imagePullSecrets = "__PULLSECRETS__" |
   .spec.template.spec.containers[0].image = "__IMAGE__" |
   .spec.template.spec.containers[0].resources = "__RESOURCES__" |
   .spec.template.spec.containers[0].securityContext = "__CTRSEC__" |
@@ -193,6 +195,9 @@ nocomments "$BASE/deployment.yaml" | yq '
 
       # pod securityContext
       s!^([ \t]*)securityContext: __PODSEC__[ \t]*$!my $c = length($1) + 2; qq(${1}securityContext:\n) . (q( ) x $c) . qq({{- toYaml .Values.apiserver.podSecurityContext | nindent $c }})!me;
+
+      # pod imagePullSecrets
+      s!^([ \t]*)imagePullSecrets: __PULLSECRETS__[ \t]*$!my $c = length($1) + 2; qq(${1}{{- with .Values.apiserver.imagePullSecrets }}\n) . qq(${1}imagePullSecrets:\n) . (q( ) x $c) . qq({{- toYaml . | nindent $c }}\n) . qq(${1}{{- end }})!me;
 
       # image + pullPolicy
       s!^([ \t]*)image: __IMAGE__[ \t]*$!qq(${1}image: {{ include "promoter.apiserver.image" . }}\n) . qq(${1}imagePullPolicy: {{ (.Values.apiserver.image).pullPolicy | default .Values.manager.image.pullPolicy }})!me;

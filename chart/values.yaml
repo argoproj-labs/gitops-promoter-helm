@@ -111,6 +111,12 @@ metrics:
   secure: true
   # Metrics server port
   port: 8080
+  # kube-rbac-proxy sidecar image override. Defaults to the image shipped with the upstream
+  # manifests; set repository/tag to use a mirror.
+  kubeRbacProxy:
+    image: {}
+      # repository: quay.io/brancz/kube-rbac-proxy
+      # tag: v0.23.0
 
 ## Cert-manager integration for TLS certificates.
 ## Required for webhook certificates and metrics endpoint certificates.
@@ -357,6 +363,11 @@ apiserver:
     # repository: quay.io/argoprojlabs/gitops-promoter
     # tag: ""
     # pullPolicy: IfNotPresent
+
+  ## Image pull secrets for the apiserver Deployment, e.g. for a private registry.
+  ## Not inherited from manager.imagePullSecrets.
+  imagePullSecrets: []
+    # - name: my-registry-secret
 
   ## Resource limits and requests
   ##
