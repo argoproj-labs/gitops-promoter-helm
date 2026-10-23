@@ -83,7 +83,7 @@ spec:
           secret:
             secretName: {{ .Values.apiserver.certs.secretName }}
         {{- end }}
-      {{- with .Values.apiserver.imagePullSecrets }}
+      {{- with or .Values.apiserver.imagePullSecrets (and (empty (.Values.apiserver.image).repository) .Values.manager.imagePullSecrets) }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}

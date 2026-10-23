@@ -365,7 +365,8 @@ apiserver:
     # pullPolicy: IfNotPresent
 
   ## Image pull secrets for the apiserver Deployment, e.g. for a private registry.
-  ## Not inherited from manager.imagePullSecrets.
+  ## When empty and apiserver.image.repository is not set (the manager image is used),
+  ## manager.imagePullSecrets applies.
   imagePullSecrets: []
     # - name: my-registry-secret
 
