@@ -113,6 +113,7 @@ metrics:
   port: 8080
   # kube-rbac-proxy sidecar image override. Defaults to the image shipped with the upstream
   # manifests; set repository/tag to use a mirror.
+  # Pulled with manager.imagePullSecrets (same pod); list one secret per registry.
   kubeRbacProxy:
     image: {}
       # repository: quay.io/brancz/kube-rbac-proxy
