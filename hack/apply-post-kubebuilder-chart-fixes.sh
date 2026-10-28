@@ -6,7 +6,7 @@
 # Usage:
 #   hack/apply-post-kubebuilder-chart-fixes.sh /path/to/chart
 #
-# Requirements: sed (GNU sed on Linux; BSD sed on macOS supported).
+# Requirements: sed (GNU sed on Linux; BSD sed on macOS supported), perl.
 #
 set -euo pipefail
 
@@ -61,4 +61,21 @@ if [[ -f "$MANAGER" ]]; then
   # the line is already templated.
   echo "Wiring manager Deployment replicas to .Values.manager.replicas..."
   sed_i 's/^  replicas: 1$/  replicas: {{ .Values.manager.replicas }}/' "$MANAGER"
+fi
+
+if [[ -f "$MANAGER" ]]; then
+  # Make the kube-rbac-proxy image overridable (private registry mirrors); the generated
+  # repository and tag stay as defaults. Idempotent: only matches a literal image line.
+  # Splits at the last ':' not followed by '/', so registry ports stay in the repository.
+  # promoter.image (templates/extras/_helpers.image.tpl) drops the tag for a digest repository.
+  echo "Wiring kube-rbac-proxy image to .Values.metrics.kubeRbacProxy.image..."
+  perl -0777 -i -pe '
+    s!^([ \t]*)image: ([^\s"{\@]+):([^\s:/"{\@]+)\n([ \t]*name: kube-rbac-proxy)$!${1}image: {{ include "promoter.image" (dict "repository" (((.Values.metrics.kubeRbacProxy).image).repository | default "$2") "tag" (((.Values.metrics.kubeRbacProxy).image).tag | default "$3")) | quote }}\n${4}!m;
+  ' "$MANAGER"
+  # Fail loudly if kubebuilder's output changed shape and the substitution did not apply;
+  # otherwise chart-diff would stay green while the override silently disappears.
+  if ! grep -q '\.Values\.metrics\.kubeRbacProxy' "$MANAGER"; then
+    echo "Error: could not wire kube-rbac-proxy image in $MANAGER; update the pattern above." >&2
+    exit 1
+  fi
 fi
