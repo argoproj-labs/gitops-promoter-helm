@@ -146,11 +146,7 @@ cat > "$OUT/_helpers.apiserver.tpl" <<'EOF'
 {{- $img := .Values.apiserver.image | default dict -}}
 {{- $repo := $img.repository | default .Values.manager.image.repository -}}
 {{- $tag := $img.tag | default .Values.manager.image.tag | default .Chart.AppVersion -}}
-{{- if contains "@" $repo -}}
-{{- $repo -}}
-{{- else -}}
-{{- printf "%s:%s" $repo $tag -}}
-{{- end -}}
+{{- include "promoter.image" (dict "repository" $repo "tag" $tag) -}}
 {{- end -}}
 EOF
 

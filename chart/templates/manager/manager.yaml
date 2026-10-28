@@ -124,7 +124,7 @@ spec:
         - --upstream=http://127.0.0.1:8080/
         - --logtostderr=true
         - --v=0
-        image: "{{ ((.Values.metrics.kubeRbacProxy).image).repository | default "quay.io/brancz/kube-rbac-proxy" }}{{- if not (contains "@" (((.Values.metrics.kubeRbacProxy).image).repository | default "quay.io/brancz/kube-rbac-proxy")) }}:{{ ((.Values.metrics.kubeRbacProxy).image).tag | default "v0.23.1" }}{{- end }}"
+        image: {{ include "promoter.image" (dict "repository" (((.Values.metrics.kubeRbacProxy).image).repository | default "quay.io/brancz/kube-rbac-proxy") "tag" (((.Values.metrics.kubeRbacProxy).image).tag | default "v0.23.1")) | quote }}
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443

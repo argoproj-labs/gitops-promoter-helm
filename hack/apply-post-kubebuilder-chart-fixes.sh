@@ -67,10 +67,10 @@ if [[ -f "$MANAGER" ]]; then
   # Make the kube-rbac-proxy image overridable (private registry mirrors); the generated
   # repository and tag stay as defaults. Idempotent: only matches a literal image line.
   # Splits at the last ':' not followed by '/', so registry ports stay in the repository.
-  # Like manager.image, a repository containing '@' (digest) is rendered without a tag.
+  # promoter.image (templates/extras/_helpers.image.tpl) drops the tag for a digest repository.
   echo "Wiring kube-rbac-proxy image to .Values.metrics.kubeRbacProxy.image..."
   perl -0777 -i -pe '
-    s!^([ \t]*)image: ([^\s"{\@]+):([^\s:/"{\@]+)\n([ \t]*name: kube-rbac-proxy)$!${1}image: "{{ ((.Values.metrics.kubeRbacProxy).image).repository | default "$2" }}{{- if not (contains "\@" (((.Values.metrics.kubeRbacProxy).image).repository | default "$2")) }}:{{ ((.Values.metrics.kubeRbacProxy).image).tag | default "$3" }}{{- end }}"\n${4}!m;
+    s!^([ \t]*)image: ([^\s"{\@]+):([^\s:/"{\@]+)\n([ \t]*name: kube-rbac-proxy)$!${1}image: {{ include "promoter.image" (dict "repository" (((.Values.metrics.kubeRbacProxy).image).repository | default "$2") "tag" (((.Values.metrics.kubeRbacProxy).image).tag | default "$3")) | quote }}\n${4}!m;
   ' "$MANAGER"
   # Fail loudly if kubebuilder's output changed shape and the substitution did not apply;
   # otherwise chart-diff would stay green while the override silently disappears.
