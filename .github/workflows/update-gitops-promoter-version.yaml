@@ -1,11 +1,18 @@
 name: Update GitOps Promoter Version
 
 on:
+  schedule:
+    - cron: "17 6 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
+
+# A scheduled run and a manual run must not push to the update branch at the same time.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 env:
   KUBEBUILDER_VERSION: v4.14.0
@@ -82,5 +89,8 @@ jobs:
             - Updated gitops_promoter_version
 
             **Release Notes:** https://github.com/argoproj-labs/gitops-promoter/releases/tag/${{ steps.get-latest-release.outputs.latest_version }}
-          branch: update-gitops-promoter-${{ steps.get-latest-release.outputs.latest_version }}
+          # Fixed branch: if an update PR is already open (e.g. for an older release), it is
+          # force-pushed with the latest version and its title and body are refreshed instead of
+          # opening a second PR. If nothing changed since the last run, the PR is left as is.
+          branch: update-gitops-promoter
           delete-branch: true
