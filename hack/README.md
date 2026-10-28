@@ -12,6 +12,8 @@ These scripts mirror what GitHub Actions does so you can reproduce chart updates
 | [`chart-diff.sh`](chart-diff.sh) | Snapshot `chart/`, install kubebuilder, regenerate, then `diff` against the snapshot (excluding `templates/extra/` and `templates/extras/`). Exits non-zero if the committed chart does not match regen + fixes. |
 | [`update-apiserver-templates.sh`](update-apiserver-templates.sh) | Generator for the dashboard aggregation apiserver. "Helmifies" upstream `config/apiserver/` (base + cert overlays) into chart-owned templates under `chart/templates/extras/apiserver/`. The kubebuilder plugin never emits these (the apiserver is not in `config/release`), so this is the equivalent of `update-controllerconfiguration.sh` for the apiserver. Requires `yq` + `perl`. |
 | [`apiserver-diff.sh`](apiserver-diff.sh) | Verifier for the apiserver templates: regenerates into a temp area and `diff`s against the committed `chart/templates/extras/apiserver/`. Exits non-zero on drift. Mirrors `regenerate-helm-chart.sh` ↔ `chart-diff.sh`. |
+| [`update-values-schema.sh`](update-values-schema.sh) | Generate `chart/values.schema.json` from `chart/values.yaml` with [helm-schema](https://github.com/dadav/helm-schema). `controllerConfiguration` is validated against the ControllerConfiguration CRD's spec schema. `--check` exits non-zero if the committed schema is stale (run in CI). Requires `yq` + `jq`; installs helm-schema if missing. |
+| [`install-helm-schema.sh`](install-helm-schema.sh) | Download the pinned `helm-schema` CLI (`HELM_SCHEMA_VERSION`, default `0.24.0`), verify its checksum, and install into **`~/.local/bin`** by default. Override with `INSTALL_DIR` or `--install-dir`. |
 
 ### Local chart diff (same as PR `chart-diff` workflow)
 
@@ -45,7 +47,7 @@ Then run `helm lint chart` and review `git diff`.
 |--------|---------|
 | [`fetch-promoter-latest-release.sh`](fetch-promoter-latest-release.sh) | Print the latest `v…` tag from the GitHub API (`curl` + `jq`). Optional `GITHUB_TOKEN` for rate limits. |
 | [`check-promoter-version-update-needed.sh`](check-promoter-version-update-needed.sh) | Compare `gitops_promoter_version` to a target tag; when `GITHUB_OUTPUT` is set (Actions), writes `update_needed` and `current_version`. |
-| [`apply-promoter-version-to-chart.sh`](apply-promoter-version-to-chart.sh) | Full bump: `regenerate-helm-chart.sh`, `update-controllerconfiguration.sh`, `update-apiserver-templates.sh`, image `tag` in `values.yaml`, `gitops_promoter_version`, `Chart.yaml` `appVersion` + semver `version` bump, `update-artifacthub-crd-annotations.sh`. Installs kubebuilder via `install-kubebuilder.sh` if missing. Requires gitops-promoter >= 0.32.0. |
+| [`apply-promoter-version-to-chart.sh`](apply-promoter-version-to-chart.sh) | Full bump: `regenerate-helm-chart.sh`, `update-controllerconfiguration.sh`, `update-apiserver-templates.sh`, image `tag` in `values.yaml`, `gitops_promoter_version`, `Chart.yaml` `appVersion` + semver `version` bump, `update-artifacthub-crd-annotations.sh`, `update-values-schema.sh`. Installs kubebuilder via `install-kubebuilder.sh` if missing. Requires gitops-promoter >= 0.32.0. |
 
 ### Local run (same steps as CI after you clone promoter at the tag)
 

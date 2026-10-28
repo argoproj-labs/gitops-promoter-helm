@@ -148,4 +148,8 @@ echo "Updating Artifact Hub CRD annotations..."
     --gitops-promoter-repo "$GITOPS_PROMOTER_REPO"
 )
 
+# Last, so the schema picks up the new CRDs, controllerConfiguration and image tag.
+echo "Regenerating values.schema.json..."
+bash "$SCRIPT_DIR/update-values-schema.sh" --helm-repo "$HELM_REPO"
+
 echo "Done. Review with: git -C \"$HELM_REPO\" diff && helm lint \"$CHART_DIR\""
