@@ -14,7 +14,7 @@ manager:
 
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
-    tag: v0.45.0
+    tag: v0.46.0
     pullPolicy: IfNotPresent
 
   ## Arguments
@@ -117,7 +117,7 @@ metrics:
   kubeRbacProxy:
     image: {}
       # repository: quay.io/brancz/kube-rbac-proxy
-      # tag: v0.23.0
+      # tag: v0.23.1
 
 ## Cert-manager integration for TLS certificates.
 ## Required for webhook certificates and metrics endpoint certificates.

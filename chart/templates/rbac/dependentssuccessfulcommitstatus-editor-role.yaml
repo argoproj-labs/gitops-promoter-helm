@@ -14,6 +14,7 @@ metadata:
     app.kubernetes.io/name: {{ include "promoter.name" . }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
   name: {{ include "promoter.resourceName" (dict "suffix" "dependentssuccessfulcommitstatus-editor-role" "context" $) }}
 rules:
 - apiGroups:
