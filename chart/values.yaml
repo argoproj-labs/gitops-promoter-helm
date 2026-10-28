@@ -1,21 +1,58 @@
 ## String to partially override chart.fullname template (will maintain the release name)
 ##
-# nameOverride: ""
+nameOverride: ""
 
 ## String to fully override chart.fullname template
 ##
-# fullnameOverride: ""
+fullnameOverride: ""
 
 ## Configure the controller manager deployment
 ##
 manager:
+  ## Set to false to skip rendering the controller-manager Deployment.
+  enabled: true
+
   ## Replica count for the controller-manager Deployment (default 1).
   replicas: 1
 
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
     tag: v0.46.0
+    # @schema
+    # enum: [Always, IfNotPresent, Never]
+    # @schema
     pullPolicy: IfNotPresent
+
+  ## Labels and annotations for the Deployment object
+  ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
+  labels: {}
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
+  annotations: {}
+
+  ## Labels and annotations for the manager pods
+  ##
+  pod:
+    # @schema
+    # type: object
+    # properties: {}
+    # additionalProperties: true
+    # @schema
+    labels: {}
+    # @schema
+    # type: object
+    # properties: {}
+    # additionalProperties: true
+    # @schema
+    annotations: {}
 
   ## Arguments
   ##
@@ -32,6 +69,11 @@ manager:
 
   ## Pod-level security settings
   ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
   podSecurityContext:
     runAsNonRoot: true
     seccompProfile:
@@ -39,6 +81,11 @@ manager:
 
   ## Container-level security settings
   ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
   securityContext:
     allowPrivilegeEscalation: false
     capabilities:
@@ -47,6 +94,11 @@ manager:
 
   ## Resource limits and requests
   ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
   resources:
     limits:
       cpu: 500m
@@ -57,6 +109,11 @@ manager:
 
   ## Manager pod's affinity
   ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -75,16 +132,61 @@ manager:
 
   ## Manager pod's node selector
   ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
   nodeSelector: {}
 
   ## Manager pod's tolerations
   ##
   tolerations: []
 
+  ## Manager pod's topology spread constraints
+  ##
+  topologySpreadConstraints: []
+
+  ## Manager pod's priority class
+  ##
+  priorityClassName: ""
+
+  ## Manager pod's termination grace period in seconds (Kubernetes default when unset)
+  ##
+  # @schema
+  # type: [integer, "null"]
+  # @schema
+  terminationGracePeriodSeconds: null
+
+  ## Deployment update strategy
+  ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
+  strategy: {}
+
 ## Service account for the controller manager
 ##
 serviceAccount:
   enable: true
+  ## Service account name (defaults to the chart's generated name)
+  name: ""
+  ## Labels and annotations for the ServiceAccount
+  ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
+  labels: {}
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
+  annotations: {}
 
 ## RBAC (Kubebuilder helm/v2-alpha layout; replaces legacy rbacHelpers)
 ##
@@ -115,6 +217,11 @@ metrics:
   # manifests; set repository/tag to use a mirror. A repository containing '@' (digest) ignores tag.
   # Pulled with manager.imagePullSecrets (same pod); list one secret per registry.
   kubeRbacProxy:
+    # @schema
+    # properties:
+    #   repository: {type: string}
+    #   tag: {type: string}
+    # @schema
     image: {}
       # repository: quay.io/brancz/kube-rbac-proxy
       # tag: v0.23.1
@@ -134,6 +241,9 @@ prometheus:
 # BEGIN controllerConfiguration
 # Synced from upstream gitops-promoter config/config/controllerconfiguration.yaml
 # (do not edit manually; run hack/update-controllerconfiguration.sh)
+# @schema
+# $ref: ../.values-schema/controllerconfiguration-spec.schema.json
+# @schema
 controllerConfiguration:
   promotionStrategy:
     workQueue:
@@ -360,6 +470,12 @@ apiserver:
 
   ## Image override. Defaults to the manager image (the apiserver and controller share a
   ## single image). Set repository/tag/pullPolicy to override.
+  # @schema
+  # properties:
+  #   repository: {type: string}
+  #   tag: {type: string}
+  #   pullPolicy: {type: string, enum: [Always, IfNotPresent, Never]}
+  # @schema
   image: {}
     # repository: quay.io/argoprojlabs/gitops-promoter
     # tag: ""
@@ -373,6 +489,11 @@ apiserver:
 
   ## Resource limits and requests
   ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
   resources:
     limits:
       cpu: 500m
@@ -383,6 +504,11 @@ apiserver:
 
   ## Pod-level security settings
   ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
   podSecurityContext:
     runAsNonRoot: true
     seccompProfile:
@@ -390,6 +516,11 @@ apiserver:
 
   ## Container-level security settings
   ##
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
   securityContext:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
@@ -406,6 +537,9 @@ apiserver:
     ##   cert-manager - a cert-manager Issuer + Certificate issue the serving cert and
     ##                  ca-injector keeps the APIService caBundle in sync.
     ##   manual       - you supply the serving-cert Secret out-of-band and set caBundle below.
+    # @schema
+    # enum: [insecure, cert-manager, manual]
+    # @schema
     mode: insecure
 
     ## Name of the serving-cert Secret (mounted in cert-manager/manual modes; unused in insecure).
@@ -422,4 +556,7 @@ apiserver:
         ## Use an existing issuer instead (leave empty to use the created one).
         name: ""
         ## Issuer kind: Issuer or ClusterIssuer.
+        # @schema
+        # enum: [Issuer, ClusterIssuer]
+        # @schema
         kind: Issuer

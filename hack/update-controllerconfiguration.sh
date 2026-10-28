@@ -78,6 +78,10 @@ export SPEC_ABS
   printf '%s\n' "$BEGIN_MARKER"
   echo "# Synced from upstream gitops-promoter config/config/controllerconfiguration.yaml"
   echo "# (do not edit manually; run hack/update-controllerconfiguration.sh)"
+  # Validated against the ControllerConfiguration CRD's spec schema; see hack/update-values-schema.sh.
+  echo "# @schema"
+  echo "# \$ref: ../.values-schema/controllerconfiguration-spec.schema.json"
+  echo "# @schema"
   yq -n '.controllerConfiguration = load(env(SPEC_ABS))' -o=yaml
   printf '%s\n' "$END_MARKER"
 } >"$BLOCK_FILE"

@@ -24,3 +24,29 @@ Default `ControllerConfiguration` **spec** lives in `chart/values.yaml` under `c
 The Helm template `chart/templates/extra/controllerconfiguration.yaml` injects that structure into the `ControllerConfiguration` CR. Users override or extend behavior by changing `controllerConfiguration` in their own values when installing the chart.
 
 After changing the sync script or the template, run `helm lint chart` and `helm template` locally before opening a PR.
+
+## Values schema (`chart/values.schema.json`)
+
+`chart/values.schema.json` is generated from `chart/values.yaml`. Do not edit it by hand. After any change to `values.yaml`, regenerate it:
+
+```bash
+./hack/update-values-schema.sh
+```
+
+CI fails if the committed schema is out of date (`hack/update-values-schema.sh --check`).
+
+- Types and defaults are inferred from `values.yaml`. Unknown keys are rejected, so **every supported value must appear in `values.yaml`**, even if its default is empty.
+- Refine a key with a `# @schema` block directly above it (see [helm-schema annotations](https://github.com/dadav/helm-schema)), e.g. an `enum`.
+- Values passed through verbatim to Kubernetes objects (resources, affinity, security contexts, labels, ...) need a pass-through block so their contents are not constrained to the defaults' shape:
+
+  ```yaml
+  # @schema
+  # type: object
+  # properties: {}
+  # additionalProperties: true
+  # @schema
+  resources:
+    ...
+  ```
+
+- `controllerConfiguration` is validated against the ControllerConfiguration CRD's `spec` schema; its `$ref` annotation is written by `hack/update-controllerconfiguration.sh`.
