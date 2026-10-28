@@ -1,0 +1,37 @@
+{{- if .Values.rbac.helpers.enable }}
+apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.namespaced }}
+kind: Role
+{{- else }}
+kind: ClusterRole
+{{- end }}
+metadata:
+{{- if .Values.rbac.namespaced }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: promoter
+    app.kubernetes.io/instance: gitrepository-viewer-role
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: clusterrole
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/part-of: promoter
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+  name: {{ include "promoter.resourceName" (dict "suffix" "gitrepository-viewer-role" "context" $) }}
+rules:
+- apiGroups:
+  - promoter.argoproj.io
+  resources:
+  - gitrepositories
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - promoter.argoproj.io
+  resources:
+  - gitrepositories/status
+  verbs:
+  - get
+{{- end }}
