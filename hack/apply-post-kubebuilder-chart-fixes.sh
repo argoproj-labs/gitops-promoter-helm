@@ -6,7 +6,7 @@
 # Usage:
 #   hack/apply-post-kubebuilder-chart-fixes.sh /path/to/chart
 #
-# Requirements: sed (GNU sed on Linux; BSD sed on macOS supported).
+# Requirements: sed (GNU sed on Linux; BSD sed on macOS supported), perl.
 #
 set -euo pipefail
 
@@ -70,4 +70,10 @@ if [[ -f "$MANAGER" ]]; then
   perl -0777 -i -pe '
     s!^([ \t]*)image: ([^\s:"{]+):([^\s"{]+)\n([ \t]*name: kube-rbac-proxy)$!${1}image: "{{ ((.Values.metrics.kubeRbacProxy).image).repository | default "$2" }}:{{ ((.Values.metrics.kubeRbacProxy).image).tag | default "$3" }}"\n${4}!m;
   ' "$MANAGER"
+  # Fail loudly if kubebuilder's output changed shape and the substitution did not apply;
+  # otherwise chart-diff would stay green while the override silently disappears.
+  if ! grep -q '\.Values\.metrics\.kubeRbacProxy' "$MANAGER"; then
+    echo "Error: could not wire kube-rbac-proxy image in $MANAGER; update the pattern above." >&2
+    exit 1
+  fi
 fi
