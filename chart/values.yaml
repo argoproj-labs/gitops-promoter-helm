@@ -14,7 +14,7 @@ manager:
 
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
-    tag: v0.46.0
+    tag: v0.47.0
     pullPolicy: IfNotPresent
 
   ## Arguments
@@ -302,6 +302,7 @@ controllerConfiguration:
               fastDelay: "1s"
               slowDelay: "5m"
               maxFastAttempts: 3
+    namespaceMetadata: Enabled
   dependentsSuccessfulCommitStatus:
     workQueue:
       maxConcurrentReconciles: 10
@@ -341,6 +342,9 @@ controllerConfiguration:
               fastDelay: "1s"
               slowDelay: "5m"
               maxFastAttempts: 3
+  clusterScmProvider:
+    mode: Enabled
+  scope: Cluster
 # END controllerConfiguration
 
 webhook:
