@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.26.0
-appVersion: 0.46.0
+version: 0.27.0
+appVersion: 0.47.0
 keywords:
   - kubernetes
   - environment
@@ -342,6 +342,11 @@ annotations:
         azureDevOps:
           organization: example-org
           domain: dev.azure.com # Optional
+          # Optional, authenticates with the controller's Azure workload identity instead of a secret. Omit secretRef and
+          # domain when set. Only supported on ClusterScmProvider. Use {} for the identity the webhook injects.
+          workloadIdentity:
+            clientID: 00000000-0000-0000-0000-000000000000 # Optional, defaults to AZURE_CLIENT_ID of the controller
+            tenantID: 00000000-0000-0000-0000-000000000000 # Optional, defaults to AZURE_TENANT_ID of the controller
         gitea:
           domain: gitea.example.com
       status:
@@ -556,6 +561,7 @@ annotations:
               exponentialFailure:
                 baseDelay: "500ms"
                 maxDelay: "1m"
+          namespaceMetadata: Enabled
         # ScheduledCommitStatus controller gates promotions on cron-based time windows
         scheduledCommitStatus:
           workQueue:
@@ -574,6 +580,11 @@ annotations:
               exponentialFailure:
                 baseDelay: "500ms"
                 maxDelay: "1m"
+        # ClusterScmProvider support can be disabled to avoid cluster-scoped access
+        clusterScmProvider:
+          mode: Enabled
+        # Scope of namespaced resources the controller watches (Cluster or Namespace)
+        scope: Cluster
     - apiVersion: promoter.argoproj.io/v1alpha1
       kind: DependentsSuccessfulCommitStatus
       metadata:
@@ -946,7 +957,8 @@ annotations:
         azureDevOps:
           organization: example-organization
           domain: dev.azure.com # Optional
-          # fake: {}  # testing only
+          # workloadIdentity is only supported on ClusterScmProvider
+        # fake: {}  # testing only
       status:
         observedGeneration: 123 # compare with metadata.generation to detect stale status
         conditions:
@@ -1133,202 +1145,26 @@ annotations:
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
     - kind: added
-      description: "e8a3109: feat!: require a webrequestcommitstatus-access label on Secrets used by WebRequestCommitStatus authentication (#2256) (@zachaller)"
+      description: "ff429b7: feat(azuredevops): support Azure workload identity on ClusterScmProvider (#2237) (@GijsvanDulmen)"
     - kind: added
-      description: "41c05cc: feat(api): WebRequestCommitStatus httpRequest support httpRequestVariables (#2162) (@dkarpele)"
-    - kind: added
-      description: "bbe34dc: feat(rbac): aggregate CRD roles to default roles (#2193) (@Copilot)"
-    - kind: added
-      description: "dd01287: feat(ui): add promotion map and environment filtering (#2217) (@jwinters01)"
-    - kind: added
-      description: "bfb5f70: feat(ui): plumb dependentsSuccessfulCommitStatuses through manager bundle (#2215) (@jwinters01)"
-    - kind: added
-      description: "88043a1: feat(ui): redesign Promotion Explorer cells and checks list (#2218) (@jwinters01)"
-    - kind: added
-      description: "ba8a365: feat(ui): show dry and app commits as two-line blocks (#2219) (@jwinters01)"
-    - kind: added
-      description: "4197b9e: feat(ui): use the Promotion Explorer in the dashboard and extension (#2220) (@jwinters01)"
-    - kind: added
-      description: "48f73d0: feat: add Bitbucket DataCenter/Server SCM provider support - #1316 (#2119) (@maxnitze)"
-    - kind: added
-      description: "7023a3f: feat: add publishTo to CommitStatus and built-in gates (#2191) (@dnwlf)"
-    - kind: added
-      description: "df533ef: feat: validate SCM provider domains as hosts (#2225) (@crenshaw-dev)"
+      description: "bdd42c1: feat: provide namespaced mode (#310) (#2107) (@alexymantha)"
     - kind: fixed
-      description: "1ebd0e1: fix(azuredevops): build PR and commit URLs for ClusterScmProviders (#2277) (@crenshaw-dev)"
+      description: "3ab256a: fix(webrequest): don't lose HTTP dedupe state when a CommitStatus write fails (#2280) (@crenshaw-dev)"
     - kind: fixed
-      description: "15ec702: fix(cs): push PR status for Azure DevOps (#2079) (#2167) (@GijsvanDulmen)"
-    - kind: fixed
-      description: "6ee4c5b: fix(ctp): re-reconcile when an owned PullRequest's Ready status changes (#2275) (@crenshaw-dev)"
-    - kind: fixed
-      description: "a1756b5: fix(pr): don't close a merged pull request that the SCM still reports open (#2154) (@GijsvanDulmen)"
-    - kind: fixed
-      description: "2ed7c71: fix(scmprovider): drop the Secret finalizer before the provider's own (#2263) (@crenshaw-dev)"
-    - kind: fixed
-      description: "e325dd6: fix(scms): retry refused Gitea and Forgejo merges (#2190) (@zachaller)"
-    - kind: fixed
-      description: "6fe76de: fix(scms): send the merge commit message to Bitbucket Cloud, and make test-scm-provider pass for every provider (#2235) (@zachaller)"
-    - kind: fixed
-      description: "cd55dae: fix(scms): stop wrapping merge errors with the controller's own prefix (#2232) (@zachaller)"
-    - kind: fixed
-      description: "390ace2: fix(ui): link commits on GitLab and Bitbucket Cloud correctly (#2282) (@crenshaw-dev)"
-    - kind: fixed
-      description: "d1eaa40: fix(ui): name no SCM in the commit link tooltip (#2203) (@maxnitze)"
-    - kind: fixed
-      description: "a183655: fix: clear stale CTP pull request status instead of copying an empty successor status (#2253) (@crenshaw-dev)"
-    - kind: fixed
-      description: "3a80363: fix: drop a local history note whose push never reached the remote (#2265) (@crenshaw-dev)"
-    - kind: fixed
-      description: "9c28180: fix: finalizer writes no longer preserve stale Ready conditions (#2266) (@crenshaw-dev)"
-    - kind: fixed
-      description: "b99a930: fix: hold SCM-authenticated web requests to the provider host across redirects (#2257) (@zachaller)"
-    - kind: fixed
-      description: "a0ba6fe: fix: patch Secret finalizers instead of updating cache-served Secrets (#2255) (@zachaller)"
+      description: "30ab498: fix(webrequest): keep .SuccessVariables when polling skips a successful SHA (#2279) (@crenshaw-dev)"
     - kind: changed
-      description: "0adcb16: docs: bump manifest versions to v0.46.0 (#2291) (@github-actions[bot])"
-    - kind: deprecated
-      description: "128c51f: docs: note Codefresh Promotions is deprecated (#2234) (@crenshaw-dev)"
+      description: "fd16dce: docs: bump manifest versions to v0.47.0 (#2307) (@github-actions[bot])"
     - kind: changed
-      description: "4f16761: docs: update docs for the Promotion Explorer (#2221) (@jwinters01)"
+      description: "c78ae8a: docs: re-record the demo GIF on the Promotion Explorer with a diamond DAG (#2294) (@crenshaw-dev)"
     - kind: changed
-      description: "4a93563: chore(deps): bump @vitest/mocker, @vitest/coverage-v8 and vitest in /ui/dashboard (#1996) (@dependabot[bot])"
+      description: "8cd2e2f: chore(deps): bump github.com/Azure/azure-sdk-for-go/sdk/internal from 1.12.0 to 1.13.0 (#2304) (@dependabot[bot])"
     - kind: changed
-      description: "deb400a: chore(deps): bump certifi from 2026.2.25 to 2026.10.19 in /docs (#2224) (@dependabot[bot])"
+      description: "db000ee: chore(deps): bump github.com/AzureAD/microsoft-authentication-library-for-go from 1.8.0 to 1.10.1 (#2303) (@dependabot[bot])"
     - kind: changed
-      description: "5655235: chore(deps): bump github.com/bytedance/sonic/loader from 0.5.2 to 0.5.3 (#2260) (@dependabot[bot])"
+      description: "83a8a88: chore(deps): update node.js to v26 (#2296) (@gitops-promoter-renovate-bot[bot])"
     - kind: changed
-      description: "8ec440d: chore(deps): bump github.com/emicklei/go-restful/v3 from 3.13.0 to 3.14.0 (#2151) (@dependabot[bot])"
+      description: "95e6e14: ci: report all test results and coverage to Codecov (#2292) (@crenshaw-dev)"
     - kind: changed
-      description: "b262a80: chore(deps): bump github.com/fxamacker/cbor/v2 from 2.9.4 to 2.9.6 (#2148) (@dependabot[bot])"
-    - kind: changed
-      description: "333dc51: chore(deps): bump github.com/gabriel-vasile/mimetype from 1.4.15 to 1.4.16 (#2211) (@dependabot[bot])"
-    - kind: changed
-      description: "0ded270: chore(deps): bump github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus from 1.1.0 to 1.1.1 (#2141) (@dependabot[bot])"
-    - kind: changed
-      description: "2b18c69: chore(deps): bump github.com/grpc-ecosystem/grpc-gateway/v2 from 2.31.0 to 2.32.0 (#2201) (@dependabot[bot])"
-    - kind: changed
-      description: "022b973: chore(deps): bump github.com/klauspost/cpuid/v2 from 2.4.0 to 2.4.1 (#2200) (@dependabot[bot])"
-    - kind: changed
-      description: "6e11921: chore(deps): bump github.com/mattn/go-colorable from 0.1.15 to 0.1.16 (#2149) (@dependabot[bot])"
-    - kind: changed
-      description: "756487a: chore(deps): bump github.com/prometheus/common from 0.72.0 to 0.72.1 in the prometheus group across 1 directory (#2177) (@dependabot[bot])"
-    - kind: changed
-      description: "a8d3cbe: chore(deps): bump github.com/prometheus/procfs from 0.22.0 to 0.23.0 in the prometheus group (#2259) (@dependabot[bot])"
-    - kind: changed
-      description: "ae4569c: chore(deps): bump github.com/quic-go/quic-go from 0.63.0 to 0.64.0 (#2199) (@dependabot[bot])"
-    - kind: changed
-      description: "ca1f6db: chore(deps): bump github.com/quic-go/quic-go from 0.64.0 to 0.64.1 (#2236) (@dependabot[bot])"
-    - kind: changed
-      description: "0095f59: chore(deps): bump github.com/stretchr/objx from 0.5.3 to 0.8.0 (#2198) (@dependabot[bot])"
-    - kind: changed
-      description: "5b841c4: chore(deps): bump go.mongodb.org/mongo-driver/v2 from 2.9.1 to 2.9.2 (#2150) (@dependabot[bot])"
-    - kind: changed
-      description: "53cf84b: chore(deps): bump ip-address from 10.7.0 to 10.7.4 in /ui/shared (#2233) (@dependabot[bot])"
-    - kind: changed
-      description: "e3ec673: chore(deps): bump js-yaml from 4.3.1 to 4.3.2 in /ui/shared (#1994) (@dependabot[bot])"
-    - kind: changed
-      description: "73f2cce: chore(deps): bump the github-actions group with 14 updates (#2202) (@dependabot[bot])"
-    - kind: changed
-      description: "38d642c: chore(deps): bump the github-actions group with 8 updates (#2261) (@dependabot[bot])"
-    - kind: changed
-      description: "8ae685d: chore(deps): bump the go-etcd group with 3 updates (#2258) (@dependabot[bot])"
-    - kind: changed
-      description: "320bebf: chore(deps): bump the golang-org-x group with 4 updates (#2147) (@dependabot[bot])"
-    - kind: changed
-      description: "efe3527: chore(deps): bump the golang-org-x group with 6 updates (#2176) (@dependabot[bot])"
-    - kind: changed
-      description: "9ba7311: chore(deps): update alpine docker tag to v3.24 (#2246) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "fe56f7f: chore(deps): update dependency argoproj/argo-cd to v3.5.5 (#2168) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "bbd5d19: chore(deps): update dependency argoproj/argo-cd to v3.5.6 (#2212) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "cac3bc2: chore(deps): update dependency goreleaser/goreleaser to v2.18.3 (#2143) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "c087e42: chore(deps): update dependency goreleaser/goreleaser to v2.19.0 (#2247) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "bf48fa4: chore(deps): update dependency helm/helm to v4.3.1 (#2194) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "5ad58e6: chore(deps): update dependency kubernetes-sigs/controller-tools to v0.23.0 (#2195) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "5ddf5a2: chore(deps): update dependency kubernetes-sigs/kustomize to v5.8.3 (#2144) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "a879c20: chore(deps): update dependency sigstore/cosign to v3.1.4 (#2213) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "0a430d0: chore(deps): update go and linter tooling (#2145) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "6610326: chore(deps): update go and linter tooling to v1.27.2 (#2186) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "e4fb2d0: chore(deps): update go and linter tooling to v2.15.0 (#2196) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "c612f77: chore(deps): update k8s.io/utils digest to ca04ba5 (#2244) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "af836d4: chore(deps): update module github.com/google/go-github/v92 to v93 (#2197) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "2386cee: chore(deps): update module sigs.k8s.io/multicluster-runtime to v0.25.2 (#2146) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "98f06d2: chore(deps): update node.js to v24.22.0 (#2175) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "5eb962a: chore(deps): update node.js to v24.22.1 (#2245) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "2a6e9d4: chore(deps): update python docker tag to v3.15 (#2169) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "0775b23: chore(deps): update quay.io/brancz/kube-rbac-proxy docker tag to v0.23.1 (#2262) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "93d1874: chore(deps-dev): bump @humanfs/node from 0.16.7 to 0.16.8 in /ui/extension (#1961) (@dependabot[bot])"
-    - kind: changed
-      description: "746377d: chore(deps-dev): bump brace-expansion from 2.1.4 to 2.1.7 in /ui/codegen (#2103) (@dependabot[bot])"
-    - kind: changed
-      description: "022be7e: chore(deps-dev): bump brace-expansion from 5.0.9 to 5.0.12 in /ui/storybook (#2096) (@dependabot[bot])"
-    - kind: changed
-      description: "a514d90: chore(deps-dev): bump fast-uri from 3.1.8 to 3.1.9 in /ui/extension (#2248) (@dependabot[bot])"
-    - kind: changed
-      description: "b8ae85d: chore(deps-dev): bump storybook from 10.6.0 to 10.6.3 in /ui/storybook (#2231) (@dependabot[bot])"
-    - kind: changed
-      description: "c01e1e8: chore(deps-dev): bump undici from 7.30.0 to 7.30.1 in /ui/extension (#2249) (@dependabot[bot])"
-    - kind: changed
-      description: "c0fe074: chore(deps-dev): bump vite from 6.4.3 to 6.4.5 in /ui/storybook (#2223) (@dependabot[bot])"
-    - kind: changed
-      description: "30c79ec: chore(deps-dev): bump vite from 8.3.0 to 8.3.4 in /ui/shared (#2206) (@dependabot[bot])"
-    - kind: changed
-      description: "36d31bb: chore(deps-dev): bump vite from 8.3.2 to 8.3.4 in /ui/extension (#2207) (@dependabot[bot])"
-    - kind: added
-      description: "aeb7719: build(ui): add vitest and testing-library to components-lib (#2214) (@jwinters01)"
-    - kind: changed
-      description: "4137d53: chore(docs): update dependency mkdocs-material to v9.8.0 (#2250) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "6067d58: chore(ui): lint components-lib with ESLint (#2274) (@crenshaw-dev)"
-    - kind: added
-      description: "eb9bb11: chore: add oss-scanner Dockerfile (#2185) (@crenshaw-dev)"
-    - kind: added
-      description: "e2a916a: chore: add oss-scanner threat model (#2187) (@crenshaw-dev)"
-    - kind: fixed
-      description: "012febb: chore: npm audit fix (#2205) (@github-actions[bot])"
-    - kind: changed
-      description: "6807d4f: chore: remove obsolete ba spelling exception (#2251) (@Copilot)"
-    - kind: fixed
-      description: "1db87b0: ci: accept target branch for npm audit fix (#2159) (@crenshaw-dev)"
-    - kind: changed
-      description: "de11539: ci: cherry pick job inherits env secret (#2172) (@crenshaw-dev)"
-    - kind: changed
-      description: "b2bef89: ci: cherry pick secret in env (#2158) (@crenshaw-dev)"
-    - kind: changed
-      description: "71b005e: ci: create branch w/ refs API instead of push (#2163) (@crenshaw-dev)"
-    - kind: changed
-      description: "be63c65: ci: inject k8s write failures in integration tests (#2267) (@crenshaw-dev)"
-    - kind: changed
-      description: "e85a368: ci: run CI for cherry-picks (release-0.45) (#2157) (#2171) (@crenshaw-dev)"
-    - kind: changed
-      description: "0f7f0eb: ci: run all the UI tests (#2241) (@crenshaw-dev)"
-    - kind: added
-      description: "fa42e69: ci: support minor release branches (#2153) (@crenshaw-dev)"
-    - kind: changed
-      description: "2bba951: ci: upload e2e coverage from one Kind matrix leg (#2264) (@crenshaw-dev)"
-    - kind: changed
-      description: "b27869d: ci: use GH app to create branches (#2164) (@crenshaw-dev)"
-    - kind: fixed
-      description: "dc3e8d8: fix(bitbucket-datacenter): check the merge SHA and report builds to the repository builds resource (#2227) (@zachaller)"
-    - kind: changed
-      description: "1167b7f: perf: bare clone (#2183) (@crenshaw-dev)"
-    - kind: added
-      description: "5984a41: refactor(ui): rename HistoryView and add promotionGraph (#2216) (@jwinters01)"
+      description: "9305e2b: ci: run the integration suite against every SCM provider weekly with faults injected (#2276) (@crenshaw-dev)"
+    - kind: removed
+      description: "1291b56: refactor: drop guards for impossible cases and dead code deadcode misses (#2285) (@crenshaw-dev)"
