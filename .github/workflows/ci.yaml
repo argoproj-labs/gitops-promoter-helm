@@ -25,11 +25,8 @@ jobs:
       - name: Create Kind cluster
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # pin v1
 
-      - name: Install Argo CD # required for CRDs for now until we handle
-        run: |
-          helm repo add argo https://argoproj.github.io/argo-helm
-          helm repo update
-          helm install argocd argo/argo-cd --namespace argocd --create-namespace --wait --timeout 5m
+      - name: Install Argo CD CRDs # the controller watches Applications; a running Argo CD isn't needed
+        run: kubectl apply -k "https://github.com/argoproj/argo-cd/manifests/crds?ref=v3.5.6"
 
       - name: Install Helm chart
         run: |
@@ -52,6 +49,8 @@ jobs:
       - name: Diagnose failed pods
         if: failure()
         run: |
+          echo "=== Argo CD CRDs ==="
+          kubectl get crds | grep argoproj.io || true
           echo "=== Pods ==="
           kubectl get pods -n promoter-system -o wide || true
           echo "=== Namespace events ==="
