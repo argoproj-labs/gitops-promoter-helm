@@ -23,7 +23,7 @@ jobs:
         run: helm lint chart
 
       - name: Create Kind cluster
-        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # pin v1
+        uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa # pin v1.15.1
 
       - name: Install Argo CD CRDs # the controller watches Applications; a running Argo CD isn't needed
         run: kubectl apply --server-side -k "https://github.com/argoproj/argo-cd/manifests/crds?ref=v3.5.6"
