@@ -2,8 +2,8 @@ apiVersion: v2
 name: gitops-promoter
 description: A Helm chart to install GitOps Promoter, a GitOps-native environment promotion tool.
 type: application
-version: 0.27.0
-appVersion: 0.47.0
+version: 0.28.0
+appVersion: 0.48.0
 keywords:
   - kubernetes
   - environment
@@ -585,6 +585,10 @@ annotations:
           mode: Enabled
         # Scope of namespaced resources the controller watches (Cluster or Namespace)
         scope: Cluster
+        # Which git_operations_* and scm_calls_* metrics carry the git_repository labels (All, Counters, or None)
+        metrics:
+          labels:
+            gitRepository: All
     - apiVersion: promoter.argoproj.io/v1alpha1
       kind: DependentsSuccessfulCommitStatus
       metadata:
@@ -1145,26 +1149,12 @@ annotations:
       #     # triggerOutput / responseOutput / successOutput: JSON maps from expr output expressions
   artifacthub.io/changes: |-
     - kind: added
-      description: "ff429b7: feat(azuredevops): support Azure workload identity on ClusterScmProvider (#2237) (@GijsvanDulmen)"
-    - kind: added
-      description: "bdd42c1: feat: provide namespaced mode (#310) (#2107) (@alexymantha)"
+      description: "3c151e8: feat(metrics): add spec.metrics.labels.gitRepository to reduce cardinality (#2320) (@crenshaw-dev)"
     - kind: fixed
-      description: "3ab256a: fix(webrequest): don't lose HTTP dedupe state when a CommitStatus write fails (#2280) (@crenshaw-dev)"
+      description: "b4b1c35: fix(github): look up only the repo owner's App installation (#2314) (@crenshaw-dev)"
     - kind: fixed
-      description: "30ab498: fix(webrequest): keep .SuccessVariables when polling skips a successful SHA (#2279) (@crenshaw-dev)"
+      description: "28039be: fix(rac): delete a RestoreActiveCommit whose tip is already unblocked (#2290) (@zachaller)"
     - kind: changed
-      description: "fd16dce: docs: bump manifest versions to v0.47.0 (#2307) (@github-actions[bot])"
+      description: "a0fccf4: docs: bump manifest versions to v0.48.0 (#2321) (@github-actions[bot])"
     - kind: changed
-      description: "c78ae8a: docs: re-record the demo GIF on the Promotion Explorer with a diamond DAG (#2294) (@crenshaw-dev)"
-    - kind: changed
-      description: "8cd2e2f: chore(deps): bump github.com/Azure/azure-sdk-for-go/sdk/internal from 1.12.0 to 1.13.0 (#2304) (@dependabot[bot])"
-    - kind: changed
-      description: "db000ee: chore(deps): bump github.com/AzureAD/microsoft-authentication-library-for-go from 1.8.0 to 1.10.1 (#2303) (@dependabot[bot])"
-    - kind: changed
-      description: "83a8a88: chore(deps): update node.js to v26 (#2296) (@gitops-promoter-renovate-bot[bot])"
-    - kind: changed
-      description: "95e6e14: ci: report all test results and coverage to Codecov (#2292) (@crenshaw-dev)"
-    - kind: changed
-      description: "9305e2b: ci: run the integration suite against every SCM provider weekly with faults injected (#2276) (@crenshaw-dev)"
-    - kind: removed
-      description: "1291b56: refactor: drop guards for impossible cases and dead code deadcode misses (#2285) (@crenshaw-dev)"
+      description: "5fe6339: ci(e2e): check out the repo before setting up Go so the module cache restores (#2329) (@crenshaw-dev)"

@@ -14,7 +14,7 @@ manager:
 
   image:
     repository: quay.io/argoprojlabs/gitops-promoter
-    tag: v0.47.0
+    tag: v0.48.0
     pullPolicy: IfNotPresent
 
   ## Arguments
@@ -345,6 +345,9 @@ controllerConfiguration:
   clusterScmProvider:
     mode: Enabled
   scope: Cluster
+  metrics:
+    labels:
+      gitRepository: All
 # END controllerConfiguration
 
 webhook:
