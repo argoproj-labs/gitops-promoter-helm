@@ -85,6 +85,9 @@ spec:
         {{- range .Values.manager.args }}
         - {{ . }}
         {{- end }}
+        {{- with include "promoter.apiserver.controllerArgs" . }}
+        {{- . | nindent 8 }}
+        {{- end }}
         command:
         - /usr/bin/tini
         - --

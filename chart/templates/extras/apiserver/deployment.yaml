@@ -73,6 +73,15 @@ spec:
               mountPath: /serving-certs
               readOnly: true
             {{- end }}
+          {{- if eq .Values.apiserver.certs.mode "builtin" }}
+          startupProbe:
+            httpGet:
+              path: /livez
+              port: https
+              scheme: HTTPS
+            periodSeconds: 5
+            failureThreshold: 60
+          {{- end }}
       serviceAccountName: {{ include "promoter.resourceName" (dict "suffix" "apiserver" "context" $) }}
       terminationGracePeriodSeconds: 10
       volumes:
@@ -82,6 +91,14 @@ spec:
         - name: serving-cert
           secret:
             secretName: {{ .Values.apiserver.certs.secretName }}
+            {{- if eq .Values.apiserver.certs.mode "builtin" }}
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+            optional: true
+            {{- end }}
         {{- end }}
       {{- with or .Values.apiserver.imagePullSecrets (and (empty (.Values.apiserver.image).repository) .Values.manager.imagePullSecrets) }}
       imagePullSecrets:
