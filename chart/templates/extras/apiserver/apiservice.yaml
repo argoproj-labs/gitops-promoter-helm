@@ -28,6 +28,7 @@ spec:
     port: 443
   {{- if eq .Values.apiserver.certs.mode "insecure" }}
   insecureSkipTLSVerify: true
+  caBundle: ""
   {{- else if eq .Values.apiserver.certs.mode "manual" }}
   caBundle: {{ .Values.apiserver.certs.caBundle | quote }}
   {{- end }}

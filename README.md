@@ -65,18 +65,24 @@ Enable it with:
 apiserver:
   enabled: true
   certs:
-    mode: insecure   # insecure | cert-manager | manual
+    mode: builtin   # builtin | insecure | cert-manager | manual
 ```
 
 ### Serving-certificate modes
 
 The aggregation layer requires the API server to serve TLS, and the `APIService` needs the
-matching CA (or to skip verification). Pick one of three modes via `apiserver.certs.mode`:
+matching CA (or to skip verification). Pick one of four modes via `apiserver.certs.mode`:
 
-- **`insecure`** (default): the API server self-signs its serving certificate in-pod and the
+- **`builtin`** (default): the controller-manager generates a self-signed CA and serving
+  certificate into the serving-certificate `Secret` (`apiserver.certs.secretName`), injects the
+  CA into the `APIService` `caBundle`, and rotates both. No extra dependencies. The chart
+  renders the `Secret` empty and never sets `caBundle`, so Helm upgrades and GitOps re-syncs
+  leave the generated values alone. On first install the API server starts once the
+  certificate is issued, which can take a minute. Requires GitOps Promoter >= 0.49.0.
+- **`insecure`**: the API server self-signs its serving certificate in-pod and the
   `APIService` is registered with `insecureSkipTLSVerify: true`. No `Secret` is rendered, so
   there is nothing for Argo CD to churn on. **This is not production-safe** — the aggregator
-  does not verify the API server's certificate. Use `cert-manager` for production.
+  does not verify the API server's certificate. Use `builtin` or `cert-manager` for production.
 - **`cert-manager`**: a self-signed cert-manager `Issuer` + `Certificate` issue the serving
   certificate, and cert-manager's CA injector keeps the `APIService` `caBundle` in sync
   (including on rotation). Requires cert-manager in the cluster. Point at an existing issuer

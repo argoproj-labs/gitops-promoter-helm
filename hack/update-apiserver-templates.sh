@@ -21,8 +21,13 @@
 #   * app.kubernetes.io/managed-by: kustomize -> chart managed-by + helm.sh/chart labels
 #   * every doc wrapped in {{- if .Values.apiserver.enabled }} ... {{- end }}
 #   * serving-cert / TLS handling made cert-mode conditional
-#     (insecure | cert-manager | manual) on the Deployment + APIService, and the
+#     (builtin | insecure | cert-manager | manual) on the Deployment + APIService, and the
 #     cert-manager Issuer/Certificate emitted only for the cert-manager mode.
+#   * builtin mode (config/apiserver/certs-builtin + certs-builtin-controller): the empty
+#     serving-cert Secret, the apiserver startupProbe / Secret items / optional from the
+#     upstream Deployment patch, the controller-manager cert-rotation RBAC, and a
+#     "promoter.apiserver.controllerArgs" helper that manager.yaml includes for the
+#     controller's --apiserver-cert-rotation* flags.
 #
 # Usage:
 #   ./hack/update-apiserver-templates.sh --gitops-promoter-repo /path/to/gitops-promoter
@@ -88,6 +93,8 @@ export RN_AUTHDEL="$(rn apiserver-auth-delegator)"
 export RN_EXTAUTH="$(rn apiserver-extension-auth-reader)"
 export RN_VIEWER="$(rn promotionstrategydetails-viewer)"
 export RN_SELFSIGNED="$(rn apiserver-selfsigned)"
+export RN_CERTROT="$(rn apiserver-cert-rotation)"
+export SECRET_NAME='{{ .Values.apiserver.certs.secretName }}'
 export SA_CONTROLLER='{{ include "promoter.serviceAccountName" . }}'
 export NS='{{ .Release.Namespace }}'
 
@@ -101,6 +108,8 @@ helmify_common() {
     s!^([ \t]*)app\.kubernetes\.io/managed-by:[ \t]*kustomize[ \t]*$!$1 . qq(app.kubernetes.io/managed-by: {{ .Release.Service }}\n) . $1 . qq(helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }})!e;
     # names (longest first so prefixes do not clobber longer names)
     s!\Qpromoter-apiserver-extension-auth-reader\E!$ENV{RN_EXTAUTH}!g;
+    s!\Qpromoter-apiserver-serving-cert\E!$ENV{SECRET_NAME}!g;
+    s!\Qpromoter-apiserver-cert-rotation\E!$ENV{RN_CERTROT}!g;
     s!\Qpromoter-apiserver-auth-delegator\E!$ENV{RN_AUTHDEL}!g;
     s!\Qpromoter-apiserver-selfsigned\E!$ENV{RN_SELFSIGNED}!g;
     s!\Qpromoter-promotionstrategydetails-viewer\E!$ENV{RN_VIEWER}!g;
@@ -131,6 +140,39 @@ wrap_enabled() {
   printf '{{- end }}\n'
 }
 
+BUILTIN="$SRC/certs-builtin"
+BUILTIN_CONTROLLER="$SRC/certs-builtin-controller"
+BUILTIN_PATCH="$BUILTIN/deployment_cert_rotation_patch.yaml"
+for f in "$BUILTIN/serving_cert_secret.yaml" "$BUILTIN_PATCH" "$BUILTIN_CONTROLLER/rbac.yaml"; do
+  if [[ ! -f "$f" ]]; then
+    echo "Error: upstream built-in cert manifest not found: $f" >&2
+    echo "       gitops-promoter >= 0.49.0 is required for apiserver.certs.mode=builtin." >&2
+    exit 1
+  fi
+done
+
+# Pull the builtin-mode Deployment additions out of the upstream JSON6902 patch so they
+# track upstream. Fail if the patch changes shape instead of silently dropping them.
+patch_value() {
+  local v
+  v="$(yq -I2 ".[] | select(.op == \"add\" and .path == \"$1\") | .value" "$BUILTIN_PATCH")"
+  if [[ -z "$v" ]]; then
+    echo "Error: $BUILTIN_PATCH no longer adds $1; update $0." >&2
+    exit 1
+  fi
+  printf '%s' "$v"
+}
+BUILTIN_STARTUP_PROBE="$(patch_value /spec/template/spec/containers/0/startupProbe)"
+BUILTIN_SECRET_ITEMS="$(patch_value /spec/template/spec/volumes/0/secret/items)"
+BUILTIN_SECRET_OPTIONAL="$(patch_value /spec/template/spec/volumes/0/secret/optional)"
+export BUILTIN_STARTUP_PROBE BUILTIN_SECRET_ITEMS BUILTIN_SECRET_OPTIONAL
+
+# Same for the controller-manager flag added by the certs-builtin-controller component.
+if ! yq -e '.patches[].patch | select(test("--apiserver-cert-rotation"))' "$BUILTIN_CONTROLLER/kustomization.yaml" >/dev/null 2>&1; then
+  echo "Error: $BUILTIN_CONTROLLER/kustomization.yaml no longer adds --apiserver-cert-rotation; update $0." >&2
+  exit 1
+fi
+
 mkdir -p "$OUT"
 
 echo "Generating apiserver templates from $SRC -> $OUT"
@@ -147,6 +189,19 @@ cat > "$OUT/_helpers.apiserver.tpl" <<'EOF'
 {{- $repo := $img.repository | default .Values.manager.image.repository -}}
 {{- $tag := $img.tag | default .Values.manager.image.tag | default .Chart.AppVersion -}}
 {{- include "promoter.image" (dict "repository" $repo "tag" $tag) -}}
+{{- end -}}
+
+{{/*
+  Controller-manager flags for apiserver.certs.mode=builtin: the controller issues, rotates
+  and injects the apiserver serving cert (upstream config/apiserver/certs-builtin-controller).
+  Included by templates/manager/manager.yaml (hack/apply-post-kubebuilder-chart-fixes.sh).
+*/}}
+{{- define "promoter.apiserver.controllerArgs" -}}
+{{- if and .Values.apiserver.enabled (eq .Values.apiserver.certs.mode "builtin") -}}
+- --apiserver-cert-rotation
+- --apiserver-cert-rotation-secret-name={{ .Values.apiserver.certs.secretName }}
+- --apiserver-cert-rotation-service-name={{ include "promoter.resourceName" (dict "suffix" "apiserver" "context" $) }}
+{{- end -}}
 {{- end -}}
 EOF
 
@@ -167,8 +222,11 @@ nocomments "$BASE/apiservice.yaml" | yq '
   | perl -0777 -pe '
       # metadata sentinel -> cert-manager caBundle injection annotation
       s!^([ \t]*)__ANNO__:.*$!qq(${1}{{- if eq .Values.apiserver.certs.mode "cert-manager" }}\n) . qq(${1}annotations:\n) . qq(${1}  cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ .Values.apiserver.certs.secretName }}\n) . qq(${1}{{- end }})!me;
-      # spec sentinel -> insecure / manual caBundle (cert-manager relies on the annotation)
-      s!^([ \t]*)__CERT__:.*$!qq(${1}{{- if eq .Values.apiserver.certs.mode "insecure" }}\n) . qq(${1}insecureSkipTLSVerify: true\n) . qq(${1}{{- else if eq .Values.apiserver.certs.mode "manual" }}\n) . qq(${1}caBundle: {{ .Values.apiserver.certs.caBundle | quote }}\n) . qq(${1}{{- end }})!me;
+      # spec sentinel -> insecure / manual caBundle (cert-manager and builtin inject it).
+      # insecure clears caBundle explicitly: one injected by a previous builtin/cert-manager
+      # mode is not owned by Helm and would otherwise survive the upgrade, and the API
+      # server rejects insecureSkipTLSVerify alongside a non-empty caBundle.
+      s!^([ \t]*)__CERT__:.*$!qq(${1}{{- if eq .Values.apiserver.certs.mode "insecure" }}\n) . qq(${1}insecureSkipTLSVerify: true\n) . qq(${1}caBundle: ""\n) . qq(${1}{{- else if eq .Values.apiserver.certs.mode "manual" }}\n) . qq(${1}caBundle: {{ .Values.apiserver.certs.caBundle | quote }}\n) . qq(${1}{{- end }})!me;
     ' \
   | helmify_common | wrap_enabled > "$OUT/apiservice.yaml"
 
@@ -180,6 +238,7 @@ nocomments "$BASE/deployment.yaml" | yq '
   .spec.template.spec.containers[0].image = "__IMAGE__" |
   .spec.template.spec.containers[0].resources = "__RESOURCES__" |
   .spec.template.spec.containers[0].securityContext = "__CTRSEC__" |
+  .spec.template.spec.containers[0].startupProbe = "__STARTUP__" |
   del(.spec.template.spec.containers[0].args[] | select(test("--tls-"))) |
   .spec.template.spec.containers[0].args += ["__CERT_ARGS__"] |
   del(.spec.template.spec.containers[0].volumeMounts[] | select(.name == "serving-cert")) |
@@ -211,8 +270,14 @@ nocomments "$BASE/deployment.yaml" | yq '
       # cert-mode volumeMount (only when a serving-cert Secret is mounted)
       s!^([ \t]*)- name: __CERT_MOUNT__[ \t]*$!qq(${1}{{- if ne .Values.apiserver.certs.mode "insecure" }}\n) . qq(${1}- name: serving-cert\n) . qq(${1}  mountPath: /serving-certs\n) . qq(${1}  readOnly: true\n) . qq(${1}{{- end }})!me;
 
-      # cert-mode volume (only when a serving-cert Secret is mounted)
-      s!^([ \t]*)- name: __CERT_VOLUME__[ \t]*$!qq(${1}{{- if ne .Values.apiserver.certs.mode "insecure" }}\n) . qq(${1}- name: serving-cert\n) . qq(${1}  secret:\n) . qq(${1}    secretName: {{ .Values.apiserver.certs.secretName }}\n) . qq(${1}{{- end }})!me;
+      sub indent { my ($n, $s) = @_; join("\n", map { (q( ) x $n) . $_ } split(/\n/, $s)) }
+
+      # builtin mode: wait for the controller-manager to issue the cert (upstream startupProbe)
+      s!^([ \t]*)startupProbe: __STARTUP__[ \t]*$!qq(${1}{{- if eq .Values.apiserver.certs.mode "builtin" }}\n) . qq(${1}startupProbe:\n) . indent(length($1) + 2, $ENV{BUILTIN_STARTUP_PROBE}) . qq(\n${1}{{- end }})!me;
+
+      # cert-mode volume (only when a serving-cert Secret is mounted). builtin mode projects
+      # only the serving key pair (not the CA key) and tolerates the initially empty Secret.
+      s!^([ \t]*)- name: __CERT_VOLUME__[ \t]*$!qq(${1}{{- if ne .Values.apiserver.certs.mode "insecure" }}\n) . qq(${1}- name: serving-cert\n) . qq(${1}  secret:\n) . qq(${1}    secretName: {{ .Values.apiserver.certs.secretName }}\n) . qq(${1}    {{- if eq .Values.apiserver.certs.mode "builtin" }}\n) . qq(${1}    items:\n) . indent(length($1) + 6, $ENV{BUILTIN_SECRET_ITEMS}) . qq(\n${1}    optional: $ENV{BUILTIN_SECRET_OPTIONAL}\n) . qq(${1}    {{- end }}\n) . qq(${1}{{- end }})!me;
     ' \
   | helmify_common | wrap_enabled > "$OUT/deployment.yaml"
 
@@ -238,6 +303,16 @@ nocomments "$BASE/deployment.yaml" | yq '
       ' \
     | helmify_common
 } | wrap_enabled 'eq .Values.apiserver.certs.mode "cert-manager"' > "$OUT/certs.yaml"
+
+# --- serving-cert-secret.yaml (builtin mode: empty Secret the controller populates) ---
+# Rendered without .data on purpose: the controller-manager owns it (field manager
+# promoter-apiserver-cert-rotator), and Helm leaves fields it never rendered alone.
+nocomments "$BUILTIN/serving_cert_secret.yaml" | yq '.' - | helmify_common \
+  | wrap_enabled 'eq .Values.apiserver.certs.mode "builtin"' > "$OUT/serving-cert-secret.yaml"
+
+# --- cert-rotation-rbac.yaml (builtin mode: controller-manager writes Secret + caBundle) ---
+nocomments "$BUILTIN_CONTROLLER/rbac.yaml" | yq '.' - | helmify_common \
+  | wrap_enabled 'eq .Values.apiserver.certs.mode "builtin"' > "$OUT/cert-rotation-rbac.yaml"
 
 echo "Wrote:"
 ls -1 "$OUT"

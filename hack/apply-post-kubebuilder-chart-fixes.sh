@@ -79,3 +79,18 @@ if [[ -f "$MANAGER" ]]; then
     exit 1
   fi
 fi
+
+if [[ -f "$MANAGER" ]]; then
+  # apiserver.certs.mode=builtin needs --apiserver-cert-rotation* on the controller-manager.
+  # hack/regenerate-helm-chart.sh strips those flags from the upstream manifests; add them
+  # back conditionally via the helper from hack/update-apiserver-templates.sh, right after
+  # the user-supplied manager.args. Idempotent.
+  echo "Wiring builtin apiserver cert rotation flags into the manager args..."
+  perl -0777 -i -pe '
+    s#^([ \t]*)(\{\{- range \.Values\.manager\.args \}\}\n[ \t]*- \{\{ \. \}\}\n[ \t]*\{\{- end \}\}\n)(?![ \t]*\{\{- with include "promoter\.apiserver\.controllerArgs")#${1} . ${2} . ${1} . q({{- with include "promoter.apiserver.controllerArgs" . }}) . "\n" . ${1} . q({{- . | nindent ) . length(${1}) . q( }}) . "\n" . ${1} . q({{- end }}) . "\n"#me;
+  ' "$MANAGER"
+  if ! grep -q 'promoter\.apiserver\.controllerArgs' "$MANAGER"; then
+    echo "Error: could not wire apiserver cert rotation flags in $MANAGER; update the pattern above." >&2
+    exit 1
+  fi
+fi

@@ -9,3 +9,16 @@
 {{- $tag := $img.tag | default .Values.manager.image.tag | default .Chart.AppVersion -}}
 {{- include "promoter.image" (dict "repository" $repo "tag" $tag) -}}
 {{- end -}}
+
+{{/*
+  Controller-manager flags for apiserver.certs.mode=builtin: the controller issues, rotates
+  and injects the apiserver serving cert (upstream config/apiserver/certs-builtin-controller).
+  Included by templates/manager/manager.yaml (hack/apply-post-kubebuilder-chart-fixes.sh).
+*/}}
+{{- define "promoter.apiserver.controllerArgs" -}}
+{{- if and .Values.apiserver.enabled (eq .Values.apiserver.certs.mode "builtin") -}}
+- --apiserver-cert-rotation
+- --apiserver-cert-rotation-secret-name={{ .Values.apiserver.certs.secretName }}
+- --apiserver-cert-rotation-service-name={{ include "promoter.resourceName" (dict "suffix" "apiserver" "context" $) }}
+{{- end -}}
+{{- end -}}

@@ -23,6 +23,6 @@ Verify the aggregation API is available with:
 {{- if eq .Values.apiserver.certs.mode "insecure" }}
 
 WARNING: certs mode "insecure" sets insecureSkipTLSVerify on the APIService and is not
-production-safe. Use certs.mode=cert-manager (or manual) for production.
+production-safe. Use certs.mode=builtin, cert-manager or manual for production.
 {{- end }}
 {{- end }}
