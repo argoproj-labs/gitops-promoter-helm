@@ -222,8 +222,11 @@ nocomments "$BASE/apiservice.yaml" | yq '
   | perl -0777 -pe '
       # metadata sentinel -> cert-manager caBundle injection annotation
       s!^([ \t]*)__ANNO__:.*$!qq(${1}{{- if eq .Values.apiserver.certs.mode "cert-manager" }}\n) . qq(${1}annotations:\n) . qq(${1}  cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ .Values.apiserver.certs.secretName }}\n) . qq(${1}{{- end }})!me;
-      # spec sentinel -> insecure / manual caBundle (cert-manager relies on the annotation)
-      s!^([ \t]*)__CERT__:.*$!qq(${1}{{- if eq .Values.apiserver.certs.mode "insecure" }}\n) . qq(${1}insecureSkipTLSVerify: true\n) . qq(${1}{{- else if eq .Values.apiserver.certs.mode "manual" }}\n) . qq(${1}caBundle: {{ .Values.apiserver.certs.caBundle | quote }}\n) . qq(${1}{{- end }})!me;
+      # spec sentinel -> insecure / manual caBundle (cert-manager and builtin inject it).
+      # insecure clears caBundle explicitly: one injected by a previous builtin/cert-manager
+      # mode is not owned by Helm and would otherwise survive the upgrade, and the API
+      # server rejects insecureSkipTLSVerify alongside a non-empty caBundle.
+      s!^([ \t]*)__CERT__:.*$!qq(${1}{{- if eq .Values.apiserver.certs.mode "insecure" }}\n) . qq(${1}insecureSkipTLSVerify: true\n) . qq(${1}caBundle: ""\n) . qq(${1}{{- else if eq .Values.apiserver.certs.mode "manual" }}\n) . qq(${1}caBundle: {{ .Values.apiserver.certs.caBundle | quote }}\n) . qq(${1}{{- end }})!me;
     ' \
   | helmify_common | wrap_enabled > "$OUT/apiservice.yaml"
 
